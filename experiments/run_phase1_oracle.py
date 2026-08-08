@@ -67,12 +67,12 @@ def main():
     
     # 3. Define the SZZ variants to evaluate using individual adapters
     szz_variants = {
-        'bszz': BSZZ,
-        # 'agszz': AGSZZ,
-        # 'maszz': MASZZ,
-        # 'lszz': LSZZ,
-        # 'rszz': RSZZ,
-        # 'raszz': RASZZ
+        # 'bszz': BSZZ, # Already completed
+        'agszz': AGSZZ,
+        'maszz': MASZZ,
+        'lszz': LSZZ,
+        'rszz': RSZZ,
+        'raszz': RASZZ
     }
     
     print(f"Variants to evaluate: {list(szz_variants.keys())}")
