@@ -1,0 +1,13 @@
+data/*
+!data/raw/
+data/raw/*
+!data/raw/*.csv
+!data/raw/*.py
+results/*
+!results/phase1/
+results/phase1/*
+!results/phase1/*.csv
+__pycache__/
+*.pyc
+venv/
+.venv/
