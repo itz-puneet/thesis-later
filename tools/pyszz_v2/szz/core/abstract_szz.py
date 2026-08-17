@@ -54,8 +54,8 @@ class AbstractSZZ(ABC):
 
     def __del__(self):
         log.info("cleanup objects...")
-        self.__cleanup_repo()
         self.__clear_gitpython()
+        self.__cleanup_repo()
 
     @property
     def repository(self) -> Repo:
@@ -261,8 +261,17 @@ class AbstractSZZ(ABC):
 
     def __cleanup_repo(self):
         """ Cleanup of local repository used by SZZ """
+        def onerror(func, path, exc_info):
+            import stat
+            import os
+            # If the file is read-only, change permissions to writable and try again
+            if not os.access(path, os.W_OK):
+                os.chmod(path, stat.S_IWUSR)
+                func(path)
+            else:
+                pass
         if os.path.isdir(self.__temp_dir):
-            rmtree(self.__temp_dir)
+            rmtree(self.__temp_dir, onerror=onerror)
 
     def __clear_gitpython(self):
         """ Cleanup of GitPython due to memory problems """

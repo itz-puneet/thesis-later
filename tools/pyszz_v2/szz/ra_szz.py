@@ -31,10 +31,27 @@ class RASZZ(MASZZ):
         refactorings = dict()
         for commit in commits:
             if not commit in refactorings:
-                with tempfile.NamedTemporaryFile(mode='r+') as tmpfile:
+                # Use delete=False and close the file before os.system uses it
+                with tempfile.NamedTemporaryFile(mode='r+', delete=False) as tmpfile:
+                    tmp_name = tmpfile.name
+                
+                try:
                     log.info(f'Running RefMiner on {commit}')
-                    os.system(f'"{PATH_TO_REFMINER}" -c "{self._repository_path}" {commit} > {tmpfile.name}')
-                    refactorings[commit] = json.loads(tmpfile.read())
+                    PATH_TO_EXEC = PATH_TO_REFMINER
+                    if os.name == 'nt' and not PATH_TO_EXEC.endswith('.bat'):
+                        PATH_TO_EXEC += '.bat'
+                    
+                    cmd = f'"{PATH_TO_EXEC}" -c "{self._repository_path}" {commit} > "{tmp_name}"'
+                    if os.name == 'nt':
+                        cmd = f'"{cmd}"'
+                        
+                    os.system(cmd)
+                    with open(tmp_name, 'r') as f:
+                        refactorings[commit] = json.loads(f.read())
+                finally:
+                    # Manually delete the file after we are done
+                    if os.path.exists(tmp_name):
+                        os.unlink(tmp_name)
 
         return refactorings
 
