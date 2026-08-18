@@ -16,11 +16,7 @@ class BaseSZZ:
         self.pyszz_dir = Path(pyszz_dir).resolve()
         self.conf_file = self.pyszz_dir / "conf" / f"{self.algorithm}.yml"
 
-    def _get_all_commits(self, repo_path: str) -> pd.DataFrame:
-        cmd = ["git", "-C", repo_path, "log", "--format=%H"]
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        commits = result.stdout.strip().split('\n')
-        return pd.DataFrame({'commit_id': [c for c in commits if c]})
+
 
     def label(self, repo_path: str, fixes: pd.DataFrame) -> pd.DataFrame:
         repo_path_obj = Path(repo_path).resolve()
@@ -32,10 +28,15 @@ class BaseSZZ:
         hash_col = 'fix_commit_hash' if 'fix_commit_hash' in fixes.columns else fixes.columns[0]
         
         for _, row in fixes.iterrows():
-            bugfix_list.append({
+            bug_dict = {
                 "fix_commit_hash": str(row[hash_col]),
                 "repo_name": repo_path_obj.name
-            })
+            }
+            if 'issue_date' in fixes.columns:
+                bug_dict['earliest_issue_date'] = str(row['issue_date'])
+            elif 'creationdate' in fixes.columns:
+                bug_dict['earliest_issue_date'] = str(row['creationdate'])
+            bugfix_list.append(bug_dict)
             
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as tmp_json:
             json.dump(bugfix_list, tmp_json)
@@ -60,7 +61,7 @@ class BaseSZZ:
             if result.returncode != 0:
                 raise RuntimeError(f"PySZZ failed for {self.name}.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}")
 
-            inducing_commits = set()
+            fix_to_inducing = []
             if out_dir.exists():
                 for result_file in out_dir.glob("*.json"):
                     with open(result_file, 'r') as f:
@@ -68,14 +69,14 @@ class BaseSZZ:
                         for bug in data:
                             if bug.get("repo_name") != repo_path_obj.name:
                                 continue
+                            fix_hash = bug.get('fix_commit_hash')
                             inducing_list = bug.get('inducing_commit_hash', bug.get('inducing_commits', []))
-                            for inducing in inducing_list:
-                                inducing_commits.add(inducing)
+                            fix_to_inducing.append({
+                                'fix_commit_hash': fix_hash,
+                                'inducing_commit_hash': inducing_list
+                            })
 
-            df_all = self._get_all_commits(repo_path)
-            df_all[f'label_{self.name}'] = df_all['commit_id'].apply(lambda x: 1 if x in inducing_commits else 0)
-            
-            return df_all
+            return pd.DataFrame(fix_to_inducing)
 
         finally:
             tmp_json_path.unlink(missing_ok=True)

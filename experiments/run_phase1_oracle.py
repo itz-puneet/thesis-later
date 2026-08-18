@@ -3,6 +3,7 @@ import subprocess
 import pandas as pd
 from pathlib import Path
 import sys
+import json
 
 # Add our local srcML installation to PATH and LD_LIBRARY_PATH so PySZZ can find it
 SRCML_DIR = Path(__file__).parent.parent / "tools" / "srcml"
@@ -53,9 +54,9 @@ def main():
     # 1. Configuration Paths
     base_dir = Path(__file__).resolve().parent.parent
     raw_data_dir = base_dir / "data" / "raw"
-    dataset_csv = raw_data_dir / "jit_defects4j.csv"
+    dataset_csv = raw_data_dir / "jit_defects4j_oracle.csv"
     pyszz_dir = base_dir / "tools" / "pyszz_v2"
-    results_dir = base_dir / "results" / "phase1"
+    results_dir = base_dir / "results" / "phase1_defect_level"
     
     # Create directories if they don't exist
     raw_data_dir.mkdir(parents=True, exist_ok=True)
@@ -81,8 +82,9 @@ def main():
     # 4. Batch Execution
     for project_name in projects:
         print(f"\n>>> Processing Project: {project_name}")
-        repo_url = f"https://github.com/apache/{project_name}.git"
-        repo_dir = raw_data_dir / project_name
+        repo_url = f"https://github.com/{project_name}.git"
+        safe_project_name = project_name.replace('/', '_')
+        repo_dir = raw_data_dir / safe_project_name
         
         # Ensure project is cloned
         setup_repository(repo_url, str(repo_dir))
@@ -92,7 +94,7 @@ def main():
         print(f"Loaded {len(fixes_df)} known bug-fixing commits for {project_name}.")
         
         for variant, adapter_class in szz_variants.items():
-            output_file = results_dir / f"{variant}_{project_name}_labels.csv"
+            output_file = results_dir / f"{variant}_{safe_project_name}_labels.csv"
             
             # Checkpointing logic: Skip if already processed
             if output_file.exists():
@@ -105,12 +107,13 @@ def main():
                 adapter = adapter_class(pyszz_dir=str(pyszz_dir))
                 results_df = adapter.label(repo_path=str(repo_dir), fixes=fixes_df)
                 
-                # Save Results
+                # Save Results - convert lists to JSON string for CSV
+                if 'inducing_commit_hash' in results_df.columns:
+                    results_df['inducing_commit_hash'] = results_df['inducing_commit_hash'].apply(lambda x: json.dumps(x))
                 results_df.to_csv(output_file, index=False)
                 
-                inducing_count = results_df[f'label_{variant.upper()}'].sum()
                 print(f"✅ Success! Saved to {output_file.name}")
-                print(f"Found {inducing_count} bug-inducing commits using {variant.upper()}.")
+                print(f"Found inducing commits for {len(results_df)} fixes using {variant.upper()}.")
                 
             except Exception as e:
                 print(f"❌ ERROR: Failed to run {variant.upper()} on {project_name}: {e}")
