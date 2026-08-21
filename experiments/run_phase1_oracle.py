@@ -54,7 +54,7 @@ def main():
     # 1. Configuration Paths
     base_dir = Path(__file__).resolve().parent.parent
     raw_data_dir = base_dir / "data" / "raw"
-    dataset_csv = raw_data_dir / "jit_defects4j_oracle.csv"
+    dataset_csv = raw_data_dir / "jit_defects4j.csv"
     pyszz_dir = base_dir / "tools" / "pyszz_v2"
     results_dir = base_dir / "results" / "phase1_defect_level"
     

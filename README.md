@@ -61,6 +61,11 @@ pip install -r requirements.txt
   - `notebooks/Phase1_Analysis.ipynb`: Comprehensive visualization of F1, Precision, Recall, MCC, and Cohen's Kappa agreement heatmaps.
   - `phase1_bias.json`: Formalized noise rates ($\rho_0$ and $\rho_1$) for each variant, which will be exported to Phase 3 for synthetic noise injection.
 
+### Dataset Clarification & Phase 1 Methodology
+* **The Ground Truth Dataset:** Phase 1 was evaluated on the **21 Apache projects** dataset (often referred to as JIT-Defects4J by the JIT-Fine authors, Ni et al.). It is important to note that the ground truth for these 21 projects **was manually verified by humans**. It is a robust, defect-level oracle. 
+* **Distinction from Rosa et al.:** The dataset used here is distinct from the 951-project "Developer-Informed Oracle" introduced by Giovanni Rosa et al. in their 2021 ICSE paper, though both datasets are manually verified human oracles used for evaluating SZZ algorithms.
+* **The Missing Issue Date Filter:** In our evaluation, the SZZ algorithms produced much higher False Positive rates compared to the findings reported in Rosa et al. This is **expected and scientifically sound**. The JIT-Fine dataset we utilized does not provide Jira issue creation dates (`issue_date`). Consequently, the `issue_date_filter` inside PySZZ could not be applied. This perfectly simulates a "metadata-poor" environment where bug tracking dates are unavailable or unlinked, demonstrating how significantly SZZ precision degrades without strict chronological filtering.
+
 ## Running the Code
 *(Refer to `03_Execution_and_Supervisor_Plan.md` for detailed steps for each phase.)*
 
