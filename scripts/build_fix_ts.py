@@ -1,13 +1,34 @@
-"""Build real `fix_ts` columns for phase2_commits.csv from Defects4J bug fixes and git history.
+"""PATCH: build a real `fix_ts` column for phase2_commits.csv.
 
-Reconstructs verification latency timestamps:
-1. Fix commit author timestamps extracted from git log of cloned repos in data/raw/<project>/
-2. Fix -> inducing mappings from results/phase1_raw/<variant>_<project>.json
-3. Adds fix_ts_<VARIANT> and unified fix_ts to data/processed/phase2_commits.csv
+Why: phase2_commits.csv has no fix_ts, so prequential_latency degenerates to a
+uniform 90-day delay for ALL labels (no tentative-clean-then-correct dynamics,
+no realistic label-arrival times). This script reconstructs fix_ts from data
+already in the repo:
+
+  fix hashes ........ data/raw/jit_defects4j.csv  (project, fix_commit_hash)
+  fix dates ......... `git log` on the already-cloned repos in data/raw/<project>/
+  fix -> inducing ... pyszz mapping JSONs (results/phase1_raw/<variant>_<proj>.json)
+                      Re-emit these from your Phase 1 pipeline if they were
+                      overwritten by the label-conversion step: in
+                      codebase/szz/base.py, results_df (fix_commit_hash ->
+                      inducing_commit_hash list) is exactly this mapping --
+                      save it to results/phase1_raw/ BEFORE converting to
+                      per-commit labels.
+
+For each commit: fix_ts = author date of the EARLIEST fix commit that any
+mapping links to it. Commits never linked keep fix_ts = NaN (correct: their
+defect label never arrives; the tentative-clean at t+W stands).
+
+Which mapping to use per label source:
+  - label_<VARIANT> columns: that variant's own mapping (its labels arrive
+    when ITS fixes land).
+  - label_oracle: union of mappings restricted to oracle-defective commits,
+    OR the JIT-Defects4J original linkage if you download it. The union
+    approximation is documented and conservative.
 
 Usage:
-  python scripts/build_fix_ts.py --mode real      # build fix_ts, update CSV
-  python scripts/build_fix_ts.py --mode uniform   # keep NaN for fixed-delay evaluation
+  python patch_build_fix_ts.py --mode real      # build fix_ts, update CSV
+  python patch_build_fix_ts.py --mode uniform   # keep NaN, just document it
 """
 from __future__ import annotations
 
@@ -66,8 +87,8 @@ def load_mappings() -> pd.DataFrame:
                                  commit_id=ind))
     if not rows:
         raise FileNotFoundError(
-            f"No mapping JSONs in {MAPPING_DIR}. Run Phase 1 pipeline "
-            f"(python -m experiments.run_phase1_oracle) to emit them.")
+            f"No mapping JSONs in {MAPPING_DIR}. Re-emit them from Phase 1 "
+            f"(save results_df from codebase/szz/base.py before label conversion).")
     return pd.DataFrame(rows)
 
 
