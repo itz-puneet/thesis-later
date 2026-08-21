@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 1 & 2 Empirical Research Report: SZZ Noise & Downstream Evaluation Impact</title>
+    <style>
+        :root {
+            --primary: #1e3c72;
+            --primary-light: #2a5298;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+            --border: #e2e8f0;
+            --card-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: var(--card-shadow);
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 5px 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .meta-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+        }
+        .card h2 {
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 10px;
+        }
+        .card h3 {
+            color: var(--dark);
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+        .stat-card {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+        .stat-card.danger { border-left-color: var(--accent); }
+        .stat-card.success { border-left-color: var(--success); }
+        .stat-card.warning { border-left-color: var(--warning); }
+        .stat-num {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 5px 0;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95rem;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background-color: #f1f5f9;
+            color: var(--dark);
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f8fafc;
+        }
+        .figure-container {
+            margin: 25px 0;
+            text-align: center;
+        }
+        .figure-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .figure-caption {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .alert-warning {
+            background-color: #fffbeb;
+            border-left: 4px solid var(--warning);
+            color: #b45309;
+        }
+        .alert-danger {
+            background-color: #fef2f2;
+            border-left: 4px solid var(--accent);
+            color: #b91c1c;
+        }
+        .alert-info {
+            background-color: #eff6ff;
+            border-left: 4px solid var(--primary-light);
+            color: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Phase 1 & 2 Empirical Research Report</h1>
+        <p><strong>Topic:</strong> Downstream Impact of SZZ Label Noise Under Honest Evaluation Regimes</p>
+        <p><strong>Benchmark:</strong> 21 Apache Software Projects | 14,700 Experimental Configurations | 10 Random Seeds</p>
+        <div class="meta-badges">
+            <span class="badge">Phase 1: SZZ Noise Characterization</span>
+            <span class="badge">Phase 2: Honest Downstream Evaluation</span>
+            <span class="badge">Models: LApredict, JITLine, ORB</span>
+            <span class="badge">Regimes: Naive K-Fold, Chronological, Prequential Latency</span>
+        </div>
+    </div>
+
+    <!-- Executive Summary Card -->
+    <div class="card">
+        <h2>Executive Summary</h2>
+        <div class="grid-3">
+            <div class="stat-card danger">
+                <div class="stat-label">SZZ Precision Floor</div>
+                <div class="stat-num">19.3%</div>
+                <small>Over 80% of SZZ-flagged bugs in BSZZ are false positives</small>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-label">Evaluation Inflation</div>
+                <div class="stat-num">+203%</div>
+                <small>Naive k-fold inflates JITLine oracle MCC from 0.067 to 0.204</small>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-label">Real Online Stream MCC</div>
+                <div class="stat-num">0.063</div>
+                <small>True predictive power under realistic 90-day verification latency</small>
+            </div>
+        </div>
+
+        <div class="alert alert-danger" style="margin-top: 25px;">
+            <strong>Core Thesis Finding:</strong> Published defect prediction performance (MCC ~0.40–0.50) is an artifact of circular self-scoring on noisy SZZ labels combined with temporal data leakage in random k-fold splits. When tested against verified oracle ground truth under time-aware streaming, real predictive capability drops by up to <strong>85%</strong>.
+        </div>
+    </div>
+
+    <!-- Phase 1 Card -->
+    <div class="card">
+        <h2>Phase 1: Intrinsic Label Quality & Noise Profile</h2>
+        <p>We evaluated 6 modern SZZ variants against human-curated ground truth across 21 Apache repositories.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>SZZ Variant</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1-Score</th>
+                    <th>FPR (&rho;<sub>0</sub>)</th>
+                    <th>FNR (&rho;<sub>1</sub>)</th>
+                    <th>Cohen's &kappa;</th>
+                    <th>MCC</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>BSZZ</strong></td>
+                    <td>0.1927</td>
+                    <td>0.6561</td>
+                    <td>0.2979</td>
+                    <td>0.2666</td>
+                    <td>0.3439</td>
+                    <td>0.1867</td>
+                    <td>0.2411</td>
+                </tr>
+                <tr>
+                    <td><strong>AGSZZ</strong></td>
+                    <td>0.2148</td>
+                    <td>0.4472</td>
+                    <td>0.2902</td>
+                    <td>0.1585</td>
+                    <td>0.5528</td>
+                    <td>0.1939</td>
+                    <td>0.2115</td>
+                </tr>
+                <tr>
+                    <td><strong>MASZZ</strong></td>
+                    <td>0.1986</td>
+                    <td>0.4669</td>
+                    <td>0.2786</td>
+                    <td>0.1730</td>
+                    <td>0.5331</td>
+                    <td>0.1821</td>
+                    <td>0.2048</td>
+                </tr>
+                <tr>
+                    <td><strong>LSZZ</strong></td>
+                    <td>0.2808</td>
+                    <td>0.2607</td>
+                    <td>0.2703</td>
+                    <td>0.0613</td>
+                    <td>0.7393</td>
+                    <td>0.2061</td>
+                    <td>0.2062</td>
+                </tr>
+                <tr>
+                    <td><strong>RSZZ</strong></td>
+                    <td>0.2423</td>
+                    <td>0.2851</td>
+                    <td>0.2620</td>
+                    <td>0.0818</td>
+                    <td>0.7149</td>
+                    <td>0.1882</td>
+                    <td>0.1889</td>
+                </tr>
+                <tr>
+                    <td><strong>RASZZ</strong></td>
+                    <td>0.2124</td>
+                    <td>0.3845</td>
+                    <td>0.2736</td>
+                    <td>0.1309</td>
+                    <td>0.6155</td>
+                    <td>0.1854</td>
+                    <td>0.1959</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="grid-2">
+            <div class="figure-container">
+                <img src="figures/fig1_phase1_precision_recall.png" alt="Figure 1">
+                <div class="figure-caption">Figure 1: Precision, Recall & F1 of SZZ Variants vs. Oracle Ground Truth</div>
+            </div>
+            <div class="figure-container">
+                <img src="figures/fig2_phase1_noise_rates.png" alt="Figure 2">
+                <div class="figure-caption">Figure 2: Asymmetric Noise Rates (FPR &rho;<sub>0</sub> vs. FNR &rho;<sub>1</sub>)</div>
+            </div>
+        </div>
+
+        <div class="figure-container">
+            <img src="figures/fig3_phase1_kappa_heatmap.png" alt="Figure 3" style="max-width: 650px;">
+            <div class="figure-caption">Figure 3: Inter-Variant Cohen's Kappa (&kappa;) Agreement Matrix</div>
+        </div>
+    </div>
+
+    <!-- Phase 2 Card -->
+    <div class="card">
+        <h2>Phase 2: Downstream Model Performance Under Honest Evaluation</h2>
+        <p>Models evaluated: <strong>LApredict</strong> (single-feature logistic regression), <strong>JITLine</strong> (100-tree Random Forest with minority oversampling), and <strong>ORB</strong> (online ensemble with 90-day verification latency).</p>
+
+        <h3>Headline Results: Oracle-Scored MCC</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>Training Label Source</th>
+                    <th>Naive K-Fold (Leaky)</th>
+                    <th>Chronological Split (Honest Batch)</th>
+                    <th>Prequential Latency (Realistic Stream)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background-color: #f1f8ff;">
+                    <td><strong>JITLine</strong></td>
+                    <td><strong>Oracle Ground Truth</strong></td>
+                    <td><strong>0.2039</strong></td>
+                    <td><strong>0.0673</strong></td>
+                    <td><em>N/A (Batch)</em></td>
+                </tr>
+                <tr>
+                    <td>JITLine</td>
+                    <td>BSZZ</td>
+                    <td>0.1754</td>
+                    <td>0.1135</td>
+                    <td><em>N/A</em></td>
+                </tr>
+                <tr>
+                    <td>JITLine</td>
+                    <td>AGSZZ</td>
+                    <td>0.0980</td>
+                    <td>0.0496</td>
+                    <td><em>N/A</em></td>
+                </tr>
+                <tr>
+                    <td>JITLine</td>
+                    <td>MASZZ</td>
+                    <td>0.1150</td>
+                    <td>0.0666</td>
+                    <td><em>N/A</em></td>
+                </tr>
+                <tr>
+                    <td>JITLine</td>
+                    <td>LSZZ</td>
+                    <td>0.1167</td>
+                    <td>0.0478</td>
+                    <td><em>N/A</em></td>
+                </tr>
+                <tr>
+                    <td>JITLine</td>
+                    <td>RSZZ</td>
+                    <td>0.0817</td>
+                    <td>0.0337</td>
+                    <td><em>N/A</em></td>
+                </tr>
+                <tr>
+                    <td>JITLine</td>
+                    <td>RASZZ</td>
+                    <td>0.1020</td>
+                    <td>0.0509</td>
+                    <td><em>N/A</em></td>
+                </tr>
+                <tr style="background-color: #f1f8ff;">
+                    <td><strong>LApredict</strong></td>
+                    <td><strong>Oracle Ground Truth</strong></td>
+                    <td><strong>0.2058</strong></td>
+                    <td><strong>0.1734</strong></td>
+                    <td><em>N/A (Batch)</em></td>
+                </tr>
+                <tr>
+                    <td>LApredict</td>
+                    <td>BSZZ</td>
+                    <td>0.1889</td>
+                    <td>0.1599</td>
+                    <td><em>N/A</em></td>
+                </tr>
+                <tr>
+                    <td>LApredict</td>
+                    <td>AGSZZ</td>
+                    <td>0.1950</td>
+                    <td>0.1670</td>
+                    <td><em>N/A</em></td>
+                </tr>
+                <tr>
+                    <td>LApredict</td>
+                    <td>MASZZ</td>
+                    <td>0.2000</td>
+                    <td>0.1708</td>
+                    <td><em>N/A</em></td>
+                </tr>
+                <tr>
+                    <td>LApredict</td>
+                    <td>LSZZ</td>
+                    <td>0.2074</td>
+                    <td>0.1719</td>
+                    <td><em>N/A</em></td>
+                </tr>
+                <tr>
+                    <td>LApredict</td>
+                    <td>RSZZ</td>
+                    <td>0.2017</td>
+                    <td>0.1740</td>
+                    <td><em>N/A</em></td>
+                </tr>
+                <tr>
+                    <td>LApredict</td>
+                    <td>RASZZ</td>
+                    <td>0.2005</td>
+                    <td>0.1745</td>
+                    <td><em>N/A</em></td>
+                </tr>
+                <tr style="background-color: #f1f8ff;">
+                    <td><strong>ORB</strong></td>
+                    <td><strong>Oracle Ground Truth</strong></td>
+                    <td><em>N/A (Streaming)</em></td>
+                    <td><em>N/A</em></td>
+                    <td><strong>0.0634</strong></td>
+                </tr>
+                <tr>
+                    <td>ORB</td>
+                    <td>BSZZ</td>
+                    <td><em>N/A</em></td>
+                    <td><em>N/A</em></td>
+                    <td><strong>0.0601</strong></td>
+                </tr>
+                <tr>
+                    <td>ORB</td>
+                    <td>AGSZZ</td>
+                    <td><em>N/A</em></td>
+                    <td><em>N/A</em></td>
+                    <td>0.0184</td>
+                </tr>
+                <tr>
+                    <td>ORB</td>
+                    <td>MASZZ</td>
+                    <td><em>N/A</em></td>
+                    <td><em>N/A</em></td>
+                    <td>0.0214</td>
+                </tr>
+                <tr>
+                    <td>ORB</td>
+                    <td>LSZZ</td>
+                    <td><em>N/A</em></td>
+                    <td><em>N/A</em></td>
+                    <td>0.0351</td>
+                </tr>
+                <tr>
+                    <td>ORB</td>
+                    <td>RSZZ</td>
+                    <td><em>N/A</em></td>
+                    <td><em>N/A</em></td>
+                    <td>0.0286</td>
+                </tr>
+                <tr>
+                    <td>ORB</td>
+                    <td>RASZZ</td>
+                    <td><em>N/A</em></td>
+                    <td><em>N/A</em></td>
+                    <td>0.0099</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="grid-2">
+            <div class="figure-container">
+                <img src="figures/fig4_phase2_regime_inflation.png" alt="Figure 4">
+                <div class="figure-caption">Figure 4: Evaluation Regime Inflation (Naive K-Fold vs. Chronological)</div>
+            </div>
+            <div class="figure-container">
+                <img src="figures/fig5_phase2_self_deception_gap.png" alt="Figure 5">
+                <div class="figure-caption">Figure 5: The Self-Deception Gap (Self-Scoring vs. Oracle Scoring)</div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="figure-container">
+                <img src="figures/fig6_phase2_orb_streaming.png" alt="Figure 6">
+                <div class="figure-caption">Figure 6: ORB Streaming Model Performance with 90-Day Latency</div>
+            </div>
+            <div class="figure-container">
+                <img src="figures/fig7_phase2_deflation_ladder.png" alt="Figure 7">
+                <div class="figure-caption">Figure 7: Summary Compounding Deflation Ladder</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Synthesis Card -->
+    <div class="card">
+        <h2>Statistical Validation & Key Takeaways</h2>
+        <div class="alert alert-info">
+            <strong>Key Statistical Takeaways:</strong>
+            <ul>
+                <li><strong>Leakage Inflation is Statistically Significant:</strong> Wilcoxon test for JITLine naive vs. chronological split yields <em>p</em> = 3.15 &times; 10<sup>-5</sup> with large Cliff's &delta; = 0.601.</li>
+                <li><strong>Self-Scoring Produces Massive Spurious Gains:</strong> BSZZ self-scoring inflates MCC by +0.190 (<em>p</em> = 6.54 &times; 10<sup>-8</sup>, Cliff's &delta; = 0.825).</li>
+                <li><strong>Simpler Models are More Noise-Robust:</strong> LApredict (single feature) shows minimal sensitivity to SZZ variant noise compared to complex oversampled tree ensembles.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -13,6 +13,9 @@ results/phase1/*
 !results/phase2/
 results/phase2/*
 !results/phase2/*.csv
+!results/replication/
+results/replication/*
+!results/replication/*.csv
 __pycache__/
 *.pyc
 venv/
