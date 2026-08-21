@@ -1,122 +1,155 @@
 # Thesis: SZZ Label Noise in Just-In-Time Defect Prediction
 
-This repository contains the codebase for the thesis exploring SZZ label noise in Just-In-Time Software Defect Prediction (JIT-SDP).
+This repository contains the experimental pipeline and empirical artifacts for the thesis investigating the downstream impact of SZZ heuristic label noise in Just-In-Time Software Defect Prediction (JIT-SDP).
+
+---
 
 ## Environment Setup
 
-To continue work on a different machine, follow these steps to set up the environment exactly as it was:
+To set up the environment on any machine:
 
 ### 1. Clone the Repository
 ```bash
-git clone <your-repository-url>
+git clone git@github.com:itz-puneet/thesis-later.git
 cd thesis-later
 ```
 
-### 2. Set Up the Virtual Environment
-Ensure you have Python 3 installed. Create a new virtual environment:
-
+### 2. Set Up Virtual Environment
+Ensure you have Python 3 (>= 3.10) installed:
 ```bash
 python3 -m venv venv
 ```
 
-### 3. Activate the Virtual Environment
-Activate the virtual environment. 
-
-On **Linux / macOS**:
-```bash
-source venv/bin/activate
-```
-
-On **Windows**:
-```cmd
-venv\Scripts\activate
-```
+### 3. Activate Virtual Environment
+- **Linux / macOS**:
+  ```bash
+  source venv/bin/activate
+  ```
+- **Windows**:
+  ```cmd
+  venv\Scripts\activate
+  ```
 
 ### 4. Install Dependencies
-Install all required packages from `requirements.txt` to ensure there is no version mismatch:
 ```bash
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
+
+---
+
+## Experiment Execution Commands
+
+Below are all the commands required to run each stage of the thesis pipeline.
+
+### Step 0: ORB Benchmark Replication (Cabral et al., 2019)
+Validates the streaming Oversampling Rate Boosting (ORB) implementation against published benchmarks:
+```bash
+python scripts/replicate_cabral_orb.py
+```
+*Outputs: `results/replication/cabral2019_orb_replication.csv`*
+
+---
+
+### Step 1: Phase 1 — SZZ Label Extraction & Quality Evaluation
+
+#### (A) Fast Evaluation on Pre-computed Labels (Instant, ~2 seconds)
+Evaluates all 6 SZZ variants (BSZZ, AGSZZ, MASZZ, LSZZ, RSZZ, RASZZ) against the human oracle ground truth with NaN handling and full universe left-joins:
+```bash
+python -m experiments.evaluate_confusion_matrix
+```
+*Outputs:*
+- `phase1_bias.json` *(noise parameters $\rho_0, \rho_1$ for Phase 3)*
+- `results/phase1/phase1_quality_corrected.csv`
+- `results/phase1/phase1_quality_per_project.csv`
+- `results/phase1/phase1_intervariant_kappa.csv`
+
+#### (B) Full PySZZ Pipeline Re-run (Extract from Git Repositories)
+Runs the full PySZZ $v2$ pipeline across the 21 cloned repositories, outputting both raw fix-to-inducing JSON mappings and binary label CSVs:
+```bash
+# Run on all 21 projects and all 6 variants:
+python -m experiments.run_phase1_oracle
+
+# Test on a single project:
+python -m experiments.run_phase1_oracle --projects giraph
+
+# Specify specific variants:
+python -m experiments.run_phase1_oracle --variants bszz agszz rszz --overwrite
+```
+*Outputs: `results/phase1_raw/*.json` and `results/phase1/*_labels.csv`*
+
+---
+
+### Step 2: Verification Latency Construction (`fix_ts`)
+
+#### Option A: Real Verification Latency (Recommended when raw mappings exist)
+Reconstructs exact commit-level defect arrival timestamps ($fix\_ts$) from Defects4J fix dates:
+```bash
+python scripts/build_fix_ts.py --mode real
+```
+
+#### Option B: Fixed-Delay Online Evaluation Fallback ($W = 90$ days)
+Sets uniform 90-day waiting delay across all commits:
+```bash
+python scripts/build_fix_ts.py --mode uniform
+```
+*Updates: `data/processed/phase2_commits.csv` with `fix_ts` columns.*
+
+---
+
+### Step 3: Phase 2 — Downstream Impact Evaluation
+
+Evaluates 3 models (`LApredict`, threshold-tuned `JITLine`, `ORB`) across 7 label sources (oracle + 6 SZZ variants) and 3 evaluation regimes (naive $k$-fold, chronological 50/50, prequential streaming with latency).
+
+#### Quick Smoke Test (Fast mode: 3 seeds, 50 trees, 5 folds)
+```bash
+python -m experiments.run_phase2_impact --fast
+```
+
+#### Full Experiment (All 21 projects, 10 seeds, auto-detect CPU cores)
+- **With Real Verification Latency:**
+  ```bash
+  python -m experiments.run_phase2_impact --latency_mode real
+  ```
+- **With Uniform Delay:**
+  ```bash
+  python -m experiments.run_phase2_impact --latency_mode uniform
+  ```
+- **Specifying Parallel Workers Explicitly:**
+  ```bash
+  python -m experiments.run_phase2_impact --latency_mode real --n_jobs 8
+  ```
+
+*Outputs (`results/phase2/`):*
+- `phase2_results.csv` *(14,700 evaluation runs)*
+- `phase2_summary.csv` *(mean and std metrics by model/regime/label)*
+- `statistical_tests.csv` *(paired Wilcoxon & Cliff's delta statistics)*
+- `inflation_ladder.csv` *(regime inflation metrics)*
+
+---
+
+### Step 4: Report and Visualization Generation
+Regenerates publication-ready figures, tables, and reports from experimental outputs:
+```bash
+python scripts/generate_report.py
+```
+*Outputs: HTML and Markdown summaries under `reports/` and figures in `reports/figures/`.*
 
 ---
 
 ## Project Structure & Documentation
 
 - `01_Learning_Guide.md`: Theoretical concepts and learning guide for the thesis.
-- `02_Thesis_Outline.md`: Structure of the thesis.
-- `03_Execution_and_Supervisor_Plan.md`: Phase-wise plan and meeting checklists.
-- `codebase/`: Core modules (feature loader, baseline models, ORB online learner, evaluation regimes, and metrics).
-- `experiments/`: Experiment execution scripts (`run_phase1_oracle.py`, `run_phase2_impact.py`, etc.).
-- `results/`: Artifacts, tables, and statistical outputs for each phase.
-
-## Project Status & Progress
-
-### Phase 1: Label Disagreement and Oracle Comparison (Completed)
-- **Objective:** Evaluate how different SZZ variants (BSZZ, AGSZZ, LSZZ, MASZZ, RASZZ, RSZZ) compare against a strict developer-informed human oracle (JIT-Defects4J).
-- **Why we did it:** To isolate and quantify the exact "label noise" generated by SZZ heuristics before training any Machine Learning models.
-- **Key Findings:** 
-  - All SZZ variants produce noisy datasets (MCC scores ~0.2, Precision < 30%). 
-  - Advanced variants like AGSZZ and MASZZ produce nearly identical labels (Kappa = 0.91), offering researchers an "illusion of choice".
-  - Basic SZZ (BSZZ) and Line-number SZZ (LSZZ) operate on fundamentally different tracking philosophies, resulting in the lowest agreement (Kappa = 0.31).
-- **Artifacts:**
-  - `notebooks/Phase1_Analysis.ipynb`: Comprehensive visualization of F1, Precision, Recall, MCC, and Cohen's Kappa agreement heatmaps.
-  - `phase1_bias.json`: Formalized noise rates ($\rho_0$ and $\rho_1$) for each variant, exported for downstream noise modeling.
-
----
-
-### Phase 2: Downstream Impact Under Honest Evaluation (In Progress)
-- **Objective (RQ2):** Quantify how much SZZ label noise shifts measured JIT-SDP performance across different evaluation regimes, and measure the extent of artificial performance inflation reported in literature.
-- **Methodology & Experimental Design:**
-  - **Dataset:** Unified 21 Apache projects with 14 Kamei et al. (2013) change-level features and 7 label sources (Human Oracle + BSZZ, AGSZZ, MASZZ, LSZZ, RSZZ, RASZZ).
-  - **Models Evaluated:**
-    1. **LApredict** (*Zeng et al., 2021*): Single-feature logistic regression driven by lines added (LA), scaled and class-weighted.
-    2. **JITLine** (*Pornprasit & Tantithamthavorn, 2021*): 100-tree Random Forest over 14 Kamei features with minority oversampling and log-transformations.
-    3. **ORB** (*Cabral et al., 2019*): Oversampling Rate Boosting online ensemble over streaming commits.
-  - **The 3 Evaluation Regimes ("The Inflation Ladder"):**
-    1. **Naive $k$-Fold Cross-Validation** (10-fold): Random shuffling across time (temporally dishonest upper bound with data leakage).
-    2. **Chronological 50/50 Split**: Time-ordered train/test partition (honest offline batch evaluation).
-    3. **Prequential with Verification Latency** ($W = 90$ days): Test-then-train streaming evaluation honoring delayed arrival of defect labels.
-  - **Dual Evaluation Scoring Conventions:**
-    - **Oracle-Scored:** Models are scored against the ground-truth human oracle to evaluate real-world predictive utility.
-    - **Self-Scored:** Models are scored against the noisy SZZ variant they were trained on, revealing the literature's "self-deception gap".
-  - **Statistical Rigor:**
-    - 10 fixed random seeds across all 21 projects.
-    - Paired Wilcoxon signed-rank tests with Cliff's delta effect sizes ($\delta$) across regimes and label sources.
-- **Key Outputs (`results/phase2/`):**
-  - `phase2_results.csv`: Complete raw evaluation table (14,700 model fits across 210 project-seed runs).
-  - `phase2_summary.csv`: Aggregated means and standard deviations by model, regime, and label source.
-  - `statistical_tests.csv`: Wilcoxon and Cliff's delta statistics for regime inflation and self-deception gaps.
-  - `inflation_ladder.csv`: Macro-level MCC comparison table across naive vs. chronological vs. prequential regimes.
-
----
-
-### Dataset Clarification & Methodology Notes
-* **The Ground Truth Dataset:** The 21 Apache projects dataset (from JIT-Defects4J / JIT-Fine by Ni et al.) contains commit-level ground truth manually verified by human annotators.
-* **Distinction from Rosa et al.:** The dataset is distinct from the 951-project "Developer-Informed Oracle" (Rosa et al., ICSE 2021), though both serve as developer-verified human ground truths.
-* **Issue Date Filtering:** The dataset operates in a metadata-poor setting without Jira issue creation timestamps, which mirrors real-world deployment where issue tracker timestamps are unlinked or missing.
-
----
-
-## Running Experiments
-
-### Phase 1 Execution
-```bash
-python -m experiments.run_phase1_oracle --data data/raw
-```
-
-### Phase 2 Execution
-Because `data/processed/phase2_commits.csv` is pre-consolidated, Phase 2 runs out of the box on any machine:
-
-```bash
-# Quick smoke test (3 seeds, 50 trees, 5 folds):
-python -m experiments.run_phase2_impact --fast
-
-# Full experiment across all 21 projects & 10 seeds (auto-detects CPU cores by default):
-python -m experiments.run_phase2_impact
-
-# Or explicitly specifying workers on Linux / macOS:
-# python -m experiments.run_phase2_impact --n_jobs $(nproc)
-# Or on Windows (PowerShell):
-# python -m experiments.run_phase2_impact --n_jobs $env:NUMBER_OF_PROCESSORS
-```
-
+- `02_Thesis_Outline.md`: Structure and chapter outline of the thesis.
+- `03_Execution_and_Supervisor_Plan.md`: Phase-wise milestones and meeting checklists.
+- `Code_Review_Report.md`: In-depth code review report, findings, and verified strengths.
+- `codebase/`:
+  - `config.py`: Global constants, paths, and hyperparameters.
+  - `data/loader.py`: Unified dataset loading and schema formatting.
+  - `models/baselines.py`: `LApredict` and SMOTE/threshold-tuned `JITLine`.
+  - `online/orb.py`: Oversampling Rate Boosting (ORB) online learner.
+  - `evaluation/regimes.py`: Naive $k$-fold, chronological split, and prequential streaming latency.
+  - `evaluation/metrics.py`: MCC, G-mean, Prequential Tracker, Wilcoxon & Cliff's $\delta$.
+- `experiments/`: Experiment execution scripts (`evaluate_confusion_matrix.py`, `run_phase1_oracle.py`, `run_phase2_impact.py`).
+- `scripts/`: Utility scripts (`build_fix_ts.py`, `replicate_cabral_orb.py`, `generate_report.py`).
+- `results/`: Artifacts, tables, and statistical outputs for Phase 1, Phase 2, and replication.
