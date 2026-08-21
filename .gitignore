@@ -3,6 +3,9 @@ data/*
 data/raw/*
 !data/raw/*.csv
 !data/raw/*.py
+!data/processed/
+data/processed/*
+!data/processed/*.csv
 results/*
 !results/phase1/
 results/phase1/*
@@ -12,3 +15,4 @@ __pycache__/
 venv/
 .venv/
 .vscode/
+
