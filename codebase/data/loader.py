@@ -77,24 +77,28 @@ def build_unified_dataset() -> pd.DataFrame:
         var_dfs = []
         for f in pred_files:
             try:
-                var_dfs.append(pd.read_csv(f))
+                df_f = pd.read_csv(f)
+                if "project" not in df_f.columns:
+                    proj = Path(f).stem.replace(f"{variant.lower()}_", "").replace("_labels", "")
+                    df_f["project"] = proj
+                var_dfs.append(df_f)
             except Exception as e:
                 print(f"Error reading {f}: {e}")
 
         if var_dfs:
             var_df = pd.concat(var_dfs, ignore_index=True)
-            var_df = var_df.drop_duplicates(subset=["commit_id"])
             pred_col = f"label_{variant}"
             if pred_col not in var_df.columns:
                 # Try finding alternative column name
                 match_cols = [c for c in var_df.columns if c.lower() == pred_col.lower()]
                 if match_cols:
                     var_df = var_df.rename(columns={match_cols[0]: pred_col})
-            
+
+            var_df = var_df.drop_duplicates(subset=["project", "commit_id"])
             full_df = pd.merge(
                 full_df,
-                var_df[["commit_id", pred_col]],
-                on="commit_id",
+                var_df[["project", "commit_id", pred_col]],
+                on=["project", "commit_id"],
                 how="left",
             )
             full_df[pred_col] = full_df[pred_col].fillna(0).astype(int)
@@ -102,7 +106,8 @@ def build_unified_dataset() -> pd.DataFrame:
     # Reorder columns
     meta_cols = ["project", "commit_id", "author_ts"]
     label_cols = ["label_oracle"] + [f"label_{v}" for v in SZZ_VARIANTS]
-    selected_cols = meta_cols + KAMEI_FEATURES + label_cols
+    fix_ts_cols = [c for c in full_df.columns if c.startswith("fix_ts")]
+    selected_cols = meta_cols + KAMEI_FEATURES + label_cols + fix_ts_cols
 
     # Keep any extra relevant columns if needed
     final_df = full_df[selected_cols].copy()

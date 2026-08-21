@@ -38,7 +38,7 @@ from codebase.evaluation.metrics import wilcoxon_with_cliffs
 
 def run_single_cell(args: tuple) -> list[dict]:
     """Execute a single combination for one project and seed."""
-    project_name, seed, df_proj, eval_modes, n_trees, k_folds = args
+    project_name, seed, df_proj, eval_modes, n_trees, k_folds, latency_mode = args
 
     label_sources = ["label_oracle"] + [f"label_{v}" for v in SZZ_VARIANTS]
     records = []
@@ -132,6 +132,7 @@ def run_single_cell(args: tuple) -> list[dict]:
                 df_proj,
                 label_col=train_label,
                 eval_label_col=eval_label,
+                latency_mode=latency_mode,
             )
             records.append({
                 "project": project_name,
@@ -233,6 +234,8 @@ def main():
     parser = argparse.ArgumentParser(description="Run Phase 2 experiments.")
     parser.add_argument("--fast", action="store_true", help="Fast mode with fewer trees and seeds for smoke tests")
     parser.add_argument("--n_jobs", type=int, default=max(1, mp.cpu_count() - 1), help="Number of parallel worker processes")
+    parser.add_argument("--latency_mode", choices=["real", "uniform"], default="real",
+                        help="Prequential latency mode: 'real' (requires fix_ts) or 'uniform' (fixed W=90d delay)")
     args = parser.parse_args()
 
     PHASE2_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -253,7 +256,7 @@ def main():
     print(f"Seeds ({len(seeds)}): {seeds}")
     print(f"Models: LApredict, JITLine, ORB")
     print(f"Label Sources: oracle, {', '.join(SZZ_VARIANTS)}")
-    print(f"Regimes: naive_kfold, chronological, prequential_latency")
+    print(f"Regimes: naive_kfold, chronological, prequential_latency[{args.latency_mode}]")
     print(f"Evaluation Modes: {eval_modes}")
     print(f"Parallel Workers: {args.n_jobs}")
     print("-" * 70)
@@ -266,7 +269,7 @@ def main():
             print(f"Skipping tiny project {proj} (<10 commits)")
             continue
         for s in seeds:
-            tasks.append((proj, s, df_proj, eval_modes, n_trees, k_folds))
+            tasks.append((proj, s, df_proj, eval_modes, n_trees, k_folds, args.latency_mode))
 
     print(f"Total project-seed execution tasks: {len(tasks)}")
     start_time = time.time()

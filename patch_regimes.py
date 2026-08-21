@@ -1,97 +1,30 @@
-"""Three evaluation regimes for Phase 2.
+"""PATCH: drop-in replacement for prequential_latency in codebase/evaluation/regimes.py.
 
-1. naive_kfold          -- Random stratified shuffling (temporally dishonest upper bound).
-2. chronological        -- Time-ordered 50/50 train/test split (honest batch evaluation).
-3. prequential_latency  -- Online stream test-then-train respecting verification latency (W=90 days).
+Changes vs current version:
+1. Aligns the protocol with scripts/replicate_cabral_orb.py (tentative-clean at
+   t+W, corrected at fix time) so Phase 2 and the validated replication use the
+   SAME semantics.
+2. Explicit `latency_mode` so runs are self-documenting:
+     "real"    -- requires fix_ts; defect labels arrive at fix time; commits
+                  whose fix lands after W are FIRST trained as clean at t+W and
+                  corrected at fix time (the one-sided latency noise).
+     "uniform" -- current repo behavior (all labels at t+W); use only as a
+                  documented sensitivity condition, never as the headline.
+3. `fix_ts_col` lets each label source use ITS OWN fix mapping
+   (fix_ts_BSZZ for label_BSZZ, ...; falls back to the union column "fix_ts").
+4. Refuses to silently run "real" mode without fix_ts (the bug that produced
+   the current results) -- raises instead.
 """
 from __future__ import annotations
 
 import heapq
-from typing import Callable, Any
+from typing import Any
+
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import StratifiedKFold
 
 from codebase.config import KAMEI_FEATURES, VERIFICATION_WAIT_DAYS, PREQUENTIAL_FADING
-from codebase.evaluation.metrics import mcc, gmean, PrequentialTracker
-
-
-def naive_kfold(
-    model_factory: Callable[[], Any],
-    df: pd.DataFrame,
-    label_col: str,
-    eval_label_col: str | None = None,
-    k: int = 10,
-    seed: int = 42,
-) -> dict:
-    """Random stratified k-fold cross-validation."""
-    eval_label_col = eval_label_col or label_col
-    X = df[KAMEI_FEATURES].to_numpy(dtype=float)
-    y_train_src = df[label_col].to_numpy(dtype=int)
-    y_eval = df[eval_label_col].to_numpy(dtype=int)
-
-    # In case there are very few instances of minority class for 10-fold
-    pos_count = np.sum(y_train_src == 1)
-    k_actual = min(k, max(pos_count, 2), len(df))
-    if k_actual < 2:
-        k_actual = 2
-
-    preds = np.zeros(len(df), dtype=int)
-    try:
-        skf = StratifiedKFold(n_splits=k_actual, shuffle=True, random_state=seed)
-        splits = skf.split(X, y_train_src)
-    except Exception:
-        # Fallback to non-stratified KFold if stratification fails
-        from sklearn.model_selection import KFold
-        kf = KFold(n_splits=k_actual, shuffle=True, random_state=seed)
-        splits = kf.split(X, y_train_src)
-
-    for tr, te in splits:
-        m = model_factory()
-        m.fit(X[tr], y_train_src[tr])
-        preds[te] = m.predict(X[te])
-
-    return dict(
-        regime="naive_kfold",
-        mcc=mcc(y_eval, preds),
-        gmean=gmean(y_eval, preds),
-    )
-
-
-def chronological(
-    model_factory: Callable[[], Any],
-    df: pd.DataFrame,
-    label_col: str,
-    eval_label_col: str | None = None,
-    train_frac: float = 0.5,
-) -> dict:
-    """Chronological (time-aware) batch train/test split."""
-    eval_label_col = eval_label_col or label_col
-    df_sorted = df.sort_values("author_ts").reset_index(drop=True)
-    cut = int(len(df_sorted) * train_frac)
-    if cut < 1:
-        cut = 1
-    if cut >= len(df_sorted):
-        cut = len(df_sorted) - 1
-
-    tr = df_sorted.iloc[:cut]
-    te = df_sorted.iloc[cut:]
-
-    X_tr = tr[KAMEI_FEATURES].to_numpy(dtype=float)
-    y_tr = tr[label_col].to_numpy(dtype=int)
-
-    X_te = te[KAMEI_FEATURES].to_numpy(dtype=float)
-    y_ev = te[eval_label_col].to_numpy(dtype=int)
-
-    m = model_factory()
-    m.fit(X_tr, y_tr)
-    preds = m.predict(X_te)
-
-    return dict(
-        regime="chronological",
-        mcc=mcc(y_ev, preds),
-        gmean=gmean(y_ev, preds),
-    )
+from codebase.evaluation.metrics import PrequentialTracker
 
 
 def prequential_latency(
@@ -133,8 +66,7 @@ def prequential_latency(
             raise ValueError(
                 f"latency_mode='real' but no usable fix_ts column for {label_col} "
                 f"(looked for '{col}'). Run patch_build_fix_ts.py first, or pass "
-                f"latency_mode='uniform' explicitly (and report it as fixed-delay)."
-            )
+                f"latency_mode='uniform' explicitly (and report it as fixed-delay).")
         fix_ts = d[col].to_numpy(dtype=float)
     elif latency_mode == "uniform":
         fix_ts = np.full(n, np.nan)

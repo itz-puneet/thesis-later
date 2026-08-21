@@ -1,9 +1,7 @@
-"""Phase 1 evaluation: SZZ variant quality against human ground truth oracle.
+"""PATCH: corrected Phase 1 evaluation (replaces experiments/evaluate_confusion_matrix.py).
 
-Evaluates 6 SZZ variants against the JIT-Fine ground truth oracle across all 21 projects.
-
-Fixes applied:
-1. NaN labels (in BSZZ/AGSZZ files) -> 0 ("SZZ made no claim = not flagged"),
+Fixes vs original:
+1. NaN labels (9,712 in BSZZ/AGSZZ files) -> 0 ("SZZ made no claim = not flagged"),
    matching how codebase/data/loader.py builds Phase 2 data. Phase 1 and Phase 2
    now measure the SAME labels.
 2. LEFT join on the full oracle universe (27,319 commits) instead of inner join,
@@ -14,8 +12,7 @@ Fixes applied:
 5. Exports phase1_bias.json in the {variant: {fp_rate, fn_rate}} schema that
    Phase 3's noise injection expects (plus full metrics alongside).
 
-Usage:
-  python -m experiments.evaluate_confusion_matrix
+Usage:  python -m experiments.evaluate_confusion_matrix
 """
 from __future__ import annotations
 
