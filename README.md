@@ -111,7 +111,12 @@ Because `data/processed/phase2_commits.csv` is pre-consolidated, Phase 2 runs ou
 # Quick smoke test (3 seeds, 50 trees, 5 folds):
 python -m experiments.run_phase2_impact --fast
 
-# Full experiment across all 21 projects & 10 seeds (parallelized across CPU cores):
-python -m experiments.run_phase2_impact --n_jobs $(nproc)
+# Full experiment across all 21 projects & 10 seeds (auto-detects CPU cores by default):
+python -m experiments.run_phase2_impact
+
+# Or explicitly specifying workers on Linux / macOS:
+# python -m experiments.run_phase2_impact --n_jobs $(nproc)
+# Or on Windows (PowerShell):
+# python -m experiments.run_phase2_impact --n_jobs $env:NUMBER_OF_PROCESSORS
 ```
 

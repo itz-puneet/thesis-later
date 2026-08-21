@@ -10,6 +10,9 @@ results/*
 !results/phase1/
 results/phase1/*
 !results/phase1/*.csv
+!results/phase2/
+results/phase2/*
+!results/phase2/*.csv
 __pycache__/
 *.pyc
 venv/

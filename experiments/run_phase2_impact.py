@@ -287,7 +287,7 @@ def main():
     df_results = pd.DataFrame(all_records)
     raw_csv = PHASE2_RESULTS_DIR / "phase2_results.csv"
     df_results.to_csv(raw_csv, index=False)
-    print(f"✅ Saved raw results to {raw_csv}")
+    print(f"[OK] Saved raw results to {raw_csv}")
 
     # 4. Compute and save summary table
     summary_df = (
@@ -297,13 +297,13 @@ def main():
     )
     summary_csv = PHASE2_RESULTS_DIR / "phase2_summary.csv"
     summary_df.to_csv(summary_csv, index=False)
-    print(f"✅ Saved summary table to {summary_csv}")
+    print(f"[OK] Saved summary table to {summary_csv}")
 
     # 5. Compute and save statistical tests
     stats_df = compute_statistical_tests(df_results)
     stats_csv = PHASE2_RESULTS_DIR / "statistical_tests.csv"
     stats_df.to_csv(stats_csv, index=False)
-    print(f"✅ Saved statistical test results to {stats_csv}")
+    print(f"[OK] Saved statistical test results to {stats_csv}")
 
     # 6. Compute and save Inflation Ladder table
     inflation_ladder = (
@@ -315,7 +315,7 @@ def main():
     )
     ladder_csv = PHASE2_RESULTS_DIR / "inflation_ladder.csv"
     inflation_ladder.to_csv(ladder_csv, index=False)
-    print(f"✅ Saved inflation ladder to {ladder_csv}")
+    print(f"[OK] Saved inflation ladder to {ladder_csv}")
 
     # Display headline table in console
     print("\n" + "=" * 70)

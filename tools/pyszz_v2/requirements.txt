@@ -1,7 +1,6 @@
 GitPython
 PyDriller
 PyYAML
-options
 testresources
 dateparser
 networkx

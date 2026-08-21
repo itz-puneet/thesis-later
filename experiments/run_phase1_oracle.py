@@ -112,11 +112,11 @@ def main():
                     results_df['inducing_commit_hash'] = results_df['inducing_commit_hash'].apply(lambda x: json.dumps(x))
                 results_df.to_csv(output_file, index=False)
                 
-                print(f"✅ Success! Saved to {output_file.name}")
+                print(f"[OK] Success! Saved to {output_file.name}")
                 print(f"Found inducing commits for {len(results_df)} fixes using {variant.upper()}.")
                 
             except Exception as e:
-                print(f"❌ ERROR: Failed to run {variant.upper()} on {project_name}: {e}")
+                print(f"[ERROR] Failed to run {variant.upper()} on {project_name}: {e}")
                 # Continue with the next variant instead of stopping the whole batch
                 continue
 

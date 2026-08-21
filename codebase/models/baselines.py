@@ -70,7 +70,7 @@ class JITLine:
         self.rf = RandomForestClassifier(
             n_estimators=n_estimators,
             random_state=seed,
-            n_jobs=-1,
+            n_jobs=1,
             class_weight="balanced_subsample"
         )
 
