@@ -56,7 +56,7 @@ def main():
     raw_data_dir = base_dir / "data" / "raw"
     dataset_csv = raw_data_dir / "jit_defects4j.csv"
     pyszz_dir = base_dir / "tools" / "pyszz_v2"
-    results_dir = base_dir / "results" / "phase1_defect_level"
+    results_dir = base_dir / "results" / "phase1"
     
     # Create directories if they don't exist
     raw_data_dir.mkdir(parents=True, exist_ok=True)

@@ -71,5 +71,5 @@ pip install -r requirements.txt
 
 Example command to run phase 1:
 ```bash
-python -m experiments.run_phase1 --data <path-to-data>
+python -m experiments.run_phase1_oracle --data <path-to-data>
 ```

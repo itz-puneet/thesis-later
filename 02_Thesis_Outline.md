@@ -82,7 +82,7 @@ Target length guidance assumes a Master's thesis of ~70–100 pages; scale as yo
 
 | Chapter | Experiment script | Key outputs |
 |---|---|---|
-| Ch. 4 | `experiments/run_phase1.py` | bias table, kappa heatmap, `phase1_bias.json` |
-| Ch. 5 | `experiments/run_phase2.py` | regime × label-source matrix, inflation plot |
-| Ch. 6 | `experiments/run_phase3.py` | dose-response curves, ORB internals traces |
-| Ch. 7 | `experiments/run_phase4.py` | recovery curves, ablation table |
+| Ch. 4 | `experiments/run_phase1_oracle.py` | bias table, kappa heatmap, `phase1_bias.json` |
+| Ch. 5 | `experiments/run_phase2_impact.py` | regime × label-source matrix, inflation plot |
+| Ch. 6 | `experiments/run_phase3_noise.py` | dose-response curves, ORB internals traces |
+| Ch. 7 | `experiments/run_phase4_na_orb.py` | recovery curves, ablation table |
