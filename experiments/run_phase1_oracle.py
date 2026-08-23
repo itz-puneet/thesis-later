@@ -15,10 +15,12 @@ import sys
 import pandas as pd
 
 # Add our local srcML installation to PATH and LD_LIBRARY_PATH so PySZZ can find it
-SRCML_DIR = Path(__file__).parent.parent / "tools" / "srcml"
+SRCML_DIR = Path(__file__).resolve().parent.parent / "tools" / "srcml"
 if SRCML_DIR.exists():
-    os.environ["PATH"] = f"{SRCML_DIR / 'usr' / 'bin'}:{os.environ.get('PATH', '')}"
-    os.environ["LD_LIBRARY_PATH"] = f"{SRCML_DIR / 'usr' / 'lib'}:{os.environ.get('LD_LIBRARY_PATH', '')}"
+    bin_dir = str(SRCML_DIR / "usr" / "bin")
+    lib_dir = str(SRCML_DIR / "usr" / "lib")
+    os.environ["PATH"] = f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}"
+    os.environ["LD_LIBRARY_PATH"] = f"{lib_dir}{os.pathsep}{os.environ.get('LD_LIBRARY_PATH', '')}"
 
 # Add parent directory to Python path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
