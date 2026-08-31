@@ -74,18 +74,17 @@ def generate_phase1_figures(df_commits, phase1_bias):
     
     rows = []
     for var, stats in phase1_bias.items():
-        tp = stats['TP']
-        fp = stats['FP']
-        fn = stats['FN']
-        tn = stats['TN']
-        prec = stats['Precision']
-        rec = stats['Recall']
-        f1 = stats['F1']
-        fpr = fp / (fp + tn) if (fp + tn) > 0 else 0
-        fnr = fn / (fn + tp) if (fn + tp) > 0 else 0
-        denom = np.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
-        mcc = (tp * tn - fp * fn) / denom if denom > 0 else 0
-        kappa = 2 * (tp * tn - fp * fn) / ((tp + fp) * (fp + tn) + (tp + fn) * (fn + tn)) if ((tp + fp) * (fp + tn) + (tp + fn) * (fn + tn)) > 0 else 0
+        tp = stats.get('TP', 0)
+        fp = stats.get('FP', 0)
+        fn = stats.get('FN', 0)
+        tn = stats.get('TN', 0)
+        prec = stats.get('precision', stats.get('Precision', 0.0))
+        rec = stats.get('recall', stats.get('Recall', 0.0))
+        f1 = stats.get('f1', stats.get('F1', 0.0))
+        fpr = stats.get('fp_rate', stats.get('FPR', (fp / (fp + tn) if (fp + tn) > 0 else 0)))
+        fnr = stats.get('fn_rate', stats.get('FNR', (fn / (fn + tp) if (fn + tp) > 0 else 0)))
+        mcc = stats.get('mcc', stats.get('MCC', 0.0))
+        kappa = stats.get('kappa', stats.get('Kappa', 0.0))
         rows.append({
             "Variant": var,
             "Precision": prec,
