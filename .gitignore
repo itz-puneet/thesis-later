@@ -21,4 +21,7 @@ __pycache__/
 venv/
 .venv/
 .vscode/
-
+tools/pyszz_v2/_szztemp/
+tools/pyszz_v2/out/
+*.log
+*.tmp
