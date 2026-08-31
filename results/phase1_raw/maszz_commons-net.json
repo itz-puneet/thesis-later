@@ -1,0 +1,1397 @@
+[
+  {
+    "fix_commit_hash": "fbfa44845e218d4408f511e7f36c0bde90a5909f",
+    "inducing_commit_hash": [
+      "c2747b5bcb2756bf961042dd051678f0f3eeffb3",
+      "0a741b42ef6ca8df07e8600ab20875900418e551",
+      "db75b58a7e2f8335af25dee367dfea1ba8e7dae2",
+      "a5392947e0fc05affd02e36767ac8c25922bcf7e"
+    ]
+  },
+  {
+    "fix_commit_hash": "9ae56b86433e209c8b0d43cab1ba419825cea391",
+    "inducing_commit_hash": [
+      "5b58eea49cad7f5a7c4d133495b9cdbd249a6116",
+      "dbb5d3ea1b519160940ba54edada59cbcd35abf0",
+      "828680c4f2d608b5bb42005b3bb687e663965fa4"
+    ]
+  },
+  {
+    "fix_commit_hash": "a8bd4d8a8f2f9cbe40e4f3e5b2e40f31b96f3710",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "5e67ea11692ba43b6f223792dbc20e5e6d2c20da",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "32f967514cec204357ffb43a4566ddb285c33318",
+    "inducing_commit_hash": [
+      "a8bd4d8a8f2f9cbe40e4f3e5b2e40f31b96f3710",
+      "be5308c6cad0ac40160d631901b16b5fa43bbccf",
+      "54d29ef30dac4168e79a10627909e9b747215186",
+      "b2d10cb1d8dada6e7c6c5b44488aaed419abf6bb",
+      "eb945ea4b8810c4a32f622b1bea7781079a3ab37",
+      "446e725ddc0a61ec47291d92a07f0bcfe942bdc8"
+    ]
+  },
+  {
+    "fix_commit_hash": "15d6f2e24f749940e4ae97ca71b2cfeb4e261537",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "a02430dbd4636baa43cd3d496a94c33c29cbedd4",
+    "inducing_commit_hash": [
+      "b2d10cb1d8dada6e7c6c5b44488aaed419abf6bb",
+      "41fcf52a10bf31693aae21df5776d051f282002b",
+      "e321b9be6df156d9a705c084aded741e1ce1ba6f",
+      "db75b58a7e2f8335af25dee367dfea1ba8e7dae2",
+      "cdb94be8243c50d9549411f829e01d23846c4d53"
+    ]
+  },
+  {
+    "fix_commit_hash": "30f5293c15477339ca1f6e5ba60a17da24e08000",
+    "inducing_commit_hash": [
+      "72fd752a5822235f8e57b898bfa60c535b1de5cf"
+    ]
+  },
+  {
+    "fix_commit_hash": "f4545a9819bd02a08c8b510bd4ec1f6d6ccbe2d1",
+    "inducing_commit_hash": [
+      "8a9331e0b34fbdaa1113a28c4df4ccf40e8a8e08",
+      "4ee460a9622c555fbd283a8587168ca9462a045f"
+    ]
+  },
+  {
+    "fix_commit_hash": "2ff4c4686bd5f50f0304eaeeb58231d1b8257047",
+    "inducing_commit_hash": [
+      "72fd752a5822235f8e57b898bfa60c535b1de5cf"
+    ]
+  },
+  {
+    "fix_commit_hash": "d0030deefaaadacb16fd05c8211ad364c341f236",
+    "inducing_commit_hash": [
+      "63a7c4cd3caf439c36f4135d78bb1f5afffd3ed6",
+      "5a7bd459998a5aa05f1579b907942b5a22fcf059"
+    ]
+  },
+  {
+    "fix_commit_hash": "c06a8097f8f1bab9709f7c212c0b4e04bacdc0cf",
+    "inducing_commit_hash": [
+      "12640f3bf048f99830e6fbb735adcc09cb078439",
+      "a1040ab2716b65deb415dcde083789c025e392ef"
+    ]
+  },
+  {
+    "fix_commit_hash": "03e9d4353d65c29bdc858434e4021aa37930c600",
+    "inducing_commit_hash": [
+      "c06a8097f8f1bab9709f7c212c0b4e04bacdc0cf",
+      "12640f3bf048f99830e6fbb735adcc09cb078439"
+    ]
+  },
+  {
+    "fix_commit_hash": "6e8b80597865492bbd92e813227abdaf01787372",
+    "inducing_commit_hash": [
+      "c06a8097f8f1bab9709f7c212c0b4e04bacdc0cf",
+      "12640f3bf048f99830e6fbb735adcc09cb078439",
+      "03e9d4353d65c29bdc858434e4021aa37930c600"
+    ]
+  },
+  {
+    "fix_commit_hash": "3330b3724e740a8d621db655a10c995782e0ed81",
+    "inducing_commit_hash": [
+      "dbb5d3ea1b519160940ba54edada59cbcd35abf0"
+    ]
+  },
+  {
+    "fix_commit_hash": "ecd741889d152da60eb793db2adfd5bb0a32ba1a",
+    "inducing_commit_hash": [
+      "c06a8097f8f1bab9709f7c212c0b4e04bacdc0cf",
+      "6e8b80597865492bbd92e813227abdaf01787372",
+      "03e9d4353d65c29bdc858434e4021aa37930c600",
+      "bc0b480a0c55e64a382f192c5dc9726ace54bf3d"
+    ]
+  },
+  {
+    "fix_commit_hash": "5b79201e660fd48cfc8d9a659fb252e56d9bfff3",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "7ff8c399dcf729ca74615be65cc27e9f2f873e0e",
+    "inducing_commit_hash": [
+      "7a8740a3d6d7bcab3d8a9cf7fa70f33dd4824863",
+      "406e22d185019eaa104b36197159944bd83c9049"
+    ]
+  },
+  {
+    "fix_commit_hash": "3d66e27a335aa95c30243a05e8e2a6a79dc7dd12",
+    "inducing_commit_hash": [
+      "5b58eea49cad7f5a7c4d133495b9cdbd249a6116"
+    ]
+  },
+  {
+    "fix_commit_hash": "3b5c227430258d71dd388520f1e0119a03077d91",
+    "inducing_commit_hash": [
+      "5b58eea49cad7f5a7c4d133495b9cdbd249a6116",
+      "dbb5d3ea1b519160940ba54edada59cbcd35abf0"
+    ]
+  },
+  {
+    "fix_commit_hash": "3ac1e43e80b3e5572345f0a9534d428d03e5f32d",
+    "inducing_commit_hash": [
+      "7a8740a3d6d7bcab3d8a9cf7fa70f33dd4824863",
+      "7ff8c399dcf729ca74615be65cc27e9f2f873e0e",
+      "406e22d185019eaa104b36197159944bd83c9049",
+      "38735ba34db11c304a0b6672f67a2104171ff45e",
+      "cdb94be8243c50d9549411f829e01d23846c4d53"
+    ]
+  },
+  {
+    "fix_commit_hash": "bb1340e9b76fc1e84599a59b1062f1bc6d617ffe",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "a42babc12533b73ee2ff1d51046f63a8933d8746",
+    "inducing_commit_hash": [
+      "38735ba34db11c304a0b6672f67a2104171ff45e"
+    ]
+  },
+  {
+    "fix_commit_hash": "5728ff6b835db16dbc3f299f6b47fdbcd4a8f924",
+    "inducing_commit_hash": [
+      "406e22d185019eaa104b36197159944bd83c9049",
+      "38735ba34db11c304a0b6672f67a2104171ff45e",
+      "3ac1e43e80b3e5572345f0a9534d428d03e5f32d"
+    ]
+  },
+  {
+    "fix_commit_hash": "e270c8e2b469b6f085773c352c4f1b932432b8b7",
+    "inducing_commit_hash": [
+      "a42babc12533b73ee2ff1d51046f63a8933d8746",
+      "38735ba34db11c304a0b6672f67a2104171ff45e"
+    ]
+  },
+  {
+    "fix_commit_hash": "80644cdc6e261792dd77631f677a33f24913d610",
+    "inducing_commit_hash": [
+      "db75b58a7e2f8335af25dee367dfea1ba8e7dae2"
+    ]
+  },
+  {
+    "fix_commit_hash": "5ab01d476a61a803da0766a2b0122f26ac2845a2",
+    "inducing_commit_hash": [
+      "5728ff6b835db16dbc3f299f6b47fdbcd4a8f924"
+    ]
+  },
+  {
+    "fix_commit_hash": "912684d1fd96f18cd9310aa6d623d6692e1e135d",
+    "inducing_commit_hash": [
+      "759ddb1f33e80387e4568a9fb21e5311b797607f"
+    ]
+  },
+  {
+    "fix_commit_hash": "f7881d9623af58f20e91520b1be585d9cb16cb81",
+    "inducing_commit_hash": [
+      "3d46a00aefb7af74da875a858a711b23e52bab95",
+      "b00341642f8aebc2171b8daf23317da59639da89",
+      "78ba66876d9356aa6e24090602ded0f05df70b27",
+      "3ac1e43e80b3e5572345f0a9534d428d03e5f32d",
+      "18c69988889123b0dc584d6368cd075b787f9cf6",
+      "5b79201e660fd48cfc8d9a659fb252e56d9bfff3"
+    ]
+  },
+  {
+    "fix_commit_hash": "f755c2763b5dc7e0eb622f7a2a36b3c423acf438",
+    "inducing_commit_hash": [
+      "f7881d9623af58f20e91520b1be585d9cb16cb81",
+      "5ab01d476a61a803da0766a2b0122f26ac2845a2",
+      "35befdda00fb607f463e167c5c2a76d6d240cfb7",
+      "3d46a00aefb7af74da875a858a711b23e52bab95",
+      "7a8740a3d6d7bcab3d8a9cf7fa70f33dd4824863",
+      "3ac1e43e80b3e5572345f0a9534d428d03e5f32d",
+      "7ff8c399dcf729ca74615be65cc27e9f2f873e0e",
+      "5728ff6b835db16dbc3f299f6b47fdbcd4a8f924",
+      "18c69988889123b0dc584d6368cd075b787f9cf6",
+      "5b79201e660fd48cfc8d9a659fb252e56d9bfff3",
+      "406e22d185019eaa104b36197159944bd83c9049",
+      "558884cdce1000f9eab1e3bfff0791120f6294e7"
+    ]
+  },
+  {
+    "fix_commit_hash": "c2d2e97a72d457cb8bfd3ab6bbe0f03ec765e4c5",
+    "inducing_commit_hash": [
+      "7f6d01d121accde2c83fea3658c311305b8d464a",
+      "38735ba34db11c304a0b6672f67a2104171ff45e",
+      "7520d2ad10fae078887b10c80641fa889e62d493",
+      "7ff8c399dcf729ca74615be65cc27e9f2f873e0e"
+    ]
+  },
+  {
+    "fix_commit_hash": "9c50b9ff95cdc9e9f7266431fb3372977dbadb8b",
+    "inducing_commit_hash": [
+      "21f02027300e844ddc172b22edc1af2892382be3",
+      "932856af457df7b2a1399e98b12350f56409f1e7",
+      "db75b58a7e2f8335af25dee367dfea1ba8e7dae2",
+      "3ac1e43e80b3e5572345f0a9534d428d03e5f32d",
+      "f755c2763b5dc7e0eb622f7a2a36b3c423acf438",
+      "1436e1c9b545dcd104b66c50f1940b28213a73ef",
+      "5b79201e660fd48cfc8d9a659fb252e56d9bfff3",
+      "5728ff6b835db16dbc3f299f6b47fdbcd4a8f924",
+      "780371088253f1d0283cf098b6f0676573b909cb"
+    ]
+  },
+  {
+    "fix_commit_hash": "b425789a43f03afb4faf1e48540a85ad09dc2349",
+    "inducing_commit_hash": [
+      "c2d2e97a72d457cb8bfd3ab6bbe0f03ec765e4c5",
+      "7a8740a3d6d7bcab3d8a9cf7fa70f33dd4824863",
+      "38735ba34db11c304a0b6672f67a2104171ff45e"
+    ]
+  },
+  {
+    "fix_commit_hash": "d56083c4e884f1f6b66ccbaf49bd802483393972",
+    "inducing_commit_hash": [
+      "7f6d01d121accde2c83fea3658c311305b8d464a",
+      "7a8740a3d6d7bcab3d8a9cf7fa70f33dd4824863"
+    ]
+  },
+  {
+    "fix_commit_hash": "d5108d7b1ab6f529d671f305b73254d16add8624",
+    "inducing_commit_hash": [
+      "81c4925a88a431cb20492c68bab9a89a5100dd12",
+      "38735ba34db11c304a0b6672f67a2104171ff45e"
+    ]
+  },
+  {
+    "fix_commit_hash": "40e38a6e72cc290ff90af422f50e4d1413b1d4c4",
+    "inducing_commit_hash": [
+      "9c50b9ff95cdc9e9f7266431fb3372977dbadb8b"
+    ]
+  },
+  {
+    "fix_commit_hash": "ff3d695958ef16b7d1c1f183e2c6424146f62b02",
+    "inducing_commit_hash": [
+      "fde9d5abcff0b7bdad23ae87a6096ea6dba5c774",
+      "fc6a7d30b2063db665c95b0114030f15eb45b811",
+      "7a8740a3d6d7bcab3d8a9cf7fa70f33dd4824863",
+      "b2c926d3c417255c171006fc6171657565b3893a",
+      "1350234289d4b994a1a5a01a5f9d374a0dfb98a0",
+      "72fd752a5822235f8e57b898bfa60c535b1de5cf"
+    ]
+  },
+  {
+    "fix_commit_hash": "aa15730a1563b241d61400d2564dc53cabca0c97",
+    "inducing_commit_hash": [
+      "3bd0f6de9989870f36a4b71ac5f558dd390bd443",
+      "b425789a43f03afb4faf1e48540a85ad09dc2349",
+      "fe68229d56d5dd499664c743384f7b29c566d09c",
+      "7520d2ad10fae078887b10c80641fa889e62d493",
+      "38735ba34db11c304a0b6672f67a2104171ff45e",
+      "1350234289d4b994a1a5a01a5f9d374a0dfb98a0",
+      "fc6a7d30b2063db665c95b0114030f15eb45b811"
+    ]
+  },
+  {
+    "fix_commit_hash": "8aedc3a2956c5b7aaf4ea43725ecb45e02e5949e",
+    "inducing_commit_hash": [
+      "ea3709b2fc01317222e7f9750f64cc96320896c8",
+      "ff3d695958ef16b7d1c1f183e2c6424146f62b02"
+    ]
+  },
+  {
+    "fix_commit_hash": "f636eda790b6ce99ea39188f5492bcdf5b5563bb",
+    "inducing_commit_hash": [
+      "262a97411cd00b68a7f2cf4aa7abcb329b1f77be"
+    ]
+  },
+  {
+    "fix_commit_hash": "f49423ac9427951b3775ab1bf301353ebf25576d",
+    "inducing_commit_hash": [
+      "c2747b5bcb2756bf961042dd051678f0f3eeffb3"
+    ]
+  },
+  {
+    "fix_commit_hash": "8f07073e9635c4140c4589f31d9b5fb30b27c910",
+    "inducing_commit_hash": [
+      "dbb5d3ea1b519160940ba54edada59cbcd35abf0",
+      "caf4e8bd4bc80eccb9597c3c0b2059ff49a469da"
+    ]
+  },
+  {
+    "fix_commit_hash": "b4c62fe4cb2e2c1520e1f4acb5cede22f3b0fceb",
+    "inducing_commit_hash": [
+      "b2c926d3c417255c171006fc6171657565b3893a",
+      "5b58eea49cad7f5a7c4d133495b9cdbd249a6116",
+      "828680c4f2d608b5bb42005b3bb687e663965fa4",
+      "013eb18a3136bd05095713e14285359e355680f6"
+    ]
+  },
+  {
+    "fix_commit_hash": "cb89d87864394169354cddfed1cf33d71cb97814",
+    "inducing_commit_hash": [
+      "f264bab9adfbb256e359fe4aad8dc9618e130ae8",
+      "8db762504de3fb01948064b1b1c7b27ad0f1c92f"
+    ]
+  },
+  {
+    "fix_commit_hash": "e22148d057d0059c1da5d92dbfff8a85ce4fd4ae",
+    "inducing_commit_hash": [
+      "048315535aa5aab321a2e6fd8f1c4327cfdaff70"
+    ]
+  },
+  {
+    "fix_commit_hash": "6c03eeff209e549b54fdb1067e62a9a780b521f5",
+    "inducing_commit_hash": [
+      "db75b58a7e2f8335af25dee367dfea1ba8e7dae2"
+    ]
+  },
+  {
+    "fix_commit_hash": "bd937a5b686c09b7f12225e131cc50d3138c146d",
+    "inducing_commit_hash": [
+      "0a741b42ef6ca8df07e8600ab20875900418e551"
+    ]
+  },
+  {
+    "fix_commit_hash": "4255137ba665d6010482e321a475ba3fe2db3b7d",
+    "inducing_commit_hash": [
+      "b3a0b8c5355e5588de6ea07e1cad9aba713e9655"
+    ]
+  },
+  {
+    "fix_commit_hash": "8b894fddfaaa187f97820f4a4b8b7b83e57cceaf",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "ad69abcb86e365dcb7e79f88c83e184ed485f9a5",
+    "inducing_commit_hash": [
+      "262a97411cd00b68a7f2cf4aa7abcb329b1f77be"
+    ]
+  },
+  {
+    "fix_commit_hash": "8caac5c5d24c01534ee50024693fe55226ac2146",
+    "inducing_commit_hash": [
+      "03f3cc2a0b1cdb45aee05b7e636a89dae5d6d1b9"
+    ]
+  },
+  {
+    "fix_commit_hash": "1d5499a5f07a5cb001a9bd9d40c28517d05e2a38",
+    "inducing_commit_hash": [
+      "c2d2e97a72d457cb8bfd3ab6bbe0f03ec765e4c5",
+      "7ff8c399dcf729ca74615be65cc27e9f2f873e0e"
+    ]
+  },
+  {
+    "fix_commit_hash": "927a15def0fa262faa355db80629e8408500e759",
+    "inducing_commit_hash": [
+      "759ddb1f33e80387e4568a9fb21e5311b797607f",
+      "a8bd4d8a8f2f9cbe40e4f3e5b2e40f31b96f3710",
+      "72fd752a5822235f8e57b898bfa60c535b1de5cf"
+    ]
+  },
+  {
+    "fix_commit_hash": "8a9331e0b34fbdaa1113a28c4df4ccf40e8a8e08",
+    "inducing_commit_hash": [
+      "4ee460a9622c555fbd283a8587168ca9462a045f"
+    ]
+  },
+  {
+    "fix_commit_hash": "950131d1876bf994194ca2400dcee9750d1f28ec",
+    "inducing_commit_hash": [
+      "828680c4f2d608b5bb42005b3bb687e663965fa4"
+    ]
+  },
+  {
+    "fix_commit_hash": "00f771359d6b1a09e660fbcad4e3ced0296c3e59",
+    "inducing_commit_hash": [
+      "67eacd6329ef9562513c1ae35c7f8e9eb7cae67a",
+      "c2bf97ea8fafc5c543f0dc4ac20217a69aa6e602",
+      "5b58eea49cad7f5a7c4d133495b9cdbd249a6116",
+      "4c0cbe1369d3246d53c2b27ec799a67664a982c6",
+      "d2b402da9d067dc2ef9c82b4f40d446427978dfb",
+      "048315535aa5aab321a2e6fd8f1c4327cfdaff70",
+      "ee5d40bd30851a55b3c7612e909bef452c906e8b"
+    ]
+  },
+  {
+    "fix_commit_hash": "1d9680147c35a81cc1925b467f640a575462135a",
+    "inducing_commit_hash": [
+      "2f6cce0a9de948b6b59c0dab22ee4b58c809fe6c"
+    ]
+  },
+  {
+    "fix_commit_hash": "948baf14a67ffdc6a16e3b1bc23e1f1ad22c66b3",
+    "inducing_commit_hash": [
+      "e321b9be6df156d9a705c084aded741e1ce1ba6f",
+      "db75b58a7e2f8335af25dee367dfea1ba8e7dae2"
+    ]
+  },
+  {
+    "fix_commit_hash": "dd17a2d97f3a1965886fb8bc16e14ebbe0cfbbda",
+    "inducing_commit_hash": [
+      "67eacd6329ef9562513c1ae35c7f8e9eb7cae67a",
+      "dbb5d3ea1b519160940ba54edada59cbcd35abf0",
+      "e102721844f2add2bfe0ff6ec56a29cd53143429"
+    ]
+  },
+  {
+    "fix_commit_hash": "a1d712291913f2210b3d5307add2235e554d588d",
+    "inducing_commit_hash": [
+      "eed40040affe2e85bf507ac05c2451caa0e21b96"
+    ]
+  },
+  {
+    "fix_commit_hash": "a425d6f5925bdde09018e72ded45b5a8e28b0735",
+    "inducing_commit_hash": [
+      "5c4bac7c778596338329323482f73d3fbc426a29"
+    ]
+  },
+  {
+    "fix_commit_hash": "41fcf52a10bf31693aae21df5776d051f282002b",
+    "inducing_commit_hash": [
+      "db75b58a7e2f8335af25dee367dfea1ba8e7dae2"
+    ]
+  },
+  {
+    "fix_commit_hash": "3ce24369a167c7ae2de2bf50c3f8fc59f2a54446",
+    "inducing_commit_hash": [
+      "a7fb411ce58472825ec1df10282ad883cbd057ee"
+    ]
+  },
+  {
+    "fix_commit_hash": "eacb4eb812111f8cb8315b291e9b8e8115849270",
+    "inducing_commit_hash": [
+      "7a8740a3d6d7bcab3d8a9cf7fa70f33dd4824863",
+      "9e06a331d8154d96947e8598c91502ae5bc87559",
+      "7ff8c399dcf729ca74615be65cc27e9f2f873e0e"
+    ]
+  },
+  {
+    "fix_commit_hash": "42424fdb6948b948ca64c333b136a0ccf79c619f",
+    "inducing_commit_hash": [
+      "048315535aa5aab321a2e6fd8f1c4327cfdaff70",
+      "e97e359cf24ce802fc53307dae5f267bc2d23c2b",
+      "4b216c0c95b9019e4b0e092e6682b20741271176",
+      "acbd0dd54778c9a6805abc9f4dd8aac8cadf1453",
+      "544a822bd63b07c4ca09cc8c5f377849b89e72c1",
+      "eacb4eb812111f8cb8315b291e9b8e8115849270",
+      "3f02322c223c7b712e42c986427f629e133de94b",
+      "720f5199a742c882521fc280872a8856194ccdc4",
+      "00f771359d6b1a09e660fbcad4e3ced0296c3e59"
+    ]
+  },
+  {
+    "fix_commit_hash": "4b9305a6ccaa1e4210277c978d226c0810695d1e",
+    "inducing_commit_hash": [
+      "a02430dbd4636baa43cd3d496a94c33c29cbedd4",
+      "db75b58a7e2f8335af25dee367dfea1ba8e7dae2"
+    ]
+  },
+  {
+    "fix_commit_hash": "52d8d739a6ba7e623ba72855597fc0ba5ba77ad3",
+    "inducing_commit_hash": [
+      "a02430dbd4636baa43cd3d496a94c33c29cbedd4"
+    ]
+  },
+  {
+    "fix_commit_hash": "3f0ede898db6d25d9b395367a0464c7784a7f59c",
+    "inducing_commit_hash": [
+      "eec7b631d8708307b1cd6b127c2e9f99eede7958"
+    ]
+  },
+  {
+    "fix_commit_hash": "131631c83ba063c63945b87d7fee95e7199897cb",
+    "inducing_commit_hash": [
+      "eec7b631d8708307b1cd6b127c2e9f99eede7958"
+    ]
+  },
+  {
+    "fix_commit_hash": "09348fb06810a9683835cf626fdbcb8510410e7d",
+    "inducing_commit_hash": [
+      "5b58eea49cad7f5a7c4d133495b9cdbd249a6116",
+      "048315535aa5aab321a2e6fd8f1c4327cfdaff70",
+      "3b5c227430258d71dd388520f1e0119a03077d91",
+      "932856af457df7b2a1399e98b12350f56409f1e7",
+      "759ddb1f33e80387e4568a9fb21e5311b797607f",
+      "3915d1b650b0c7263bc1d37a628e0383866f5b74",
+      "cf5944112edb28e47b15ed525aa6d089f3eddf41",
+      "1207673d23125a673520aef93efe25b3e1e9a20a",
+      "72fd752a5822235f8e57b898bfa60c535b1de5cf",
+      "da30e3d378e6630fae2e8612f2fa488dd612d6db",
+      "63a7c4cd3caf439c36f4135d78bb1f5afffd3ed6",
+      "a8bd4d8a8f2f9cbe40e4f3e5b2e40f31b96f3710",
+      "a7fb411ce58472825ec1df10282ad883cbd057ee",
+      "7b60d1ec0faf6491ac36d4a17a845fa2b971fce0",
+      "a2d0cf17989ff23bcd64453f73293fef920735fa",
+      "eed40040affe2e85bf507ac05c2451caa0e21b96",
+      "3d66e27a335aa95c30243a05e8e2a6a79dc7dd12",
+      "38735ba34db11c304a0b6672f67a2104171ff45e",
+      "afc96c08a80a5b27755b99a1a318d3eae9fc4a9b"
+    ]
+  },
+  {
+    "fix_commit_hash": "91a8b14869510c2008236cc7f8ed8f56b29eed67",
+    "inducing_commit_hash": [
+      "72fd752a5822235f8e57b898bfa60c535b1de5cf"
+    ]
+  },
+  {
+    "fix_commit_hash": "be17a6d191362ff5363ec7d9092e19a6bc29b79f",
+    "inducing_commit_hash": [
+      "72fd752a5822235f8e57b898bfa60c535b1de5cf"
+    ]
+  },
+  {
+    "fix_commit_hash": "2749ce0e8faaf8434b72c56bab946b0e03a5285f",
+    "inducing_commit_hash": [
+      "91a8b14869510c2008236cc7f8ed8f56b29eed67"
+    ]
+  },
+  {
+    "fix_commit_hash": "6af5849865fb193727a996d894a32160fcfcd047",
+    "inducing_commit_hash": [
+      "be17a6d191362ff5363ec7d9092e19a6bc29b79f"
+    ]
+  },
+  {
+    "fix_commit_hash": "98b3ea94e70512d81008dbdb563ff7b096d00e4b",
+    "inducing_commit_hash": [
+      "91a8b14869510c2008236cc7f8ed8f56b29eed67"
+    ]
+  },
+  {
+    "fix_commit_hash": "f67e84f14ef74212c9168ecc63e38fd7ef3d1ab5",
+    "inducing_commit_hash": [
+      "be17a6d191362ff5363ec7d9092e19a6bc29b79f"
+    ]
+  },
+  {
+    "fix_commit_hash": "3687d9331a0002f7735dddf93fc0bc19939bf94a",
+    "inducing_commit_hash": [
+      "67eacd6329ef9562513c1ae35c7f8e9eb7cae67a"
+    ]
+  },
+  {
+    "fix_commit_hash": "84a574e82115eeeeed3d115f2a09d0a080b8c7c5",
+    "inducing_commit_hash": [
+      "67eacd6329ef9562513c1ae35c7f8e9eb7cae67a"
+    ]
+  },
+  {
+    "fix_commit_hash": "0d84e07a916e35eae53961dcf43522ec89e8a2e6",
+    "inducing_commit_hash": [
+      "5e67ea11692ba43b6f223792dbc20e5e6d2c20da",
+      "91a8b14869510c2008236cc7f8ed8f56b29eed67"
+    ]
+  },
+  {
+    "fix_commit_hash": "46c188e2a222fe567926cd5c9291855238622ee5",
+    "inducing_commit_hash": [
+      "5b58eea49cad7f5a7c4d133495b9cdbd249a6116",
+      "9cdfe8b631f8520c9bcf72b76cc6a9e9a5392222"
+    ]
+  },
+  {
+    "fix_commit_hash": "8601927a7abd8a549d737024575fa97cf0643b2e",
+    "inducing_commit_hash": [
+      "a6fa84abace07ed7894969954c6a366bf80b791f",
+      "5b58eea49cad7f5a7c4d133495b9cdbd249a6116",
+      "dbb5d3ea1b519160940ba54edada59cbcd35abf0",
+      "9cdfe8b631f8520c9bcf72b76cc6a9e9a5392222"
+    ]
+  },
+  {
+    "fix_commit_hash": "be5af473dca0fd652be1637d824d0baebb492947",
+    "inducing_commit_hash": [
+      "5b58eea49cad7f5a7c4d133495b9cdbd249a6116",
+      "9ee3325628e22cddd78d185b0159f086574ccd24",
+      "0c4aa76c73c7ded722b397225889ad7d8afd1c4c",
+      "626957070b65c00396a43c4e737d5ff8ae3017f1",
+      "2b596b0d76dd54e272deb092e724070ecf9fe721",
+      "a3b42c1a0d76d8f492ba31395129c508dd8e90d8",
+      "f7271cc2f293d479d4d1511baa797a96c899ce77",
+      "f9cfa140025093b43483a20b143703950e027678",
+      "828680c4f2d608b5bb42005b3bb687e663965fa4",
+      "249dd201875309f4be02ee11732de47a6139512a",
+      "fa26f70b591cc65443ca4686f1c0aa879d369585"
+    ]
+  },
+  {
+    "fix_commit_hash": "80852c26ff492e9ed7ce54f723064e8dba1349f9",
+    "inducing_commit_hash": [
+      "eacb4eb812111f8cb8315b291e9b8e8115849270"
+    ]
+  },
+  {
+    "fix_commit_hash": "b1147fde1076f89b396403cc3a22b4871cb1f5ed",
+    "inducing_commit_hash": [
+      "44cec10c8d2683429a48565072098a89426ed27f"
+    ]
+  },
+  {
+    "fix_commit_hash": "cb64f2d8a6198c301e263ca41f56c79240cbf4dc",
+    "inducing_commit_hash": [
+      "418ed6d5f337221ec4c64bef240ab3c994603509"
+    ]
+  },
+  {
+    "fix_commit_hash": "a8da84c614ba6e6e87c6c91e0c426ddfec2766a2",
+    "inducing_commit_hash": [
+      "4e61aa8f8adb0e1ec836a474d500294f423781c5",
+      "7a8740a3d6d7bcab3d8a9cf7fa70f33dd4824863",
+      "9e06a331d8154d96947e8598c91502ae5bc87559",
+      "1078ab218d3c0e62c313eec88545d18813b0efb7"
+    ]
+  },
+  {
+    "fix_commit_hash": "5e68290386c9a2e5aef3b0442d12d6616010904d",
+    "inducing_commit_hash": [
+      "7ff8c399dcf729ca74615be65cc27e9f2f873e0e"
+    ]
+  },
+  {
+    "fix_commit_hash": "cc8870db1014308fb6f426aa72ae697e25a6a199",
+    "inducing_commit_hash": [
+      "b2d10cb1d8dada6e7c6c5b44488aaed419abf6bb"
+    ]
+  },
+  {
+    "fix_commit_hash": "af63187f263d9926c564078d15eac90feae0159d",
+    "inducing_commit_hash": [
+      "b8bc7f83cf3123de1440fd48c65158176132b334",
+      "418ed6d5f337221ec4c64bef240ab3c994603509"
+    ]
+  },
+  {
+    "fix_commit_hash": "88fd980936f1cc9b8f4ce7d373b852244a9edd68",
+    "inducing_commit_hash": [
+      "af63187f263d9926c564078d15eac90feae0159d",
+      "1b0ac023651d4f11e7557246cde380510beb3d34"
+    ]
+  },
+  {
+    "fix_commit_hash": "1382c2c056507a001a189872ea72b47ccb70f5df",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "a0ae3ae65e5762b66f79fe433db83896bbf21fb0",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "62fae6d4717fa7f868a8860f048ea14757cdc2ce",
+    "inducing_commit_hash": [
+      "a51964468f055a6337876fa810bfc8ae007020f0"
+    ]
+  },
+  {
+    "fix_commit_hash": "f7124894fa92c65537f5ba7567f653ce35107d0b",
+    "inducing_commit_hash": [
+      "828680c4f2d608b5bb42005b3bb687e663965fa4"
+    ]
+  },
+  {
+    "fix_commit_hash": "8ab9563f472ea43bf6a6a56d397560a53c2a7b07",
+    "inducing_commit_hash": [
+      "67eacd6329ef9562513c1ae35c7f8e9eb7cae67a",
+      "3e00967ef974a409014dad74c91631320f8df3cc"
+    ]
+  },
+  {
+    "fix_commit_hash": "5da07e27ef1bf17c39c642c437b23be9ff83d0c7",
+    "inducing_commit_hash": [
+      "44cec10c8d2683429a48565072098a89426ed27f"
+    ]
+  },
+  {
+    "fix_commit_hash": "6d6ab6d5df774861ea227281e0fa96f2d95db301",
+    "inducing_commit_hash": [
+      "4ee460a9622c555fbd283a8587168ca9462a045f"
+    ]
+  },
+  {
+    "fix_commit_hash": "ce7d1e157bbfd00cb9d48a80cdde0bf9ab6ea2c7",
+    "inducing_commit_hash": [
+      "a29009716c694f44b5469735268f3397b57e0612"
+    ]
+  },
+  {
+    "fix_commit_hash": "61537329d74bf2275332c38e85f8386910ad8b8d",
+    "inducing_commit_hash": [
+      "da30e3d378e6630fae2e8612f2fa488dd612d6db",
+      "a2d0cf17989ff23bcd64453f73293fef920735fa",
+      "013eb18a3136bd05095713e14285359e355680f6"
+    ]
+  },
+  {
+    "fix_commit_hash": "41bab7886c48607fe8a83c8ca1980f2a1e200ec9",
+    "inducing_commit_hash": [
+      "dbb5d3ea1b519160940ba54edada59cbcd35abf0"
+    ]
+  },
+  {
+    "fix_commit_hash": "045baf90953dda495c94258b5d3b2c835e9950e1",
+    "inducing_commit_hash": [
+      "62fae6d4717fa7f868a8860f048ea14757cdc2ce",
+      "a51964468f055a6337876fa810bfc8ae007020f0",
+      "7eba16ffcbbff68181d6c10fc9db8cb1aebd328d",
+      "8b1b7fd195403b6e35fb54f78d094d691d90e480",
+      "db75b58a7e2f8335af25dee367dfea1ba8e7dae2"
+    ]
+  },
+  {
+    "fix_commit_hash": "e771cac9982f083e3d9c2d4c827f6f03e88f67aa",
+    "inducing_commit_hash": [
+      "eec7b631d8708307b1cd6b127c2e9f99eede7958"
+    ]
+  },
+  {
+    "fix_commit_hash": "67ae3620fb00a020198884e189b2dee20b215091",
+    "inducing_commit_hash": [
+      "ebcf30d368d7cd8730df74d0d92ddd7ad9f3e7b0",
+      "ad1a51f03abbe85c6648c1b94d9ca440cb1d6966"
+    ]
+  },
+  {
+    "fix_commit_hash": "b9b9bae63e08432f620abd1c0e35abf662a6008d",
+    "inducing_commit_hash": [
+      "0a741b42ef6ca8df07e8600ab20875900418e551"
+    ]
+  },
+  {
+    "fix_commit_hash": "6986685e30874e009b537da8db5cceeee831020e",
+    "inducing_commit_hash": [
+      "f36e0083e47b383eb25eb96e21d3afd5bff34116"
+    ]
+  },
+  {
+    "fix_commit_hash": "4e9bd7f4681f6cd5efcb00f0360c0c3c2a5e8a91",
+    "inducing_commit_hash": [
+      "70e5a394a539ffca893abfb18a38238d8874df67",
+      "ab8ff6b7d0b8a6bb1845893e1dff62beeed7c394",
+      "316270d06b0664d9a0ed9d618300a6f6058fed99"
+    ]
+  },
+  {
+    "fix_commit_hash": "8dbb4478ddaae61c259b9e0a2328f3d0416eaf67",
+    "inducing_commit_hash": [
+      "fa016f84acd981a01b8b7797a47e8def640813b3",
+      "c2747b5bcb2756bf961042dd051678f0f3eeffb3",
+      "ee5d40bd30851a55b3c7612e909bef452c906e8b",
+      "c2bf97ea8fafc5c543f0dc4ac20217a69aa6e602",
+      "d789d1f413facd0c43bb96679a9c15497a6e7159",
+      "ca5da1a157782a2b62f7d7f71850c4b4647c4db0",
+      "17a1a0237411139a92fdfce236864cfa6ed4f87f"
+    ]
+  },
+  {
+    "fix_commit_hash": "fe1234086a20b2d6bc96b681d63113a88621a317",
+    "inducing_commit_hash": [
+      "627078166a70df589f5527402edf905a95d8040c"
+    ]
+  },
+  {
+    "fix_commit_hash": "848066f18feb98ec0b5f6410de7a551f906ef52e",
+    "inducing_commit_hash": [
+      "91db96b2f79d3e22238e5877fd75a8a8f4848c5c"
+    ]
+  },
+  {
+    "fix_commit_hash": "c5da682c24f811eeb549496aab363546855ac6ad",
+    "inducing_commit_hash": [
+      "9fc7e85de43213ae797b27dea5005c0cd58a943d"
+    ]
+  },
+  {
+    "fix_commit_hash": "f7f24e57b918744a807c880d21310b058bb420b2",
+    "inducing_commit_hash": [
+      "9cdfe8b631f8520c9bcf72b76cc6a9e9a5392222"
+    ]
+  },
+  {
+    "fix_commit_hash": "18b15845967cc3ba7e93a58dd5326b0ec3b4bd4a",
+    "inducing_commit_hash": [
+      "5b58eea49cad7f5a7c4d133495b9cdbd249a6116"
+    ]
+  },
+  {
+    "fix_commit_hash": "8701b165e5adbad70d2e44e2d4b5012cbdb0b6c0",
+    "inducing_commit_hash": [
+      "5b58eea49cad7f5a7c4d133495b9cdbd249a6116"
+    ]
+  },
+  {
+    "fix_commit_hash": "b90978e398f439cc7dde074c09830a3335b634ff",
+    "inducing_commit_hash": [
+      "5b58eea49cad7f5a7c4d133495b9cdbd249a6116"
+    ]
+  },
+  {
+    "fix_commit_hash": "b3231dce618c4be9b0821e86d30ad2e08f212b39",
+    "inducing_commit_hash": [
+      "eac3ab973e7ceffbb6a0af410aeacc619e3cc16f"
+    ]
+  },
+  {
+    "fix_commit_hash": "c8a59bff0bb7b4c826de95a3a0c14ae1168608ab",
+    "inducing_commit_hash": [
+      "70e5a394a539ffca893abfb18a38238d8874df67",
+      "7bba666b88d80afbc2d63ca28a13f9dee4b6539f"
+    ]
+  },
+  {
+    "fix_commit_hash": "3866a4412c0ce98490a002fb3e53d7c3de6c8ccb",
+    "inducing_commit_hash": [
+      "6f6518fe01fa4d8592bf0bdb684edc930542f5c6"
+    ]
+  },
+  {
+    "fix_commit_hash": "59bc4b860928befc6d1c7bd5fd58bd6d4697b5a4",
+    "inducing_commit_hash": [
+      "45b1a1677a20e970c4387af85aefef71b7a11d62"
+    ]
+  },
+  {
+    "fix_commit_hash": "5b470174edcf743bf152b66e208592289f559c10",
+    "inducing_commit_hash": [
+      "429c22bf4955cbc8ccd0867d093e72d9a664aa01",
+      "e43b619735ee7339578117d460d555cc09b3e3eb"
+    ]
+  },
+  {
+    "fix_commit_hash": "285f8dd4bd50f350e1590d41b6efafbd28c0e378",
+    "inducing_commit_hash": [
+      "048315535aa5aab321a2e6fd8f1c4327cfdaff70"
+    ]
+  },
+  {
+    "fix_commit_hash": "cde2efc78463a4ffeefb92974c573b540f0e421e",
+    "inducing_commit_hash": [
+      "e9d4d2b54e640897e3d12da30904d1c8c4b6a672"
+    ]
+  },
+  {
+    "fix_commit_hash": "9502e426da6c989b7d3aba8b579333f1af98cebc",
+    "inducing_commit_hash": [
+      "e9d4d2b54e640897e3d12da30904d1c8c4b6a672"
+    ]
+  },
+  {
+    "fix_commit_hash": "654041ab91173273c19ddba25e3fc9bffc5c8f3b",
+    "inducing_commit_hash": [
+      "53a599cedef64e98b6f47e3ba57824f90ba84baa"
+    ]
+  },
+  {
+    "fix_commit_hash": "ed1dc3161c91f05a6f9a42ac838de996f21cae95",
+    "inducing_commit_hash": [
+      "cde2efc78463a4ffeefb92974c573b540f0e421e",
+      "26bc12904f3b5d08e6238490607d98795a802ec8",
+      "e9d4d2b54e640897e3d12da30904d1c8c4b6a672"
+    ]
+  },
+  {
+    "fix_commit_hash": "c55f56d6459fc8c8a9a0df19cba54b3f8ca93de4",
+    "inducing_commit_hash": [
+      "dbb5d3ea1b519160940ba54edada59cbcd35abf0",
+      "9ae56b86433e209c8b0d43cab1ba419825cea391"
+    ]
+  },
+  {
+    "fix_commit_hash": "3097e3a539b5ddcd0ba8d3c8b1bcd296d10b41c6",
+    "inducing_commit_hash": [
+      "5b366f24f6169676c625bcdc2b5ca87aae13f915"
+    ]
+  },
+  {
+    "fix_commit_hash": "5129f619ec3884f80637ae10bdde3d4590f37fd5",
+    "inducing_commit_hash": [
+      "d99c9eb175dba3da104c10739d160d1f35f81d1d",
+      "10a6ae4bf21617f5295697f467368152472946ea"
+    ]
+  },
+  {
+    "fix_commit_hash": "c2ceeda2055ecfa02ff7dd44ee2db0625fba246f",
+    "inducing_commit_hash": [
+      "5fbc50a66288428e9487304a5609c5607bbb2e1f",
+      "0a741b42ef6ca8df07e8600ab20875900418e551",
+      "3e00967ef974a409014dad74c91631320f8df3cc"
+    ]
+  },
+  {
+    "fix_commit_hash": "31ca60623ff48b6b4563ee81901486277610c34b",
+    "inducing_commit_hash": [
+      "e426eef5c698462e9f4c840cb9e3d037419c93a2"
+    ]
+  },
+  {
+    "fix_commit_hash": "60de42750746ab7aa387e2946accd62bcc88a626",
+    "inducing_commit_hash": [
+      "262a97411cd00b68a7f2cf4aa7abcb329b1f77be",
+      "7413f76bfb900661468f01f7128f23e304e80f54"
+    ]
+  },
+  {
+    "fix_commit_hash": "a4ae7b2374bfab3729937f8e293f3621d3b07654",
+    "inducing_commit_hash": [
+      "3af0bc51e0a45370f06efd27e20066c163eea941",
+      "10a6ae4bf21617f5295697f467368152472946ea"
+    ]
+  },
+  {
+    "fix_commit_hash": "616cad1f99efc4d4bbb2220225e7169355197b3f",
+    "inducing_commit_hash": [
+      "c2bf97ea8fafc5c543f0dc4ac20217a69aa6e602",
+      "2fdc7fdfa5a7c833be84bec975bc6563af3ef9e9",
+      "c2747b5bcb2756bf961042dd051678f0f3eeffb3",
+      "2f17ffdd03878fb9ada0523215ba0f3f6407719d",
+      "c83e0eed208453327c8d5ed02d5f264a39374b72"
+    ]
+  },
+  {
+    "fix_commit_hash": "061d70dd783a9150601fc884cc93831d39efd751",
+    "inducing_commit_hash": [
+      "c2747b5bcb2756bf961042dd051678f0f3eeffb3",
+      "2fdc7fdfa5a7c833be84bec975bc6563af3ef9e9"
+    ]
+  },
+  {
+    "fix_commit_hash": "5555226cf8d009ee9fdb9164a919e96d768c529e",
+    "inducing_commit_hash": [
+      "aee94d0b51becdc83ea4a74e86b242d0ca3d6f0a",
+      "1889f939b4f44cd2f3fcfaba4442fb5dbc1c203e"
+    ]
+  },
+  {
+    "fix_commit_hash": "752a551c95abe091bd69a4c68c8f9d900e5e3b67",
+    "inducing_commit_hash": [
+      "bacfee1ff2e6394fd3a3b8798a6b9d5a5bc61b86"
+    ]
+  },
+  {
+    "fix_commit_hash": "b8f3226deacb7b4f969875c88670af85884dc531",
+    "inducing_commit_hash": [
+      "7a8740a3d6d7bcab3d8a9cf7fa70f33dd4824863",
+      "8aedc3a2956c5b7aaf4ea43725ecb45e02e5949e"
+    ]
+  },
+  {
+    "fix_commit_hash": "c422412d32e14e8afa259124b75f864b4c8833be",
+    "inducing_commit_hash": [
+      "a4a8f826376808e955a226fc7415a30dfa04ff34",
+      "809652a391eca056eebc494d106a4bb0ceefdd59",
+      "e9d4d2b54e640897e3d12da30904d1c8c4b6a672"
+    ]
+  },
+  {
+    "fix_commit_hash": "b01fe9bf2a54859d6e2d908d04aa760cf37b4674",
+    "inducing_commit_hash": [
+      "dfadc09fb25e22ef01021bb5a062b721f80e26fc"
+    ]
+  },
+  {
+    "fix_commit_hash": "e0aba3e6ccb8166991907ec82e38a58378af9b12",
+    "inducing_commit_hash": [
+      "dfadc09fb25e22ef01021bb5a062b721f80e26fc",
+      "20a4cc7811893962b8e21fdf2f52edcff611e803",
+      "e96cf344ddaaf7efe4a7e1f3fc79bd2656bdb63a",
+      "5337e4e7a559293c8c18adaae3d89f0bd150f821",
+      "231850ff0bfbf6883b74b9a2cedb02d30fd6b931"
+    ]
+  },
+  {
+    "fix_commit_hash": "5e34e05fd8e4ce1204e19eaf34e55aa95df4c5c0",
+    "inducing_commit_hash": [
+      "a03af288732eca729acbb8d8a3fdedfc2c2ccefa"
+    ]
+  },
+  {
+    "fix_commit_hash": "cd2d049fac6301077e0e5f441edb55bd71930448",
+    "inducing_commit_hash": [
+      "67eacd6329ef9562513c1ae35c7f8e9eb7cae67a",
+      "3f56c7abbd2d0257260d2c4a1af458273b4e3425",
+      "616cad1f99efc4d4bbb2220225e7169355197b3f",
+      "262a97411cd00b68a7f2cf4aa7abcb329b1f77be",
+      "4a77b384b16af7eadd2819907cfc77cdb8719b30",
+      "00104e73df37ae873fd6a6b2b9e0b69bd940ec25",
+      "b4fabe83da5d59144b32bd24001e769a30fd16ab",
+      "393d38e08ec3dd2bd83532ef6aa19a08d446d57f"
+    ]
+  },
+  {
+    "fix_commit_hash": "e8d76ef9c72325b773b9141a8566ce1147c1ebc6",
+    "inducing_commit_hash": [
+      "a19fae7262f9212ada7acde170ded85a12720705"
+    ]
+  },
+  {
+    "fix_commit_hash": "2586f75769dc9c82de31c47412f3b41076a9c55b",
+    "inducing_commit_hash": [
+      "00b2736ec0cd90f6bf8d70defe00397c0fdb5cec",
+      "32f967514cec204357ffb43a4566ddb285c33318"
+    ]
+  },
+  {
+    "fix_commit_hash": "f3eae24d5955de2a2b98b677718f29edbadd7b97",
+    "inducing_commit_hash": [
+      "91a8b14869510c2008236cc7f8ed8f56b29eed67"
+    ]
+  },
+  {
+    "fix_commit_hash": "02ae1898a1bc9eb7fe541072b6bd1ac0dbf6a915",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "7e3ba40585f473071bb3b05d155d3474f39d7575",
+    "inducing_commit_hash": [
+      "3e00967ef974a409014dad74c91631320f8df3cc",
+      "4ee460a9622c555fbd283a8587168ca9462a045f"
+    ]
+  },
+  {
+    "fix_commit_hash": "92dd4eb80de367ec8df62ee8aa4fcaf40f3eb16e",
+    "inducing_commit_hash": [
+      "4ee460a9622c555fbd283a8587168ca9462a045f"
+    ]
+  },
+  {
+    "fix_commit_hash": "f42e49c710e732f9be1efe22568f72d6db699192",
+    "inducing_commit_hash": [
+      "86450a6f5d7a79021c6d9d5aa9cc84ef5209fdbe"
+    ]
+  },
+  {
+    "fix_commit_hash": "208e8af1160c871a98547aa02a2be048a8d18530",
+    "inducing_commit_hash": [
+      "70e5a394a539ffca893abfb18a38238d8874df67"
+    ]
+  },
+  {
+    "fix_commit_hash": "0af2fc75f2a7a9e6f5021c68c7d503feb596bd52",
+    "inducing_commit_hash": [
+      "0a3c3449fe484d17b04516d562226337c1b10255"
+    ]
+  },
+  {
+    "fix_commit_hash": "bec3eaa55584966aeab7ad00cb16b07656b82553",
+    "inducing_commit_hash": [
+      "ff1547720ec4b433091745b33d1393a19b46538f",
+      "7a8740a3d6d7bcab3d8a9cf7fa70f33dd4824863",
+      "b00341642f8aebc2171b8daf23317da59639da89",
+      "b43ac62dccc9b4ce2033709aab0a78e1171f3072",
+      "1b0ac023651d4f11e7557246cde380510beb3d34"
+    ]
+  },
+  {
+    "fix_commit_hash": "fa4642768201907dad2d4e37009bf73cc2890ba2",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "6697e685dd8d3bb7a41c65a013276e79910203f5",
+    "inducing_commit_hash": [
+      "50a124bf76c36d47d797306ccadcb3d97c43caca"
+    ]
+  },
+  {
+    "fix_commit_hash": "108c5edc91122f913d6962d557e497da18a66067",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "d969913836215396e8f586ffe6e0151c47d057c5",
+    "inducing_commit_hash": [
+      "9d090d40ef488c6c8e0784da877b93a05034e339",
+      "418ed6d5f337221ec4c64bef240ab3c994603509"
+    ]
+  },
+  {
+    "fix_commit_hash": "76036954547d0ead559f4e7b258019b3355d05a4",
+    "inducing_commit_hash": [
+      "418ed6d5f337221ec4c64bef240ab3c994603509"
+    ]
+  },
+  {
+    "fix_commit_hash": "43a4141d3eab58255bd74a0e433fe54fbeee5ec4",
+    "inducing_commit_hash": [
+      "e426eef5c698462e9f4c840cb9e3d037419c93a2"
+    ]
+  },
+  {
+    "fix_commit_hash": "bd93ccda0479075258d18c1596d1c6408ab854f2",
+    "inducing_commit_hash": [
+      "43a4141d3eab58255bd74a0e433fe54fbeee5ec4"
+    ]
+  },
+  {
+    "fix_commit_hash": "e759649cdd49383c850d9d38eba21d0aab4df930",
+    "inducing_commit_hash": [
+      "11f725ec69d1aedc1302f50609c8a49d52fefc6d",
+      "e426eef5c698462e9f4c840cb9e3d037419c93a2"
+    ]
+  },
+  {
+    "fix_commit_hash": "d8f9af13ba04b2b483f6d441d1c4071174726988",
+    "inducing_commit_hash": [
+      "00b2736ec0cd90f6bf8d70defe00397c0fdb5cec",
+      "32f967514cec204357ffb43a4566ddb285c33318"
+    ]
+  },
+  {
+    "fix_commit_hash": "5cf11219eed630818a4ec33da3aa78486e02ee5b",
+    "inducing_commit_hash": [
+      "8fb7ba23bd49183b23767fab4445e0fbedc465fc",
+      "41c3c2131e7120dd0fe9ce783700811b63843ded",
+      "d0af24cdff2aecc9c63affbb395759d8ab44aee4"
+    ]
+  },
+  {
+    "fix_commit_hash": "1f53268e6c72cb65abecb04826c5e4243418789a",
+    "inducing_commit_hash": [
+      "8d1fd6ffc999fa31a28d54c33f0d9be3d502ea4b"
+    ]
+  },
+  {
+    "fix_commit_hash": "c93eb599030a1b151300fab3aff28a1bdff5905e",
+    "inducing_commit_hash": [
+      "156724c0bbe79aaf50321716c1fde151f89bc4a5",
+      "ed38176d7fe97113b449ee18a708c0201c00f4c3",
+      "6655daf3f8eaf1392a27dccbf0846d2a79e33616",
+      "d3e2a981256ba84529c72aa5fbd3cb5936d0029b"
+    ]
+  },
+  {
+    "fix_commit_hash": "5c76214e780ded02c42788f7031c36864352dd62",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "e6ba4903c70f15a22637d21a49fe49baa8370dc1",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "cf9cc619ffdc632b9fca6add307da0243d34bc20",
+    "inducing_commit_hash": [
+      "7a8740a3d6d7bcab3d8a9cf7fa70f33dd4824863"
+    ]
+  },
+  {
+    "fix_commit_hash": "d13cf6f856458e50e8e4528b5be87505fece74ee",
+    "inducing_commit_hash": [
+      "5b58eea49cad7f5a7c4d133495b9cdbd249a6116"
+    ]
+  },
+  {
+    "fix_commit_hash": "de2bea7643c2a1324a90c9e6931ee37a1d9e0f4c",
+    "inducing_commit_hash": [
+      "8b1b7fd195403b6e35fb54f78d094d691d90e480",
+      "c61b67c2c8589d0f89b6e7016529a77e16460897"
+    ]
+  },
+  {
+    "fix_commit_hash": "d08c40e1af3570b58733be06dc5bd227b44e30fd",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "fb7aae4c64f7d2bf6dced00c49c3ffc428b2d572",
+    "inducing_commit_hash": [
+      "a4ae7b2374bfab3729937f8e293f3621d3b07654",
+      "663e0f0ebf6a914acd5b55d5a3a7a382428b0785",
+      "5e305c6a2c7d0e3d2dfc9c07a702167f55944373",
+      "3af0bc51e0a45370f06efd27e20066c163eea941"
+    ]
+  },
+  {
+    "fix_commit_hash": "0167d71ef5c88173d2cea54a3afb152f342c0e97",
+    "inducing_commit_hash": [
+      "77e3f3cdd72ba175335ddba55a1d4acc90eb6604",
+      "10a6ae4bf21617f5295697f467368152472946ea"
+    ]
+  },
+  {
+    "fix_commit_hash": "461a77e1995068348d27cb27e7216ff6e820dc3f",
+    "inducing_commit_hash": [
+      "0a741b42ef6ca8df07e8600ab20875900418e551"
+    ]
+  },
+  {
+    "fix_commit_hash": "7af355d7e5830d118c1c0807091204e0d25b4eb7",
+    "inducing_commit_hash": [
+      "c062f74182fa8eb15b60b520d1f8ae10eff71b1b"
+    ]
+  },
+  {
+    "fix_commit_hash": "ea50e462cd6ddc80256a847550a97b7f726f69f5",
+    "inducing_commit_hash": [
+      "759ddb1f33e80387e4568a9fb21e5311b797607f"
+    ]
+  },
+  {
+    "fix_commit_hash": "6858072e1ee0bfc7c9865bffade4df0bb1696a72",
+    "inducing_commit_hash": []
+  },
+  {
+    "fix_commit_hash": "cac55bddf3d2f98d8625f20d67b3eb47231bd056",
+    "inducing_commit_hash": [
+      "c2d2e97a72d457cb8bfd3ab6bbe0f03ec765e4c5",
+      "5e67ea11692ba43b6f223792dbc20e5e6d2c20da",
+      "0dd2e79fbdf14f62db132a837f987fe38f831243"
+    ]
+  },
+  {
+    "fix_commit_hash": "432510450e21779226669b40d0b3531baaf8e27b",
+    "inducing_commit_hash": [
+      "ed3c3be6015564a3d542dcccb68123ff1a846ec4"
+    ]
+  },
+  {
+    "fix_commit_hash": "2e69b70d9c65ea5dfe6f2e92a52deb7e0dc1fbe7",
+    "inducing_commit_hash": [
+      "91db96b2f79d3e22238e5877fd75a8a8f4848c5c"
+    ]
+  },
+  {
+    "fix_commit_hash": "ba75ed23264fdc913f7007323d6ca728bc3a712e",
+    "inducing_commit_hash": [
+      "045baf90953dda495c94258b5d3b2c835e9950e1",
+      "6e27f355d10cc68055a5412dde99121843776de9",
+      "8b1b7fd195403b6e35fb54f78d094d691d90e480",
+      "db75b58a7e2f8335af25dee367dfea1ba8e7dae2",
+      "addf9529dd35a7a01b3baee7472736dcff28d294",
+      "3c1a730e6794400463dad9bfb1492fe7d40344e9"
+    ]
+  },
+  {
+    "fix_commit_hash": "4f21d978fbfa17f550d1b5e47c9c83c24e7f34fa",
+    "inducing_commit_hash": [
+      "db75b58a7e2f8335af25dee367dfea1ba8e7dae2",
+      "a2db3224814e0ef2adcd8c46145eab05a7e439a0"
+    ]
+  },
+  {
+    "fix_commit_hash": "4593db5c235bf26cd90f4595b6c82ff16ae99149",
+    "inducing_commit_hash": [
+      "445aec51d442420162075fd92ef6963e86963d5f",
+      "386c6c0e18853d44754c6ee0ce99fd14c614fe5e",
+      "5e67ea11692ba43b6f223792dbc20e5e6d2c20da",
+      "fdfcb814712d7d6c40116bdbb6df183f935f0cb3",
+      "061f8feb4f935cbf15b352b396f8247377ce9062",
+      "c351e2292f4bca64ce71b75d73b5cd727d623c6d",
+      "014e2fbcafcce8ef504b2c5dbeced30c1fd75c88",
+      "fafba67a2318599b6565c01e6d13534d95c1e437"
+    ]
+  },
+  {
+    "fix_commit_hash": "783fea7e5484a7c4fa1d918fc10db3cf151b1e36",
+    "inducing_commit_hash": [
+      "5b4b5bc6d1e7ce9dd1afaed94e76e0c17ce01efa",
+      "092aa892f11cb28324dcb0b57f19a220a8e65285",
+      "ed38176d7fe97113b449ee18a708c0201c00f4c3",
+      "418ed6d5f337221ec4c64bef240ab3c994603509"
+    ]
+  },
+  {
+    "fix_commit_hash": "1f696bb27bd7045f6361f4ab6f131e60a7d52ee2",
+    "inducing_commit_hash": [
+      "addf9529dd35a7a01b3baee7472736dcff28d294",
+      "db75b58a7e2f8335af25dee367dfea1ba8e7dae2"
+    ]
+  },
+  {
+    "fix_commit_hash": "564bd1ee8e227972fa62c14fac730770c8133847",
+    "inducing_commit_hash": [
+      "91db96b2f79d3e22238e5877fd75a8a8f4848c5c",
+      "8d1fd6ffc999fa31a28d54c33f0d9be3d502ea4b",
+      "d0af24cdff2aecc9c63affbb395759d8ab44aee4",
+      "dfdd18d8974987fa1fc936a74a158bfe8a21ca51",
+      "0fc436474cd29849bd610e7336773e08ba37c17b",
+      "ceeeec1b1d6363ec96d4f6210826b91016becc57",
+      "a7fb411ce58472825ec1df10282ad883cbd057ee",
+      "9cdfe8b631f8520c9bcf72b76cc6a9e9a5392222",
+      "627078166a70df589f5527402edf905a95d8040c",
+      "10a6ae4bf21617f5295697f467368152472946ea",
+      "69e6aa7bc544094738945fe169700afe768db853",
+      "0a741b42ef6ca8df07e8600ab20875900418e551",
+      "5ed1c0a37798545ff9bb8e8c188d2e0b47b8aedf"
+    ]
+  },
+  {
+    "fix_commit_hash": "aec7c943a7f797fa0c28a525a98964593bec89ae",
+    "inducing_commit_hash": [
+      "e426eef5c698462e9f4c840cb9e3d037419c93a2"
+    ]
+  },
+  {
+    "fix_commit_hash": "e75b2edd53d840e1163e9eb1715ef304596f69c6",
+    "inducing_commit_hash": [
+      "d0af24cdff2aecc9c63affbb395759d8ab44aee4"
+    ]
+  },
+  {
+    "fix_commit_hash": "2fe4a2e0c0ac3c0ad1a43a4da97d1fe109c96491",
+    "inducing_commit_hash": [
+      "67eacd6329ef9562513c1ae35c7f8e9eb7cae67a",
+      "58a309554be9de39a3b2665d56b6dddeca4fd648"
+    ]
+  },
+  {
+    "fix_commit_hash": "d695c27afe2cf39ac4c0a7188ddbcccd9e607ca7",
+    "inducing_commit_hash": [
+      "564bd1ee8e227972fa62c14fac730770c8133847"
+    ]
+  },
+  {
+    "fix_commit_hash": "8df5082f4479bdc08d38c7d7f96be9c520f2a2ce",
+    "inducing_commit_hash": [
+      "05b92b6049e869f78de79fa71ac48149f10fca23",
+      "7599d7bf6041cc4dbe6f8e7d5678d6f392284a09"
+    ]
+  },
+  {
+    "fix_commit_hash": "39995ca8c7f0efd8aff209a03ecc84e1a6184e5d",
+    "inducing_commit_hash": [
+      "8d1fd6ffc999fa31a28d54c33f0d9be3d502ea4b"
+    ]
+  },
+  {
+    "fix_commit_hash": "0418328f09106fccf4e83079468c2364c78e9dca",
+    "inducing_commit_hash": [
+      "e8f3ebfdf487f1e70f06b8bd990e0400542137da"
+    ]
+  },
+  {
+    "fix_commit_hash": "717068898a67d03b7c2435e9f16bb65aced68048",
+    "inducing_commit_hash": [
+      "092aa892f11cb28324dcb0b57f19a220a8e65285",
+      "46c9b97454b17150b3ee7b2de973eae4aed8522a",
+      "1ab1a17fd37c377d96c8b41f41178ef1498c7fb5"
+    ]
+  },
+  {
+    "fix_commit_hash": "a8ee23ca86892199ab1c4c4b3555a56602bb9568",
+    "inducing_commit_hash": [
+      "a2d0cf17989ff23bcd64453f73293fef920735fa"
+    ]
+  },
+  {
+    "fix_commit_hash": "cb17db7ce76142641138ac7000821324550a69a4",
+    "inducing_commit_hash": [
+      "a8ee23ca86892199ab1c4c4b3555a56602bb9568",
+      "a2d0cf17989ff23bcd64453f73293fef920735fa"
+    ]
+  },
+  {
+    "fix_commit_hash": "aa4da9ef9ee2eaf452b35eb87b144e7b689f728a",
+    "inducing_commit_hash": [
+      "86450a6f5d7a79021c6d9d5aa9cc84ef5209fdbe",
+      "5e305c6a2c7d0e3d2dfc9c07a702167f55944373"
+    ]
+  },
+  {
+    "fix_commit_hash": "7ac3c66369d7214ee6ad5d722cd430deb14a662a",
+    "inducing_commit_hash": [
+      "c73d661f30f04065c0375ddccf46e1404b7b289c"
+    ]
+  },
+  {
+    "fix_commit_hash": "41dd3db34ae2c03f5b5148bcca84653055c0e3eb",
+    "inducing_commit_hash": [
+      "7a8740a3d6d7bcab3d8a9cf7fa70f33dd4824863"
+    ]
+  }
+]
