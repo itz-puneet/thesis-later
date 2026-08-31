@@ -1,0 +1,66 @@
+name: Run Phase 2 Experiment
+
+on:
+  workflow_dispatch:
+    inputs:
+      latency_mode:
+        description: 'Verification Latency Mode'
+        required: true
+        default: 'real'
+        type: choice
+        options:
+          - 'real'
+          - 'uniform'
+      fast:
+        description: 'Run in Fast smoke-test mode (fewer seeds/trees)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  phase2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # 6 hours max
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install tqdm imbalanced-learn scikit-learn
+
+      - name: Run Phase 2 Experiment Grid
+        run: |
+          FAST_FLAG="${{ inputs.fast == true && '--fast' || '' }}"
+          python -m experiments.run_phase2_impact --latency_mode ${{ inputs.latency_mode }} $FAST_FLAG
+
+      - name: Generate Reports & Figures
+        run: |
+          python scripts/generate_report.py
+
+      - name: Commit and push results
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add results/phase2/ reports/
+          git commit -m "Add Phase 2 experimental results (latency_mode: ${{ inputs.latency_mode }})" || echo "No changes to commit"
+          git push origin master
+
+      - name: Upload Results Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2-results-${{ inputs.latency_mode }}
+          path: |
+            results/phase2/*.csv
+            reports/
