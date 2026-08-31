@@ -1,9 +1,0 @@
-pandas>=2.0
-numpy>=1.24
-scikit-learn>=1.3
-scipy>=1.10
-matplotlib>=3.7
-seaborn>=0.12
-# Optional, for real SZZ runs and stream baselines:
-# pyszz (clone from https://github.com/grosa1/pyszz_v2)
-# pydriller>=2.5

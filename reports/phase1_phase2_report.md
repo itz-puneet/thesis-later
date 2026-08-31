@@ -2,37 +2,39 @@
 
 **Author / Project**: Thesis Research Replication & Empirical Evaluation  
 **Projects Evaluated**: 21 Apache Java Projects (JIT-Defects4J / JIT-Fine Benchmark)  
-**Total Experimental Records**: 14,700 runs across 10 random seeds, 7 label sources, 3 models, and 3 evaluation regimes.  
-**Report Date**: August 2026  
+**Total Experimental Records**: 14,700 runs across 10 random seeds, 7 label sources, 3 models, and 3 evaluation regimes  
+**Report Date**: August 2026 (Post-Fix Rerun v2)  
 
 ---
 
 ## Executive Summary
 
-This empirical investigation addresses a foundational vulnerability in Just-In-Time Software Defect Prediction (JIT-SDP): **how does label noise introduced by automated SZZ algorithms distort defect prediction models, and how much of reported literature performance is an artifact of circular and temporally leaky evaluation?**
+This empirical investigation addresses a foundational vulnerability in Just-In-Time Software Defect Prediction (JIT-SDP): **how does label noise introduced by automated SZZ algorithms distort defect prediction models, and how much of reported literature performance is an artifact of circular self-scoring and temporal data leakage?**
 
 ### Key Findings at a Glance:
-1. **SZZ Label Noise is Severe and Asymmetric (Phase 1)**: Across 21 projects, SZZ variants exhibit poor precision (**19.3% to 28.1%**) and high false alarm rates ($\rho_0 = 6.1\% - 26.6\%$). Between **71.9% and 80.7%** of all commits flagged as defect-inducing by SZZ tools are false positives.
-2. **Evaluation Leakage Inflates Performance by up to 203% (Phase 2)**: Naive $k$-fold cross-validation allows future-to-past data leakage. For `JITLine`, naive $k$-fold inflates MCC from **0.0673** (chronological) to **0.2039** (naive $k$-fold), a statistically significant **large effect** ($p = 3.15 \times 10^{-5}$, Cliff's $\delta = 0.601$).
-3. **The Circular "Self-Deception" Gap (Phase 2)**: When models are evaluated on the same SZZ labels used for training, apparent performance is severely exaggerated. For `BSZZ`, self-scored MCC is **0.3721** versus an oracle-scored MCC of **0.1821** ($p = 6.54 \times 10^{-8}$, Cliff's $\delta = 0.825$).
-4. **Real-World Online Performance is Near-Random (Phase 2)**: Under the realistic streaming deployment setting with verification latency ($W = 90$ days) using `ORB`, the maximum achievable MCC is **0.0634** on oracle labels and **0.0601** on `BSZZ`.
+1. **Severe & Asymmetric SZZ Label Noise (Phase 1)**: Across 21 projects, SZZ variants exhibit poor precision (**18.3% to 27.2%**) and high false alarm rates ($\rho_0 = 6.7\% - 26.3\%$). Over **72% to 81%** of all commits flagged as defect-inducing by SZZ tools are false positives, while 36% to 73% of true bugs are missed ($\rho_1 = 35.9\% - 73.3\%$).
+2. **Evaluation Leakage Inflates Performance by +0.141 MCC (Phase 2)**: Naive $k$-fold cross-validation allows future-to-past data leakage. For `JITLine`, naive $k$-fold inflates oracle MCC from **0.1028** (chronological) to **0.2435** (naive $k$-fold), a statistically significant **large effect** ($p = 2.86 \times 10^-6$, Cliff's $\delta = +0.737$).
+3. **The Circular "Self-Deception" Gap is +0.180 MCC (Phase 2)**: When models are evaluated on the same SZZ labels used for training, apparent performance is heavily exaggerated. For `BSZZ`, self-scored naive MCC is **0.3550** versus an oracle-scored MCC of **0.1748** ($p = 6.54 \times 10^-8$, Cliff's $\delta = +0.811$).
+4. **ORB Sanity Ordering Restored Under Real Latency (Phase 2)**: When online evaluation incorporates real reconstructed verification latency (median 113 days, 53% arriving after $W=90$ days), oracle-trained `ORB` is the best-performing configuration (**MCC = 0.0685**, G-mean = 0.5460), beating `BSZZ` (**0.0559** / 0.5060) in 14 of 21 projects.
+5. **JITLine Anomaly Decomposed**: Following SMOTE minority oversampling and G-mean threshold moving, oracle-trained JITLine chronological MCC increased from 0.067 to **0.1028** (G-mean 0.4915). BSZZ-trained JITLine achieves **0.1309** MCC (winning in 13/21 projects), proving that part of the earlier gap was a decision-threshold artifact, while a residual minority-enrichment effect remains under 8.5% class imbalance.
+6. **Variant Spread Compression Under Latency**: Because 53% of defect labels arrive late, verification latency itself imposes heavy false-negative noise on every label source, compressing the performance spread between refined and naive SZZ variants (LSZZ 0.0259 > RSZZ 0.0183 > AGSZZ 0.0164 > RASZZ 0.0047 > MASZZ -0.0025).
 
 ---
 
 ## Phase 1: Intrinsic Label Quality & Noise Profile of SZZ Variants
 
-Phase 1 benchmarks 6 modern SZZ variants (`BSZZ`, `AGSZZ`, `MASZZ`, `LSZZ`, `RSZZ`, `RASZZ`) directly against human-validated ground truth (`label_oracle`) across all 21 Apache repositories.
+Phase 1 benchmarks 6 modern SZZ variants (`BSZZ`, `AGSZZ`, `MASZZ`, `LSZZ`, `RSZZ`, `RASZZ`) directly against human-validated ground truth (`label_oracle`) on an identical 27,319-commit universe across all 21 Apache repositories.
 
 ### Table 1: Intrinsic SZZ Performance vs. Ground Truth Oracle
 
-| SZZ Variant | Precision | Recall | F1-Score | FPR ($\rho_0$) | FNR ($\rho_1$) | Cohen's $\kappa$ | Matthews Corr. (MCC) | True Pos (TP) | False Pos (FP) | False Neg (FN) | True Neg (TN) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **BSZZ** | 0.1855 | 0.6411 | 0.2877 | 0.2627 | 0.3589 | 0.1790 | 0.2318 | 1,495 | 6,565 | 837 | 18,422 |
-| **AGSZZ** | 0.1855 | 0.4674 | 0.2656 | 0.1915 | 0.5326 | 0.1633 | 0.1876 | 1,090 | 4,786 | 1,242 | 20,201 |
-| **MASZZ** | 0.1826 | 0.4820 | 0.2649 | 0.2013 | 0.5180 | 0.1610 | 0.1877 | 1,124 | 5,030 | 1,208 | 19,957 |
-| **LSZZ** | 0.2720 | 0.2667 | 0.2693 | 0.0666 | 0.7333 | 0.2019 | 0.2019 | 622 | 1,665 | 1,710 | 23,322 |
-| **RSZZ** | 0.2318 | 0.2997 | 0.2615 | 0.0927 | 0.7003 | 0.1828 | 0.1846 | 699 | 2,316 | 1,633 | 22,671 |
-| **RASZZ** | 0.1840 | 0.4383 | 0.2592 | 0.1813 | 0.5617 | 0.1580 | 0.1784 | 1,022 | 4,531 | 1,310 | 20,456 |
+| SZZ Variant | Precision | Recall | F1-Score | G-Mean | FPR ($\rho_0$) | FNR ($\rho_1$) | Cohen's $\kappa$ | Matthews Corr. (MCC) | True Pos (TP) | False Pos (FP) | False Neg (FN) | True Neg (TN) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **BSZZ** | 0.1855 | 0.6411 | 0.2877 | 0.6875 | 0.2627 | 0.3589 | 0.1790 | 0.2318 | 1,495 | 6,565 | 837 | 18,422 |
+| **AGSZZ** | 0.1855 | 0.4674 | 0.2656 | 0.6147 | 0.1915 | 0.5326 | 0.1633 | 0.1876 | 1,090 | 4,786 | 1,242 | 20,201 |
+| **MASZZ** | 0.1826 | 0.4820 | 0.2649 | 0.6205 | 0.2013 | 0.5180 | 0.1610 | 0.1877 | 1,124 | 5,030 | 1,208 | 19,957 |
+| **LSZZ** | 0.2720 | 0.2667 | 0.2693 | 0.4989 | 0.0666 | 0.7333 | 0.2019 | 0.2019 | 622 | 1,665 | 1,710 | 23,322 |
+| **RSZZ** | 0.2318 | 0.2997 | 0.2615 | 0.5215 | 0.0927 | 0.7003 | 0.1828 | 0.1846 | 699 | 2,316 | 1,633 | 22,671 |
+| **RASZZ** | 0.1840 | 0.4383 | 0.2592 | 0.5990 | 0.1813 | 0.5617 | 0.1580 | 0.1784 | 1,022 | 4,531 | 1,310 | 20,456 |
 
 ### Phase 1 Visualizations
 
@@ -46,8 +48,9 @@ Phase 1 benchmarks 6 modern SZZ variants (`BSZZ`, `AGSZZ`, `MASZZ`, `LSZZ`, `RSZ
 ![Figure 3: Kappa Heatmap](figures/fig3_phase1_kappa_heatmap.png)
 
 ### Phase 1 Insights:
-- **High Recall vs. High Precision Trade-off**: `BSZZ` captures the highest fraction of real bugs (Recall = 65.6%), but generates 5,908 false positives (Precision = 19.3%). Conversely, `LSZZ` and `RSZZ` aggressively filter changes, boosting precision slightly (28.1% and 24.2%) at the cost of missing over 70% of real bugs (Recall = 26.1% and 28.5%).
-- **Low Agreement with Oracle**: Inter-variant Cohen's $\kappa$ with the oracle ranges between **0.174** and **0.250**, confirming that no automated SZZ variant provides a high-fidelity proxy for ground truth defect labels.
+- **Severe Precision Ceiling**: Precision never exceeds 27.2% across all variants. Between 72.8% and 81.5% of commits flagged as bug-introducing are false positives.
+- **Asymmetric Noise Trade-Off**: `BSZZ` achieves highest recall (64.1%) at the cost of high FPR ($\rho_0 = 26.3\%$). Refined variants (`LSZZ`, `RSZZ`) suppress FPR to 6.7%–9.3%, but miss 70.0%–73.3% of true bugs ($\rho_1 = 70.0\% - 73.3\%$).
+- **Low Agreement with Oracle**: Inter-variant Cohen's $\kappa$ with the oracle ranges between **0.158** and **0.202**, indicating only slight to fair agreement.
 
 ---
 
@@ -55,34 +58,35 @@ Phase 1 benchmarks 6 modern SZZ variants (`BSZZ`, `AGSZZ`, `MASZZ`, `LSZZ`, `RSZ
 
 Phase 2 evaluates 3 distinct defect prediction architectures across 7 label sources and 3 evaluation regimes:
 1. **`LApredict`** (Zeng et al., 2021): Single-feature logistic regression on *Lines Added* (`la`).
-2. **`JITLine`** (Pornprasit & Tantithamthavorn, 2021): 100-tree Random Forest over 14 Kamei features with minority oversampling.
-3. **`ORB`** (Cabral et al., 2019): Online streaming ensemble (20 estimators) with Poisson oversampling rate boosting and 90-day verification latency.
+2. **`JITLine`** (Pornprasit & Tantithamthavorn, 2021): 100-tree Random Forest over 14 Kamei features with SMOTE minority oversampling and G-mean threshold moving.
+3. **`ORB`** (Cabral et al., 2019): Online streaming ensemble with Poisson oversampling rate boosting and real reconstructed verification latency ($W = 90$ days).
 
-### Table 2: Oracle-Scored MCC by Model, Label Source & Regime
+### Table 2: Oracle-Scored Performance by Model, Label Source & Regime
 
-| Model | Training Label Source | Naive $k$-Fold (Leaky) | Chronological (Honest Batch) | Prequential Latency (Online Stream) |
+| Model | Training Label Source | Naive $k$-Fold (Leaky) [MCC / G-mean] | Chronological (Honest Batch) [MCC / G-mean] | Prequential Latency (Online Stream) [MCC / G-mean] |
 | :--- | :--- | :---: | :---: | :---: |
-| **JITLine** | Oracle | **0.2039** | **0.0673** | *N/A (Batch Model)* |
-| JITLine | BSZZ | 0.1754 | 0.1135 | *N/A* |
-| JITLine | AGSZZ | 0.0980 | 0.0496 | *N/A* |
-| JITLine | MASZZ | 0.1150 | 0.0666 | *N/A* |
-| JITLine | LSZZ | 0.1167 | 0.0478 | *N/A* |
-| JITLine | RSZZ | 0.0817 | 0.0337 | *N/A* |
-| JITLine | RASZZ | 0.1020 | 0.0509 | *N/A* |
-| **LApredict** | Oracle | **0.2058** | **0.1734** | *N/A (Batch Model)* |
-| LApredict | BSZZ | 0.1889 | 0.1599 | *N/A* |
-| LApredict | AGSZZ | 0.1950 | 0.1670 | *N/A* |
-| LApredict | MASZZ | 0.2000 | 0.1708 | *N/A* |
-| LApredict | LSZZ | 0.2074 | 0.1719 | *N/A* |
-| LApredict | RSZZ | 0.2017 | 0.1740 | *N/A* |
-| LApredict | RASZZ | 0.2005 | 0.1745 | *N/A* |
-| **ORB** | Oracle | *N/A (Online Model)* | *N/A* | **0.0634** |
-| ORB | BSZZ | *N/A* | *N/A* | **0.0601** |
-| ORB | AGSZZ | *N/A* | *N/A* | 0.0184 |
-| ORB | MASZZ | *N/A* | *N/A* | 0.0214 |
-| ORB | LSZZ | *N/A* | *N/A* | 0.0351 |
-| ORB | RSZZ | *N/A* | *N/A* | 0.0286 |
-| ORB | RASZZ | *N/A* | *N/A* | 0.0099 |
+| JITLine | **oracle** | **0.2435** / 0.6719 | **0.1028** / 0.4915 | *N/A (Batch Model)* |
+| JITLine | BSZZ | 0.1607 / 0.5986 | 0.1309 / 0.5398 | *N/A (Batch Model)* |
+| JITLine | AGSZZ | 0.1044 / 0.5455 | 0.0750 / 0.4668 | *N/A (Batch Model)* |
+| JITLine | MASZZ | 0.1155 / 0.5896 | 0.0734 / 0.4780 | *N/A (Batch Model)* |
+| JITLine | LSZZ | 0.1290 / 0.5773 | 0.0779 / 0.4580 | *N/A (Batch Model)* |
+| JITLine | RSZZ | 0.1038 / 0.5704 | 0.0573 / 0.4647 | *N/A (Batch Model)* |
+| JITLine | RASZZ | 0.1135 / 0.5840 | 0.0658 / 0.4712 | *N/A (Batch Model)* |
+| LApredict | **oracle** | **0.2058** / 0.6770 | **0.1734** / 0.6387 | *N/A (Batch Model)* |
+| LApredict | BSZZ | 0.1889 / 0.6375 | 0.1599 / 0.6259 | *N/A (Batch Model)* |
+| LApredict | AGSZZ | 0.1950 / 0.6437 | 0.1670 / 0.6289 | *N/A (Batch Model)* |
+| LApredict | MASZZ | 0.2000 / 0.6731 | 0.1708 / 0.6575 | *N/A (Batch Model)* |
+| LApredict | LSZZ | 0.2074 / 0.6714 | 0.1719 / 0.6303 | *N/A (Batch Model)* |
+| LApredict | RSZZ | 0.2017 / 0.6748 | 0.1740 / 0.6551 | *N/A (Batch Model)* |
+| LApredict | RASZZ | 0.2005 / 0.6732 | 0.1745 / 0.6563 | *N/A (Batch Model)* |
+| ORB | **oracle** | *N/A (Online Model)* | *N/A (Online Model)* | **0.0685** / 0.5460 |
+| ORB | BSZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0559 / 0.5060 |
+| ORB | AGSZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0164 / 0.4603 |
+| ORB | MASZZ | *N/A (Online Model)* | *N/A (Online Model)* | -0.0025 / 0.4514 |
+| ORB | LSZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0259 / 0.4917 |
+| ORB | RSZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0183 / 0.4913 |
+| ORB | RASZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0047 / 0.4739 |
+
 
 ---
 
@@ -134,32 +138,35 @@ Phase 2 evaluates 3 distinct defect prediction architectures across 7 label sour
 #### Figure 6: ORB Online Streaming Performance
 ![Figure 6: ORB Streaming](figures/fig6_phase2_orb_streaming.png)
 
-#### Figure 7: Compounding Deflation Ladder of Defect Prediction Performance
+#### Figure 7: Step-by-Step Transition Across Regimes and Ground Truth
 ![Figure 7: Deflation Ladder](figures/fig7_phase2_deflation_ladder.png)
+
+#### Figure 8: Reconstructed Defect Verification Latency Distribution
+![Figure 8: Latency Distribution](figures/fig8_reconstructed_latency.png)
 
 ---
 
-## Synthesis: The Three Layers of Performance Inflation
+## Synthesis: Decomposition of Performance Inflation
 
-When software engineering papers report defect prediction models reaching MCCs of $0.40 - 0.50$, our findings prove this is driven by three compounding methodological flaws:
+When software engineering papers report defect prediction models reaching apparent MCCs of $0.35 - 0.50$, our findings prove this is driven by three compounding methodological flaws:
 
 ```
-[Reported Literature Performance: MCC ~0.41]
+[Published Baseline: Naive K-Fold Self-Scored BSZZ JITLine: MCC ~0.377]
    │
-   ├── Layer 1: Evaluation Leakage (-0.14 MCC)
-   │     Random k-fold trains on future commits and tests on past commits.
+   ├── Layer 1: Circular Self-Scoring Gap (Δ = -0.216 MCC)
+   │     Evaluating on true oracle labels reveals true capability is MCC 0.161.
    │
-   ├── Layer 2: Circular Self-Scoring (-0.19 MCC)
-   │     Evaluating on SZZ rewards the model for mimicking SZZ's false positives.
+   ├── Layer 2: Temporal Evaluation Leakage (Δ = -0.141 MCC for Oracle JITLine)
+   │     Random k-fold leaks future features into past training splits.
    │
-   └── Layer 3: Unrealistic Batch Assumption (-0.05 MCC)
-         Failing to model 90-day verification latency and stream arrivals.
+   └── Layer 3: Online Streaming with Real Latency
+         Realistic deployment with 90-day verification latency yields MCC ~0.068.
    │
    ▼
-[Real-World True Predictive Capability: MCC ~0.06]
+[Real-World True Predictive Capability: Oracle ORB MCC = 0.0685 (G-Mean = 0.546)]
 ```
 
 ### Recommendations for Future Defect Prediction Research:
 1. **Ban Random $k$-Fold**: All JIT defect prediction models must be evaluated chronologically or in online prequential streams.
 2. **Never Self-Score on SZZ**: SZZ labels should only be used for training, never as the test oracle for measuring model performance.
-3. **Account for Verification Latency**: Real-world deployment involves delayed feedback ($W \ge 90$ days); offline batch evaluation provides an overly optimistic bound.
+3. **Account for Verification Latency**: Real-world deployment involves delayed feedback (median 113 days); offline batch evaluation provides an overly optimistic bound.
