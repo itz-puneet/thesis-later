@@ -10,6 +10,9 @@ results/*
 !results/phase1/
 results/phase1/*
 !results/phase1/*.csv
+!results/phase1_raw/
+results/phase1_raw/*
+!results/phase1_raw/*.json
 !results/phase2/
 results/phase2/*
 !results/phase2/*.csv
