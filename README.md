@@ -80,6 +80,27 @@ python -m experiments.run_phase1_oracle --variants bszz agszz rszz --overwrite
 
 ---
 
+### Step 1b: One-Time Extraction of Small Committed Inputs
+
+Heavy experiments run on GitHub Actions, where the 101 MB JIT-Fine zip and the 830 MB
+of cloned repositories are unavailable. Both are replaced by two small committed files,
+regenerated only if Phase 1 is re-run from scratch:
+
+```bash
+# Stable Kamei features / author_ts / label_oracle -> data/processed/phase2_features.csv (4.2 MB)
+# Memory-safe (streams the inner zip); cap it on a small machine:
+systemd-run --user --scope -p MemoryMax=2G -p MemorySwapMax=0 \
+    venv/bin/python scripts/extract_base_features.py
+
+# Author dates of the 5,453 Defects4J fix commits -> data/raw/fix_commit_dates.csv (0.4 MB)
+python scripts/extract_fix_dates.py
+```
+
+Only `extract_fix_dates.py` needs the cloned repos; only `extract_base_features.py`
+needs the zip. After both are committed, every later rebuild runs from small inputs.
+
+---
+
 ### Step 2: Verification Latency Construction (`fix_ts`)
 
 #### Option A: Real Verification Latency (Recommended when raw mappings exist)
@@ -125,6 +146,49 @@ python -m experiments.run_phase2_impact --fast
 - `phase2_summary.csv` *(mean and std metrics by model/regime/label)*
 - `statistical_tests.csv` *(paired Wilcoxon & Cliff's delta statistics)*
 - `inflation_ladder.csv` *(regime inflation metrics)*
+
+---
+
+### Step 3b: Label-Consistency Gate (run after every rebuild)
+
+Asserts that the noise rates published in `phase1_bias.json` describe exactly the labels
+in `data/processed/phase2_commits.csv`. Phase 2 once trained on a label vintage one commit
+older than Phase 1 reported, because the dataset cache was never invalidated; this check
+makes that unreachable and runs in CI before any compute is spent.
+
+```bash
+python -m experiments.check_label_consistency
+```
+
+Rebuild order matters — `build_unified_dataset()` cannot reconstruct `fix_ts`:
+
+```bash
+python -m experiments.evaluate_confusion_matrix
+python -c "from codebase.data.loader import build_unified_dataset; build_unified_dataset()"
+python scripts/build_fix_ts.py --mode real
+python -m experiments.check_label_consistency
+```
+
+`load_or_build_dataset()` refuses to serve a cache older than the Phase 1 label files,
+so forgetting this sequence raises rather than silently producing stale results.
+
+---
+
+### Step 3c: Running the Heavy Pipeline on GitHub Actions
+
+The full chain (Phase 1 evaluation → rebuild → `fix_ts` → gate → Phase 2 → imputation
+sensitivity → reports) runs on a runner via the **Phase 2 Pipeline** workflow
+(`.github/workflows/phase2_experiment.yml`), triggered from the Actions tab:
+
+| Input | Values | Notes |
+|---|---|---|
+| `stage` | `smoke` / `full` | `smoke` = 3 seeds / 50 trees / 5 folds (~25 min); `full` = 10 seeds (~2 h) |
+| `latency_mode` | `real` / `uniform` | `real` requires the committed `fix_commit_dates.csv` |
+| `push_results` | true / false | Commits results back to `master`; `full` stage only |
+
+Run `smoke` first — it exercises the entire chain including the gate, so a mistake costs
+minutes rather than hours. Results and figures are uploaded as artifacts on every run,
+including failures.
 
 ---
 

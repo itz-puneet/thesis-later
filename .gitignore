@@ -6,6 +6,7 @@ data/raw/*
 !data/processed/
 data/processed/*
 !data/processed/*.csv
+!data/processed/*.provenance.json
 results/*
 !results/phase1/
 results/phase1/*

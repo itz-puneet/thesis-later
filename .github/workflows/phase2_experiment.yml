@@ -1,8 +1,25 @@
-name: Run Phase 2 Experiment
+name: Phase 2 Pipeline
+
+# Runs the full chain on a GitHub runner:
+#   Phase 1 label evaluation -> dataset rebuild -> fix_ts -> GATE
+#   -> Phase 2 grid -> latency imputation sensitivity -> reports
+#
+# The gate (check_label_consistency) sits BEFORE the expensive steps, so a
+# label-vintage mismatch costs two minutes instead of two hours. The runner
+# needs neither the 101 MB JIT-Fine zip nor the 830 MB of cloned repos: both
+# are replaced by the committed phase2_features.csv and fix_commit_dates.csv.
 
 on:
   workflow_dispatch:
     inputs:
+      stage:
+        description: 'smoke (3 seeds, ~10 min) or full (10 seeds, ~2 h)'
+        required: true
+        default: 'smoke'
+        type: choice
+        options:
+          - 'smoke'
+          - 'full'
       latency_mode:
         description: 'Verification Latency Mode'
         required: true
@@ -11,19 +28,23 @@ on:
         options:
           - 'real'
           - 'uniform'
-      fast:
-        description: 'Run in Fast smoke-test mode (fewer seeds/trees)'
+      push_results:
+        description: 'Commit results back to master (full stage only)'
         required: false
-        default: false
+        default: true
         type: boolean
 
 permissions:
   contents: write
 
+concurrency:
+  group: phase2-pipeline
+  cancel-in-progress: false
+
 jobs:
-  phase2:
+  pipeline:
     runs-on: ubuntu-latest
-    timeout-minutes: 360  # 6 hours max
+    timeout-minutes: 360
 
     steps:
       - name: Checkout repository
@@ -36,33 +57,75 @@ jobs:
         with:
           python-version: '3.12'
           cache: 'pip'
+          cache-dependency-path: requirements-ci.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install numpy scipy pandas scikit-learn matplotlib seaborn tqdm imbalanced-learn GitPython Jinja2
+          pip install -r requirements-ci.txt
+          pip list
 
-      - name: Run Phase 2 Experiment Grid
-        run: |
-          FAST_FLAG="${{ inputs.fast == true && '--fast' || '' }}"
-          python -m experiments.run_phase2_impact --latency_mode ${{ inputs.latency_mode }} $FAST_FLAG
+      # --- Rebuild the data chain from committed inputs -------------------
 
-      - name: Generate Reports & Figures
+      - name: Phase 1 - evaluate SZZ labels against the oracle
+        run: python -m experiments.evaluate_confusion_matrix
+
+      - name: Rebuild Phase 2 dataset from current Phase 1 labels
         run: |
-          python scripts/generate_report.py
+          python -c "from codebase.data.loader import build_unified_dataset; build_unified_dataset()"
+
+      - name: Reconstruct verification latency (fix_ts)
+        run: python scripts/build_fix_ts.py --mode ${{ inputs.latency_mode }}
+
+      # --- Gate: refuse to spend compute on inconsistent labels -----------
+
+      - name: GATE - Phase 1 / Phase 2 label consistency
+        run: python -m experiments.check_label_consistency
+
+      # --- Experiments ----------------------------------------------------
+
+      - name: Run Phase 2 experiment grid
+        run: |
+          FAST_FLAG=""
+          if [ "${{ inputs.stage }}" = "smoke" ]; then FAST_FLAG="--fast"; fi
+          python -m experiments.run_phase2_impact \
+            --latency_mode ${{ inputs.latency_mode }} $FAST_FLAG
+
+      - name: Run latency imputation sensitivity
+        run: python -m experiments.run_latency_imputation_sensitivity
+
+      - name: Generate reports and figures
+        run: python scripts/generate_report.py
+
+      # --- Publish --------------------------------------------------------
 
       - name: Commit and push results
+        if: ${{ inputs.stage == 'full' && inputs.push_results }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add results/phase2/ reports/
-          git commit -m "Add Phase 2 experimental results (latency_mode: ${{ inputs.latency_mode }}, fast: ${{ inputs.fast }})" || echo "No changes to commit"
+          git add data/processed/phase2_commits.csv \
+                  data/processed/phase2_commits.provenance.json \
+                  phase1_bias.json results/ reports/
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Phase 2 results (stage: ${{ inputs.stage }}, latency: ${{ inputs.latency_mode }})
+
+          Rebuilt from current Phase 1 labels; label-consistency gate passed."
+          git pull --rebase origin master
           git push origin master
 
-      - name: Upload Results Artifacts
+      - name: Upload results artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: phase2-results-${{ inputs.latency_mode }}
+          name: phase2-${{ inputs.stage }}-${{ inputs.latency_mode }}
           path: |
+            results/phase1/*.csv
             results/phase2/*.csv
             reports/
+            phase1_bias.json
+            data/processed/phase2_commits.provenance.json
+          if-no-files-found: warn

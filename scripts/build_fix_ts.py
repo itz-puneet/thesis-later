@@ -41,10 +41,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-RAW = Path("data/raw")
-PROCESSED = Path("data/processed/phase2_commits.csv")
-MAPPING_DIR = Path("results/phase1_raw")   # fix->inducing JSONs per variant/project
+_ROOT = Path(__file__).resolve().parent.parent
+
+RAW = _ROOT / "data" / "raw"
+PROCESSED = _ROOT / "data" / "processed" / "phase2_commits.csv"
+MAPPING_DIR = _ROOT / "results" / "phase1_raw"   # fix->inducing JSONs per variant/project
 FIX_CSV = RAW / "jit_defects4j.csv"
+FIX_DATES_CSV = RAW / "fix_commit_dates.csv"     # cached; see scripts/extract_fix_dates.py
 
 
 def git_commit_dates(repo_dir: Path, hashes: set[str]) -> dict[str, float]:
@@ -108,18 +111,34 @@ def main(mode: str):
               "evaluation', not 'verification latency'.")
         return
 
-    # 1) fix-commit dates per project
-    fixes = pd.read_csv(FIX_CSV)
+    # 1) fix-commit dates per project.
+    #    Prefer the cached table (scripts/extract_fix_dates.py) so this step does
+    #    not need the 830 MB of cloned repos -- that is what lets it run in CI.
     fix_dates: dict[tuple[str, str], float] = {}
-    for project, g in fixes.groupby("project"):
-        repo_dir = RAW / project.replace("/", "_")
-        if not repo_dir.exists():
-            print(f"  [skip] repo not cloned: {repo_dir}")
-            continue
-        dates = git_commit_dates(repo_dir, set(g["fix_commit_hash"]))
-        for h, ts in dates.items():
-            fix_dates[(project, h)] = ts
-        print(f"  {project}: dated {len(dates)}/{len(g)} fix commits")
+    if FIX_DATES_CSV.exists():
+        cached = pd.read_csv(FIX_DATES_CSV)
+        for r in cached.itertuples(index=False):
+            fix_dates[(r.project, r.fix_commit_hash)] = float(r.fix_author_ts)
+        print(f"  loaded {len(fix_dates)} cached fix dates from {FIX_DATES_CSV.name}")
+    else:
+        print(f"  {FIX_DATES_CSV.name} not found -- falling back to git log over cloned repos")
+        fixes = pd.read_csv(FIX_CSV)
+        for project, g in fixes.groupby("project"):
+            repo_dir = RAW / str(project).replace("/", "_")
+            if not repo_dir.exists():
+                print(f"  [skip] repo not cloned: {repo_dir}")
+                continue
+            dates = git_commit_dates(repo_dir, set(g["fix_commit_hash"]))
+            for h, ts in dates.items():
+                fix_dates[(project, h)] = ts
+            print(f"  {project}: dated {len(dates)}/{len(g)} fix commits")
+
+    if not fix_dates:
+        raise FileNotFoundError(
+            "No fix-commit dates available. Either commit "
+            f"{FIX_DATES_CSV.name} (run scripts/extract_fix_dates.py where the "
+            "repos are cloned) or clone the 21 repos under data/raw/."
+        )
 
     # 2) mapping -> earliest fix date per inducing commit (per variant + union)
     mapping = load_mappings()

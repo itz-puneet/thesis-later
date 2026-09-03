@@ -1,0 +1,19 @@
+# Minimal, pinned runtime dependencies for the experiment pipeline.
+#
+# requirements.txt is a full `pip freeze` of the development environment
+# (JupyterLab, PyDriller, srcML tooling, ...) and is far too heavy for CI.
+# This file pins exactly the versions the local venv runs, so results computed
+# on a runner match results computed locally.
+#
+# imbalanced-learn is not optional: codebase/models/baselines.py silently falls
+# back to jitter oversampling when imblearn is missing, which changes JITLine's
+# behaviour without any error.
+
+numpy==2.5.1
+scipy==1.18.0
+pandas==3.0.5
+scikit-learn==1.9.0
+imbalanced-learn==0.14.2
+matplotlib==3.11.1
+seaborn==0.13.2
+tqdm>=4.66.0
