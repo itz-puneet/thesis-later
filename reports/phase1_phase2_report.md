@@ -66,26 +66,26 @@ Phase 2 evaluates 3 distinct defect prediction architectures across 7 label sour
 | Model | Training Label Source | Naive $k$-Fold (Leaky) [MCC / G-mean] | Chronological (Honest Batch) [MCC / G-mean] | Prequential Latency (Online Stream) [MCC / G-mean] |
 | :--- | :--- | :---: | :---: | :---: |
 | JITLine | **oracle** | **0.2435** / 0.6719 | **0.1028** / 0.4915 | *N/A (Batch Model)* |
-| JITLine | BSZZ | 0.1607 / 0.5986 | 0.1309 / 0.5398 | *N/A (Batch Model)* |
-| JITLine | AGSZZ | 0.1044 / 0.5455 | 0.0750 / 0.4668 | *N/A (Batch Model)* |
-| JITLine | MASZZ | 0.1155 / 0.5896 | 0.0734 / 0.4780 | *N/A (Batch Model)* |
-| JITLine | LSZZ | 0.1290 / 0.5773 | 0.0779 / 0.4580 | *N/A (Batch Model)* |
-| JITLine | RSZZ | 0.1038 / 0.5704 | 0.0573 / 0.4647 | *N/A (Batch Model)* |
-| JITLine | RASZZ | 0.1135 / 0.5840 | 0.0658 / 0.4712 | *N/A (Batch Model)* |
+| JITLine | BSZZ | 0.1652 / 0.6269 | 0.1345 / 0.5656 | *N/A (Batch Model)* |
+| JITLine | AGSZZ | 0.1087 / 0.5767 | 0.0775 / 0.5006 | *N/A (Batch Model)* |
+| JITLine | MASZZ | 0.1145 / 0.5893 | 0.0730 / 0.4782 | *N/A (Batch Model)* |
+| JITLine | LSZZ | 0.1308 / 0.5796 | 0.0794 / 0.4595 | *N/A (Batch Model)* |
+| JITLine | RSZZ | 0.1053 / 0.5725 | 0.0590 / 0.4761 | *N/A (Batch Model)* |
+| JITLine | RASZZ | 0.1067 / 0.5787 | 0.0681 / 0.4831 | *N/A (Batch Model)* |
 | LApredict | **oracle** | **0.2058** / 0.6770 | **0.1734** / 0.6387 | *N/A (Batch Model)* |
-| LApredict | BSZZ | 0.1889 / 0.6375 | 0.1599 / 0.6259 | *N/A (Batch Model)* |
-| LApredict | AGSZZ | 0.1950 / 0.6437 | 0.1670 / 0.6289 | *N/A (Batch Model)* |
-| LApredict | MASZZ | 0.2000 / 0.6731 | 0.1708 / 0.6575 | *N/A (Batch Model)* |
-| LApredict | LSZZ | 0.2074 / 0.6714 | 0.1719 / 0.6303 | *N/A (Batch Model)* |
-| LApredict | RSZZ | 0.2017 / 0.6748 | 0.1740 / 0.6551 | *N/A (Batch Model)* |
-| LApredict | RASZZ | 0.2005 / 0.6732 | 0.1745 / 0.6563 | *N/A (Batch Model)* |
+| LApredict | BSZZ | 0.1941 / 0.6672 | 0.1634 / 0.6539 | *N/A (Batch Model)* |
+| LApredict | AGSZZ | 0.2003 / 0.6735 | 0.1685 / 0.6552 | *N/A (Batch Model)* |
+| LApredict | MASZZ | 0.1995 / 0.6729 | 0.1664 / 0.6542 | *N/A (Batch Model)* |
+| LApredict | LSZZ | 0.2078 / 0.6719 | 0.1706 / 0.6293 | *N/A (Batch Model)* |
+| LApredict | RSZZ | 0.2016 / 0.6749 | 0.1731 / 0.6544 | *N/A (Batch Model)* |
+| LApredict | RASZZ | 0.2000 / 0.6727 | 0.1679 / 0.6504 | *N/A (Batch Model)* |
 | ORB | **oracle** | *N/A (Online Model)* | *N/A (Online Model)* | **0.0685** / 0.5460 |
-| ORB | BSZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0559 / 0.5060 |
-| ORB | AGSZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0164 / 0.4603 |
-| ORB | MASZZ | *N/A (Online Model)* | *N/A (Online Model)* | -0.0025 / 0.4514 |
-| ORB | LSZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0259 / 0.4917 |
-| ORB | RSZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0183 / 0.4913 |
-| ORB | RASZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0047 / 0.4739 |
+| ORB | BSZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0565 / 0.5343 |
+| ORB | AGSZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0117 / 0.4774 |
+| ORB | MASZZ | *N/A (Online Model)* | *N/A (Online Model)* | -0.0030 / 0.4547 |
+| ORB | LSZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0209 / 0.4869 |
+| ORB | RSZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0105 / 0.4849 |
+| ORB | RASZZ | *N/A (Online Model)* | *N/A (Online Model)* | 0.0191 / 0.4876 |
 
 
 ---
@@ -95,35 +95,35 @@ Phase 2 evaluates 3 distinct defect prediction architectures across 7 label sour
 | Comparison Type | Model | Label Source | Condition A | Condition B | Mean A | Mean B | Mean Diff | $p$-value | Cliff's $\delta$ | Magnitude |
 | :--- | :--- | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | regime_inflation | LApredict | oracle | naive_kfold | chronological | 0.2058 | 0.1734 | +0.0324 | 0.0502 | +0.247 | **small** |
-| regime_inflation | LApredict | BSZZ | naive_kfold | chronological | 0.1889 | 0.1599 | +0.0290 | 0.0793 | +0.236 | **small** |
-| regime_inflation | LApredict | RSZZ | naive_kfold | chronological | 0.2017 | 0.1740 | +0.0276 | 0.1111 | +0.243 | **small** |
+| regime_inflation | LApredict | BSZZ | naive_kfold | chronological | 0.1941 | 0.1634 | +0.0307 | 0.0646 | +0.252 | **small** |
+| regime_inflation | LApredict | RSZZ | naive_kfold | chronological | 0.2016 | 0.1731 | +0.0285 | 0.1111 | +0.247 | **small** |
 | regime_inflation | JITLine | oracle | naive_kfold | chronological | 0.2435 | 0.1028 | +0.1407 | 2.86e-06 | +0.737 | **large** |
-| regime_inflation | JITLine | BSZZ | naive_kfold | chronological | 0.1607 | 0.1309 | +0.0297 | 0.0793 | +0.181 | **small** |
-| regime_inflation | JITLine | RSZZ | naive_kfold | chronological | 0.1038 | 0.0573 | +0.0466 | 0.0071 | +0.351 | **medium** |
-| self_deception_gap | All | BSZZ | self_scored (naive_kfold) | oracle_scored (naive_kfold) | 0.3550 | 0.1748 | +0.1803 | 6.54e-08 | +0.811 | **large** |
-| self_deception_gap | All | BSZZ | self_scored (chronological) | oracle_scored (chronological) | 0.2422 | 0.1454 | +0.0968 | 7.14e-06 | +0.509 | **large** |
-| self_deception_gap | All | BSZZ | self_scored (prequential_latency) | oracle_scored (prequential_latency) | 0.1136 | 0.0559 | +0.0577 | 0.0127 | +0.356 | **medium** |
-| self_deception_gap | All | AGSZZ | self_scored (naive_kfold) | oracle_scored (naive_kfold) | 0.2386 | 0.1497 | +0.0889 | 3.32e-04 | +0.459 | **medium** |
-| self_deception_gap | All | AGSZZ | self_scored (chronological) | oracle_scored (chronological) | 0.1337 | 0.1210 | +0.0127 | 0.4436 | +0.074 | **negligible** |
-| self_deception_gap | All | AGSZZ | self_scored (prequential_latency) | oracle_scored (prequential_latency) | 0.0526 | 0.0164 | +0.0363 | 0.0460 | +0.270 | **small** |
-| self_deception_gap | All | MASZZ | self_scored (naive_kfold) | oracle_scored (naive_kfold) | 0.2753 | 0.1578 | +0.1176 | 2.12e-06 | +0.677 | **large** |
-| self_deception_gap | All | MASZZ | self_scored (chronological) | oracle_scored (chronological) | 0.1547 | 0.1221 | +0.0326 | 0.0330 | +0.206 | **small** |
-| self_deception_gap | All | MASZZ | self_scored (prequential_latency) | oracle_scored (prequential_latency) | 0.0575 | -0.0025 | +0.0600 | 0.0127 | +0.429 | **medium** |
-| self_deception_gap | All | LSZZ | self_scored (naive_kfold) | oracle_scored (naive_kfold) | 0.2452 | 0.1682 | +0.0770 | 5.99e-06 | +0.525 | **large** |
-| self_deception_gap | All | LSZZ | self_scored (chronological) | oracle_scored (chronological) | 0.1725 | 0.1249 | +0.0476 | 0.0043 | +0.378 | **medium** |
-| self_deception_gap | All | LSZZ | self_scored (prequential_latency) | oracle_scored (prequential_latency) | 0.0747 | 0.0259 | +0.0488 | 8.52e-04 | +0.492 | **large** |
-| self_deception_gap | All | RSZZ | self_scored (naive_kfold) | oracle_scored (naive_kfold) | 0.1703 | 0.1528 | +0.0176 | 0.1707 | +0.164 | **small** |
-| self_deception_gap | All | RSZZ | self_scored (chronological) | oracle_scored (chronological) | 0.1237 | 0.1157 | +0.0080 | 0.1668 | +0.087 | **negligible** |
-| self_deception_gap | All | RSZZ | self_scored (prequential_latency) | oracle_scored (prequential_latency) | 0.0500 | 0.0183 | +0.0317 | 0.0351 | +0.374 | **medium** |
-| self_deception_gap | All | RASZZ | self_scored (naive_kfold) | oracle_scored (naive_kfold) | 0.2537 | 0.1570 | +0.0968 | 6.46e-06 | +0.590 | **large** |
-| self_deception_gap | All | RASZZ | self_scored (chronological) | oracle_scored (chronological) | 0.1514 | 0.1201 | +0.0313 | 0.0370 | +0.204 | **small** |
-| self_deception_gap | All | RASZZ | self_scored (prequential_latency) | oracle_scored (prequential_latency) | 0.0408 | 0.0047 | +0.0362 | 0.0760 | +0.256 | **small** |
-| label_source_gap | ORB | BSZZ | oracle | BSZZ | 0.0685 | 0.0559 | +0.0126 | 0.3926 | +0.156 | **small** |
-| label_source_gap | ORB | AGSZZ | oracle | AGSZZ | 0.0685 | 0.0164 | +0.0521 | 0.0063 | +0.397 | **medium** |
-| label_source_gap | ORB | MASZZ | oracle | MASZZ | 0.0685 | -0.0025 | +0.0710 | 0.0101 | +0.546 | **large** |
-| label_source_gap | ORB | LSZZ | oracle | LSZZ | 0.0685 | 0.0259 | +0.0426 | 0.0263 | +0.397 | **medium** |
-| label_source_gap | ORB | RSZZ | oracle | RSZZ | 0.0685 | 0.0183 | +0.0502 | 0.0127 | +0.451 | **medium** |
-| label_source_gap | ORB | RASZZ | oracle | RASZZ | 0.0685 | 0.0047 | +0.0638 | 8.52e-04 | +0.483 | **large** |
+| regime_inflation | JITLine | BSZZ | naive_kfold | chronological | 0.1652 | 0.1345 | +0.0307 | 0.0646 | +0.211 | **small** |
+| regime_inflation | JITLine | RSZZ | naive_kfold | chronological | 0.1053 | 0.0590 | +0.0463 | 0.0055 | +0.374 | **medium** |
+| self_deception_gap | All | BSZZ | self_scored (naive_kfold) | oracle_scored (naive_kfold) | 0.3734 | 0.1796 | +0.1938 | 1.14e-11 | +0.904 | **large** |
+| self_deception_gap | All | BSZZ | self_scored (chronological) | oracle_scored (chronological) | 0.2539 | 0.1489 | +0.1050 | 3.25e-07 | +0.580 | **large** |
+| self_deception_gap | All | BSZZ | self_scored (prequential_latency) | oracle_scored (prequential_latency) | 0.1126 | 0.0565 | +0.0560 | 0.0263 | +0.342 | **medium** |
+| self_deception_gap | All | AGSZZ | self_scored (naive_kfold) | oracle_scored (naive_kfold) | 0.2744 | 0.1545 | +0.1199 | 8.11e-06 | +0.610 | **large** |
+| self_deception_gap | All | AGSZZ | self_scored (chronological) | oracle_scored (chronological) | 0.1583 | 0.1230 | +0.0353 | 0.0845 | +0.218 | **small** |
+| self_deception_gap | All | AGSZZ | self_scored (prequential_latency) | oracle_scored (prequential_latency) | 0.0612 | 0.0117 | +0.0495 | 0.0547 | +0.361 | **medium** |
+| self_deception_gap | All | MASZZ | self_scored (naive_kfold) | oracle_scored (naive_kfold) | 0.2919 | 0.1570 | +0.1349 | 3.58e-07 | +0.717 | **large** |
+| self_deception_gap | All | MASZZ | self_scored (chronological) | oracle_scored (chronological) | 0.1672 | 0.1197 | +0.0474 | 0.0090 | +0.303 | **small** |
+| self_deception_gap | All | MASZZ | self_scored (prequential_latency) | oracle_scored (prequential_latency) | 0.0664 | -0.0030 | +0.0694 | 0.0071 | +0.469 | **medium** |
+| self_deception_gap | All | LSZZ | self_scored (naive_kfold) | oracle_scored (naive_kfold) | 0.2520 | 0.1693 | +0.0827 | 2.71e-06 | +0.543 | **large** |
+| self_deception_gap | All | LSZZ | self_scored (chronological) | oracle_scored (chronological) | 0.1789 | 0.1250 | +0.0539 | 0.0036 | +0.409 | **medium** |
+| self_deception_gap | All | LSZZ | self_scored (prequential_latency) | oracle_scored (prequential_latency) | 0.0682 | 0.0209 | +0.0473 | 6.07e-04 | +0.483 | **large** |
+| self_deception_gap | All | RSZZ | self_scored (naive_kfold) | oracle_scored (naive_kfold) | 0.1745 | 0.1534 | +0.0211 | 0.1129 | +0.194 | **small** |
+| self_deception_gap | All | RSZZ | self_scored (chronological) | oracle_scored (chronological) | 0.1281 | 0.1160 | +0.0121 | 0.1448 | +0.135 | **negligible** |
+| self_deception_gap | All | RSZZ | self_scored (prequential_latency) | oracle_scored (prequential_latency) | 0.0474 | 0.0105 | +0.0369 | 0.0421 | +0.401 | **medium** |
+| self_deception_gap | All | RASZZ | self_scored (naive_kfold) | oracle_scored (naive_kfold) | 0.2753 | 0.1534 | +0.1220 | 1.39e-06 | +0.643 | **large** |
+| self_deception_gap | All | RASZZ | self_scored (chronological) | oracle_scored (chronological) | 0.1676 | 0.1180 | +0.0496 | 0.0053 | +0.297 | **small** |
+| self_deception_gap | All | RASZZ | self_scored (prequential_latency) | oracle_scored (prequential_latency) | 0.0559 | 0.0191 | +0.0368 | 0.0646 | +0.311 | **small** |
+| label_source_gap | ORB | BSZZ | oracle | BSZZ | 0.0685 | 0.0565 | +0.0119 | 0.4948 | +0.143 | **negligible** |
+| label_source_gap | ORB | AGSZZ | oracle | AGSZZ | 0.0685 | 0.0117 | +0.0568 | 0.0090 | +0.424 | **medium** |
+| label_source_gap | ORB | MASZZ | oracle | MASZZ | 0.0685 | -0.0030 | +0.0714 | 0.0090 | +0.506 | **large** |
+| label_source_gap | ORB | LSZZ | oracle | LSZZ | 0.0685 | 0.0209 | +0.0476 | 0.0142 | +0.451 | **medium** |
+| label_source_gap | ORB | RSZZ | oracle | RSZZ | 0.0685 | 0.0105 | +0.0579 | 0.0071 | +0.474 | **medium** |
+| label_source_gap | ORB | RASZZ | oracle | RASZZ | 0.0685 | 0.0191 | +0.0493 | 0.0113 | +0.451 | **medium** |
 
 ---
 

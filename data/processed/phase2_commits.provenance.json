@@ -1,5 +1,5 @@
 {
-  "built_at_git_commit": "31c41a4e7a8bb482df34b05feb4d9f505dbe8493",
+  "built_at_git_commit": "76a56d61ac1ad7ed6dc670908e3b52655af0787e",
   "n_rows": 27319,
   "base_features_source": "phase2_features.csv",
   "label_positives": {
