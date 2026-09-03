@@ -32,7 +32,9 @@ from codebase.config import (
 from codebase.data.loader import load_or_build_dataset, get_all_projects, get_project_dataset
 from codebase.models.baselines import LApredict, JITLine
 from codebase.online.orb import ORB
-from codebase.evaluation.regimes import naive_kfold, chronological, prequential_latency
+from codebase.evaluation.regimes import (
+    naive_kfold, chronological, prequential_latency, chronological_online,
+)
 from codebase.evaluation.metrics import wilcoxon_with_cliffs
 
 
@@ -46,6 +48,12 @@ def run_single_cell(args: tuple) -> list[dict]:
     for train_label in label_sources:
         for eval_mode in eval_modes:
             eval_label = "label_oracle" if eval_mode == "oracle" else train_label
+            # For oracle-trained cells the two scoring conventions are identical
+            # by construction (eval_label == label_oracle either way), so the
+            # "self" pass would refit the same models to reproduce the same
+            # numbers. Emit it once and mark it as covering both.
+            if train_label == "label_oracle" and eval_mode == "self":
+                continue
 
             # 1. LApredict on Naive k-fold & Chronological
             la_factory = lambda: LApredict(seed=seed)
@@ -143,9 +151,82 @@ def run_single_cell(args: tuple) -> list[dict]:
                 "regime": "prequential_latency",
                 "mcc": r_preq_orb["mcc"],
                 "gmean": r_preq_orb["gmean"],
+                "mcc_avg": r_preq_orb["mcc_avg"],
+                "gmean_avg": r_preq_orb["gmean_avg"],
+            })
+
+            # 4. ORB under the chronological regime -- holds the model fixed while
+            #    changing the regime, so the batch->stream drop can be decomposed
+            #    into a learner effect and a latency effect.
+            orb_chrono = ORB(seed=seed, **ORB_CONFIG)
+            r_chrono_orb = chronological_online(
+                orb_chrono,
+                df_proj,
+                label_col=train_label,
+                eval_label_col=eval_label,
+                train_frac=0.5,
+            )
+            records.append({
+                "project": project_name,
+                "seed": seed,
+                "model": "ORB",
+                "train_label": train_label.replace("label_", ""),
+                "eval_mode": eval_mode,
+                "regime": "chronological_online",
+                "mcc": r_chrono_orb["mcc"],
+                "gmean": r_chrono_orb["gmean"],
             })
 
     return records
+
+
+def _holm(pvals: np.ndarray) -> np.ndarray:
+    """Holm-Bonferroni step-down adjusted p-values (monotone, no statsmodels dep)."""
+    p = np.asarray(pvals, dtype=float)
+    m = len(p)
+    order = np.argsort(p)
+    adj = np.empty(m, dtype=float)
+    running = 0.0
+    for i, idx in enumerate(order):
+        running = max(running, (m - i) * p[idx])
+        adj[idx] = min(running, 1.0)
+    return adj
+
+
+def _benjamini_hochberg(pvals: np.ndarray) -> np.ndarray:
+    """Benjamini-Hochberg FDR-adjusted p-values."""
+    p = np.asarray(pvals, dtype=float)
+    m = len(p)
+    order = np.argsort(p)
+    adj = np.empty(m, dtype=float)
+    running = 1.0
+    for i in range(m - 1, -1, -1):
+        idx = order[i]
+        running = min(running, m * p[idx] / (i + 1))
+        adj[idx] = min(running, 1.0)
+    return adj
+
+
+def add_multiplicity_correction(df: pd.DataFrame) -> pd.DataFrame:
+    """Adjust p-values WITHIN each test family.
+
+    Thesis outline section 3.4 promises multiple-comparison correction; 30 raw
+    p-values were being reported without it. Families are corrected separately
+    because they answer different questions.
+    """
+    if df.empty:
+        return df
+    df = df.copy()
+    df["p_holm"] = np.nan
+    df["p_bh"] = np.nan
+    df["family_size"] = 0
+    for fam, idx in df.groupby("comparison_type").groups.items():
+        pv = df.loc[idx, "p_value"].to_numpy(dtype=float)
+        df.loc[idx, "p_holm"] = _holm(pv)
+        df.loc[idx, "p_bh"] = _benjamini_hochberg(pv)
+        df.loc[idx, "family_size"] = len(pv)
+    df["significant_holm_05"] = df["p_holm"] < 0.05
+    return df
 
 
 def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
@@ -175,6 +256,7 @@ def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
                     "comparison_type": "regime_inflation",
                     "model": m,
                     "train_label": lab,
+                    "n_pairs": int(len(pivot)),
                     "condition_A": "naive_kfold",
                     "condition_B": "chronological",
                     "mean_A": float(pivot["naive_kfold"].mean()),
@@ -183,22 +265,76 @@ def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
                     **res,
                 })
 
+    # 1b. Batch -> stream decomposition. The ladder previously subtracted a
+    #     batch RF/LR number from an online-ensemble number and attributed the
+    #     whole drop to verification latency, but the learner changed too.
+    #     These two families separate the effects.
+    for lab in ["oracle", "BSZZ"]:
+        # (i) regime effect: ORB fixed, chronological -> prequential+latency
+        sub = proj_means[(proj_means["model"] == "ORB") & (proj_means["train_label"] == lab)]
+        pivot = sub.pivot(index="project", columns="regime", values="mcc").dropna()
+        if "chronological_online" in pivot and "prequential_latency" in pivot:
+            res = wilcoxon_with_cliffs(pivot["chronological_online"], pivot["prequential_latency"])
+            test_rows.append({
+                "comparison_type": "regime_effect_model_fixed",
+                "model": "ORB", "train_label": lab,
+                "n_pairs": int(len(pivot)),
+                "condition_A": "chronological_online", "condition_B": "prequential_latency",
+                "mean_A": float(pivot["chronological_online"].mean()),
+                "mean_B": float(pivot["prequential_latency"].mean()),
+                "mean_diff": float(pivot["chronological_online"].mean() - pivot["prequential_latency"].mean()),
+                **res,
+            })
+        # (ii) learner effect: chronological regime fixed, batch model -> ORB
+        for batch_model in ["JITLine", "LApredict"]:
+            a = proj_means[(proj_means["model"] == batch_model)
+                           & (proj_means["train_label"] == lab)
+                           & (proj_means["regime"] == "chronological")].set_index("project")["mcc"]
+            b = proj_means[(proj_means["model"] == "ORB")
+                           & (proj_means["train_label"] == lab)
+                           & (proj_means["regime"] == "chronological_online")].set_index("project")["mcc"]
+            common = a.index.intersection(b.index)
+            if len(common) < 3:
+                continue
+            res = wilcoxon_with_cliffs(a.loc[common], b.loc[common])
+            test_rows.append({
+                "comparison_type": "learner_effect_regime_fixed",
+                "model": f"{batch_model}_vs_ORB", "train_label": lab,
+                "n_pairs": int(len(common)),
+                "condition_A": f"{batch_model} (chronological)",
+                "condition_B": "ORB (chronological_online)",
+                "mean_A": float(a.loc[common].mean()),
+                "mean_B": float(b.loc[common].mean()),
+                "mean_diff": float(a.loc[common].mean() - b.loc[common].mean()),
+                **res,
+            })
+
     # 2. Self-Scored vs Oracle-Scored (Self-deception gap)
     self_vs_oracle = (
         df_results.groupby(["project", "model", "train_label", "regime", "eval_mode"])["mcc"]
         .mean()
         .reset_index()
     )
+    # Tested per model. Pooling JITLine and LApredict gave 42 pairs that were
+    # reported as "21 projects" and treated two models on the same project as
+    # independent observations, which they are not: same project, same labels,
+    # same split. Pairing is now project-level within a single model.
     for lab in SZZ_VARIANTS:
-        for reg in ["naive_kfold", "chronological", "prequential_latency"]:
-            sub = self_vs_oracle[(self_vs_oracle["train_label"] == lab) & (self_vs_oracle["regime"] == reg)]
-            pivot = sub.pivot_table(index=["project", "model"], columns="eval_mode", values="mcc").dropna()
-            if "self" in pivot and "oracle" in pivot:
+        for reg in ["naive_kfold", "chronological", "prequential_latency", "chronological_online"]:
+            sub_all = self_vs_oracle[
+                (self_vs_oracle["train_label"] == lab) & (self_vs_oracle["regime"] == reg)
+            ]
+            for mdl in sorted(sub_all["model"].unique()):
+                sub = sub_all[sub_all["model"] == mdl]
+                pivot = sub.pivot_table(index="project", columns="eval_mode", values="mcc").dropna()
+                if len(pivot) < 3 or "self" not in pivot or "oracle" not in pivot:
+                    continue
                 res = wilcoxon_with_cliffs(pivot["self"], pivot["oracle"])
                 test_rows.append({
                     "comparison_type": "self_deception_gap",
-                    "model": "All",
+                    "model": mdl,
                     "train_label": lab,
+                    "n_pairs": int(len(pivot)),
                     "condition_A": f"self_scored ({reg})",
                     "condition_B": f"oracle_scored ({reg})",
                     "mean_A": float(pivot["self"].mean()),
@@ -219,6 +355,7 @@ def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
                     "comparison_type": "label_source_gap",
                     "model": "ORB",
                     "train_label": var,
+                    "n_pairs": int(len(orb_pivot)),
                     "condition_A": "oracle",
                     "condition_B": var,
                     "mean_A": float(orb_pivot["oracle"].mean()),
@@ -227,7 +364,7 @@ def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
                     **res,
                 })
 
-    return pd.DataFrame(test_rows)
+    return add_multiplicity_correction(pd.DataFrame(test_rows))
 
 
 def main():

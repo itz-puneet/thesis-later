@@ -169,9 +169,60 @@ def prequential_latency(
         else:
             heapq.heappush(pending, (now + W, (tie := tie + 1), i, 0))
 
+    # The terminal fading value summarises only the tail of the stream: with
+    # fading=0.99 the weights sum to ~1/(1-f) = 100 commits, i.e. ~8.5 positives
+    # at an 8.5% defect rate. Gama's prequential protocol reports the metric's
+    # trajectory, so we also return its mean over the stream, which is both the
+    # standard estimator and far more stable. Report *_avg as primary.
+    mcc_hist = np.array([h["mcc"] for h in tracker.history], dtype=float)
+    gm_hist = np.array([h["gmean"] for h in tracker.history], dtype=float)
     return dict(
         regime=f"prequential_latency[{latency_mode}]",
-        mcc=tracker.mcc(),
+        mcc=tracker.mcc(),                                  # terminal (fading tail)
         gmean=tracker.gmean(),
+        mcc_avg=float(np.nanmean(mcc_hist)) if len(mcc_hist) else 0.0,
+        gmean_avg=float(np.nanmean(gm_hist)) if len(gm_hist) else 0.0,
+        effective_window=float(1.0 / (1.0 - fading)) if fading < 1.0 else float(n),
         history=tracker.history,
+    )
+
+
+def chronological_online(
+    online_model: Any,
+    df: pd.DataFrame,
+    label_col: str,
+    eval_label_col: str | None = None,
+    train_frac: float = 0.5,
+) -> dict:
+    """Chronological split for an ONLINE learner: learn the past, freeze, predict the future.
+
+    Exists to break a confound in the inflation ladder. LApredict/JITLine ran
+    only under naive_kfold + chronological, ORB only under prequential_latency,
+    so no learner crossed the batch/stream boundary and the reported
+    batch -> stream drop conflated the change of regime with the change of
+    model. This cell holds the model fixed while changing the regime, so the
+    two effects can be separated.
+
+    The training half is consumed with immediate labels (no verification
+    latency), matching what the batch models get; the test half is predicted
+    with learning switched off.
+    """
+    eval_label_col = eval_label_col or label_col
+    d = df.sort_values("author_ts").reset_index(drop=True)
+    cut = int(len(d) * train_frac)
+    cut = max(1, min(cut, len(d) - 1))
+
+    X = d[KAMEI_FEATURES].to_numpy(dtype=float)
+    y_train = d[label_col].to_numpy(dtype=int)
+    y_eval = d[eval_label_col].to_numpy(dtype=int)
+
+    for i in range(cut):
+        online_model.learn_one(X[i], int(y_train[i]))
+
+    preds = np.array([online_model.predict_one(X[i]) for i in range(cut, len(d))], dtype=int)
+
+    return dict(
+        regime="chronological_online",
+        mcc=mcc(y_eval[cut:], preds),
+        gmean=gmean(y_eval[cut:], preds),
     )
