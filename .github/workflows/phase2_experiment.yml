@@ -104,9 +104,13 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # generate_report.py writes figures to BOTH reports/figures and
+          # manuscript/figures. Omitting manuscript/ left tracked PNGs modified
+          # but unstaged, and `git pull --rebase` refuses to run with a dirty
+          # tree -- which failed the push after a successful 2h run.
           git add data/processed/phase2_commits.csv \
                   data/processed/phase2_commits.provenance.json \
-                  phase1_bias.json results/ reports/
+                  phase1_bias.json results/ reports/ manuscript/
           if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0
@@ -114,7 +118,7 @@ jobs:
           git commit -m "Phase 2 results (stage: ${{ inputs.stage }}, latency: ${{ inputs.latency_mode }})
 
           Rebuilt from current Phase 1 labels; label-consistency gate passed."
-          git pull --rebase origin master
+          git pull --rebase --autostash origin master
           git push origin master
 
       - name: Upload results artifacts
