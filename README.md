@@ -209,6 +209,7 @@ python scripts/make_figures.py
 - `Phase1_Phase2_Master_Results.md`: **single source of truth** — every Phase 1 and Phase 2 number, with the eight figures.
 - `Phase2_Supervisor_Explanation_Guide.md`: how to present Phase 2 and its statistical tests.
 - `Phase2_Audit_Findings_and_Remediation_Plan.md`: pipeline audit, what was fixed and how, what remains open.
+- `Phase3_Phase4_Plan.md`: ordered execution plan for Phases 3 and 4, with exit criteria per step.
 
 **Planning and reference:**
 - `01_Learning_Guide.md`: Theoretical concepts and learning guide for the thesis.
@@ -220,8 +221,10 @@ python scripts/make_figures.py
   - `data/loader.py`: Unified dataset loading and schema formatting.
   - `models/baselines.py`: `LApredict` and SMOTE/threshold-tuned `JITLine`.
   - `online/orb.py`: Oversampling Rate Boosting (ORB) online learner.
+  - `online/noise_aware_orb.py`: Phase 4 Noise-Aware ORB (damp / rescue / capped loss correction).
+  - `noise/injection.py`: symmetric and asymmetric label-noise injection, `fix_ts` imputation.
   - `evaluation/regimes.py`: Naive $k$-fold, chronological split, and prequential streaming latency.
   - `evaluation/metrics.py`: MCC, G-mean, Prequential Tracker, Wilcoxon & Cliff's $\delta$.
-- `experiments/`: Experiment execution scripts (`evaluate_confusion_matrix.py`, `run_phase1_oracle.py`, `run_phase2_impact.py`).
-- `scripts/`: Utility scripts (`build_fix_ts.py`, `replicate_cabral_orb.py`, `make_figures.py`, `extract_base_features.py`, `extract_fix_dates.py`).
+- `experiments/`: Experiment execution scripts (`evaluate_confusion_matrix.py`, `run_phase1_oracle.py`, `run_phase2_impact.py`, `check_label_consistency.py`, `run_phase3_noise.py`, `run_phase4_na_orb.py`).
+- `scripts/`: Utility scripts (`build_fix_ts.py`, `replicate_cabral_orb.py`, `make_figures.py`, `make_phase34_figures.py`, `extract_base_features.py`, `extract_fix_dates.py`).
 - `results/`: Artifacts, tables, and statistical outputs for Phase 1, Phase 2, and replication.

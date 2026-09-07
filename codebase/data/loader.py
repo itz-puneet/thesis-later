@@ -14,8 +14,8 @@ Two-layer design (see Phase2_Audit_Findings_and_Remediation_Plan.md):
 
 The separation exists because Phase 2 once trained on a label vintage one commit
 older than the one Phase 1 reported: the cached CSV was never invalidated when
-the label files changed. `load_or_build_dataset` now refuses to serve a cache
-that is older than the label files it was built from.
+the label files changed. `load_or_build_dataset` now refuses to serve a cache whose
+recorded label-file hashes do not match the label files on disk.
 """
 from __future__ import annotations
 
@@ -200,11 +200,14 @@ def _git_commit() -> str:
         return "unknown"
 
 
-def _newest_label_mtime() -> float:
-    return max(
-        (p.stat().st_mtime for p in PHASE1_RESULTS_DIR.glob("*_labels.csv")),
-        default=0.0,
-    )
+def _stored_label_digests() -> dict[str, str] | None:
+    """Label-file hashes recorded when the cached dataset was built."""
+    if not PROVENANCE_JSON.exists():
+        return None
+    try:
+        return json.load(open(PROVENANCE_JSON)).get("label_file_sha256")
+    except Exception:
+        return None
 
 
 def build_unified_dataset() -> pd.DataFrame:
@@ -296,12 +299,20 @@ def _carry_forward_fix_ts(final_df: pd.DataFrame) -> list[str]:
 def load_or_build_dataset(force_rebuild: bool = False) -> pd.DataFrame:
     """Load the cached dataset, refusing to serve one that predates its labels."""
     if DATASET_CSV.exists() and not force_rebuild:
-        if _newest_label_mtime() > DATASET_CSV.stat().st_mtime:
+        # Content hashes, not mtimes. A fresh clone or CI checkout assigns
+        # checkout-time mtimes in arbitrary order, so an mtime comparison
+        # false-positives on untouched data and blocks a perfectly valid cache.
+        stored = _stored_label_digests()
+        if stored is None:
+            print(f"WARNING: {PROVENANCE_JSON.name} missing -- cannot verify that "
+                  f"{DATASET_CSV.name} was built from the current Phase 1 labels. "
+                  "Run: python -m experiments.check_label_consistency")
+        elif stored != _label_file_digests():
             raise RuntimeError(
-                f"{DATASET_CSV} is older than results/phase1/*_labels.csv.\n"
-                "Phase 1 labels changed since this cache was built, so Phase 2 would "
-                "train on a stale label vintage (this exact bug invalidated the first "
-                "Phase 2 run). Rebuild in this order:\n"
+                f"{DATASET_CSV} was built from different Phase 1 label files than "
+                "the ones now in results/phase1/.\n"
+                "Phase 2 would train on a stale label vintage (this exact bug "
+                "invalidated the first Phase 2 run). Rebuild in this order:\n"
                 "  python -c 'from codebase.data.loader import build_unified_dataset; build_unified_dataset()'\n"
                 "  python scripts/build_fix_ts.py --mode real\n"
                 "  python -m experiments.check_label_consistency"

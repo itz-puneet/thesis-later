@@ -1,4 +1,4 @@
-"""Phase 4: Noise-Aware ORB. Place at: codebase/online/noise_aware_orb.py
+"""Phase 4: Noise-Aware ORB.
 
 Extends your validated ORB with independently switchable noise defenses. The
 design reflects the Phase 1/2 measurements, not the original proposal:
@@ -71,8 +71,17 @@ class NoiseAwareORB(ORB):
         w = self.win[y]
         return float(np.mean(w)) if len(w) >= self.warmup else None
 
-    def _confidence(self, p1: float, y: int) -> float:
-        """c = P_model(y|x) / running self-confidence threshold of class y."""
+    def _observe(self, p1: float, y: int) -> float:
+        """Record this arrival in class y's window; return its confidence ratio.
+
+        The window is maintained UNCONDITIONALLY, not only when damping is on.
+        The RESCUE path reads the class-1 threshold, so gating window
+        maintenance on `use_damp` left `win[1]` permanently empty in the
+        rescue-only ablation arm: `_class_threshold(1)` returned None on every
+        arrival, no commit was ever rescued, and NA(rescue) was byte-identical
+        to plain ORB. Whether the returned confidence is *used* is still the
+        damping switch's decision -- see learn_one.
+        """
         p_y = p1 if y == 1 else 1.0 - p1
         thr = self._class_threshold(y)
         c = 1.0 if thr is None else min(p_y / max(thr, 1e-6), 1.0)
@@ -108,7 +117,11 @@ class NoiseAwareORB(ORB):
         y_eff = 1 if rescued else y
         w = weight * (self.rescue_weight if rescued else 1.0) * self._lc_weight(y_eff)
 
-        c = self._confidence(p1, y) if self.use_damp else 1.0
+        # Observe first (fills the windows for both paths), then decide whether
+        # damping actually applies. Note the rescue check above deliberately
+        # runs BEFORE this, so an arrival never influences its own threshold.
+        c_obs = self._observe(p1, y)
+        c = c_obs if self.use_damp else 1.0
         if self.use_agree and not rescued and self._agreement_flag(x, y):
             c *= self.agree_penalty
 
