@@ -301,7 +301,38 @@ Oracle has only 67.8% coverage vs BSZZ's 100%. Does oracle win on quality, or is
 
 ![JITLine anomaly](reports/figures/f8_jitline_anomaly.png)
 
-**The JITLine anomaly:** BSZZ-trained JITLine (0.1285) beats oracle-trained (0.1027) in **13 of 21 projects** under chronological evaluation. BSZZ labels 29.5% of commits positive against a true rate of 8.5%; with only ~40 positives per oracle training split, the Random Forest starves, and BSZZ's extra minority mass — 81% of it false — acts as accidental data augmentation.
+**The JITLine anomaly:** BSZZ-trained JITLine (0.1285) beats oracle-trained (0.1027) in **13 of 21 projects** under chronological evaluation.
+
+**The effect is real and project-specific, but unexplained.** It is not seed noise: **97.7%** of the between-project variance in the gap is real, and **16 of 21** projects have a gap more than 2 SE from zero. But no project characteristic predicts which projects those are.
+
+![What predicts the anomaly](reports/figures/f9_anomaly_predictors.png)
+
+| Predictor | Spearman ρ with gap | p |
+|---|---|---|
+| training-half oracle positives | −0.336 | 0.14 |
+| oracle positives (total) | −0.216 | 0.35 |
+| oracle fix_ts coverage | −0.175 | 0.45 |
+| n commits | −0.149 | 0.52 |
+| BSZZ precision | −0.135 | 0.56 |
+| BSZZ recall | −0.108 | 0.64 |
+| enrichment (BSZZ rate / oracle rate) | +0.066 | 0.78 |
+| oracle positive rate | −0.056 | 0.81 |
+| BSZZ positive rate | −0.029 | 0.90 |
+
+Not one reaches uncorrected p < 0.05, across 18 tests where ~1 would be expected by chance.
+
+**Two mechanisms point the right way but neither is significant at n = 21:**
+
+- *Minority starvation.* Median split on training positives: few-positive projects gain **+0.0479** (BSZZ wins 8/11), many-positive projects **+0.0015** (5/10). Mann-Whitney **p = 0.245**.
+- *Headroom.* BSZZ helps most where oracle-trained JITLine is already weak — oracle MCC 0.093 in BSZZ-win projects vs 0.119 elsewhere, r = −0.336, **p = 0.137**.
+
+These two are not independent (fewer positives → weaker oracle model), so they are one hypothesis, not two.
+
+**A counter-example the enrichment story cannot absorb.** `opennlp` is the second-largest BSZZ win (**+0.162 ± 0.010**, unambiguous), yet BSZZ flags a *lower* positive rate there than the oracle does — 6.91% vs 8.38%, enrichment **0.82×**. There is no extra minority mass, so accidental augmentation cannot be the mechanism in that project.
+
+**How to state it:** minority enrichment is a plausible mechanism consistent with the aggregate direction, and the class-imbalance argument is sound. But it is not established: no project-level characteristic predicts where BSZZ wins, and at least one large win contradicts the mechanism outright.
+
+**It is a batch-learner phenomenon.** Under the time-averaged estimator, BSZZ beats oracle for ORB in only **3 of 21** projects (8/21 under the terminal estimator). The anomaly does not carry into streaming.
 
 **It is not a threshold artifact.** Measured under three threshold protocols across 21 projects × 3 seeds:
 
@@ -341,7 +372,7 @@ All means are **unweighted** across projects spanning 544–4,026 commits and 1.
 ### Tier 2 — solid, with the right framing
 
 5. **Oracle labels beat all six SZZ variants** under honest streaming evaluation (time-averaged estimator; Holm p ≤ 0.0025, δ 0.39–0.71, 16–19/21 projects). Survives 100% latency imputation (+0.026, 16/21, p = 0.010). *Must add:* under the terminal estimator the BSZZ comparison alone is not significant; report both, treat time-averaged as primary.
-6. **FP-heavy noise helps batch learners.** BSZZ-trained JITLine beats oracle-trained in 13/21 projects; survives three threshold protocols.
+6. **FP-heavy labels help batch learners in some projects.** BSZZ-trained JITLine beats oracle-trained in 13/21 projects, and the effect survives three threshold protocols and is stable across seeds (97.7% real variance). The *mechanism* is not established: no project characteristic predicts where it happens, and `opennlp` is a large BSZZ win where BSZZ supplies fewer positives than the oracle. It does not carry into streaming (ORB: 3/21). See §9.
 7. **Latency is not what makes streaming hard.** Holding the learner fixed, latency costs +0.009 MCC (p = 0.84, negligible); the learner swap costs +0.096 (Holm p = 0.0004, large). ~91% of the batch→stream drop is the learner. **No prior JIT-SDP work separates these** — this is the novel contribution.
 
 ### Tier 3 — observations
@@ -366,4 +397,4 @@ python -c "import pandas as pd; print(pd.read_csv('results/phase2/statistical_te
 | `results/phase2/latency_imputation_summary.csv` | Deliverability confound, both estimators |
 | `results/phase1/phase1_quality_corrected.csv` | Phase 1 table |
 | `phase1_bias.json` | ρ₀/ρ₁ for Phase 3 |
-| `reports/figures/` | The eight figures above |
+| `reports/figures/` | The nine figures above |

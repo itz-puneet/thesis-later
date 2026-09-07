@@ -17,6 +17,7 @@ re-running any experiment:
   f6  Verification latency distribution against the W=90d window
   f7  Why the two estimators disagree (variance comparison)
   f8  Per-project JITLine BSZZ-over-oracle anomaly
+  f9  What predicts that anomaly (nothing does) + the opennlp counter-example
 
 Usage:
   python scripts/make_figures.py
@@ -190,14 +191,56 @@ def f8_jitline_anomaly(d):
     plt.tight_layout(); fig.savefig(OUT / "f8_jitline_anomaly.png"); plt.close(fig)
 
 
+def f9_anomaly_predictors(d):
+    """Where BSZZ beats oracle -- and why the enrichment story is incomplete.
+
+    The per-project gap is stable (97.7% of its between-project variance is real
+    rather than seed noise, 16/21 projects >2 SE from zero), but no project
+    characteristic predicts it. opennlp is the load-bearing counter-example:
+    a large BSZZ win where BSZZ supplies FEWER positives than the oracle, so
+    minority enrichment cannot be the mechanism there.
+    """
+    o, c = d["oracle"], d["commits"]
+    j = o[(o.model == "JITLine") & (o.regime == "chronological")]
+    piv = j.groupby(["project", "train_label"]).mcc.mean().unstack()
+    gap = (piv.BSZZ - piv.oracle)
+    stats_ = {}
+    for proj, g in c.groupby("project"):
+        half = g.sort_values("author_ts").iloc[:len(g) // 2]
+        stats_[proj] = (int(half.label_oracle.sum()),
+                        g.label_BSZZ.mean() / g.label_oracle.mean())
+    tp = pd.Series({k: v[0] for k, v in stats_.items()})
+    en = pd.Series({k: v[1] for k, v in stats_.items()})
+
+    fig, ax = plt.subplots(1, 2, figsize=(10, 4))
+    for a, x, xlab, title in [
+        (ax[0], tp, "oracle positives in the chronological training half",
+         "Starvation: directionally right, not significant\n(Mann-Whitney p = 0.25 on a median split)"),
+        (ax[1], en, "BSZZ positive rate / oracle positive rate",
+         "Enrichment does not explain it\n(opennlp: a large BSZZ win with FEWER positives)")]:
+        col = ["#c0392b" if v > 0 else "#27ae60" for v in gap[x.index]]
+        a.scatter(x, gap[x.index], c=col, s=45, zorder=3)
+        a.axhline(0, c="k", lw=0.8)
+        a.set_xlabel(xlab); a.set_ylabel("MCC(BSZZ) − MCC(oracle)")
+        a.set_title(title, fontsize=9)
+    ax[1].axvline(1.0, ls="--", c="#7f8c8d", lw=1)
+    ax[1].text(1.15, gap.max() * 0.92, "1x = same positive rate", fontsize=7, color="#7f8c8d")
+    for a, x in [(ax[0], tp), (ax[1], en)]:
+        a.annotate("opennlp", (x["opennlp"], gap["opennlp"]),
+                   textcoords="offset points", xytext=(8, -2), fontsize=8, fontweight="bold")
+    fig.suptitle("Red = BSZZ-trained JITLine beat oracle-trained (13/21 projects)", fontsize=9, y=1.02)
+    plt.tight_layout(); fig.savefig(OUT / "f9_anomaly_predictors.png"); plt.close(fig)
+
+
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     d = _load()
     for fn in (f1_phase1_noise, f2_inflation_ladder, f3_self_deception, f4_label_source,
-               f5_decomposition, f6_latency, f7_estimators, f8_jitline_anomaly):
+               f5_decomposition, f6_latency, f7_estimators, f8_jitline_anomaly,
+           f9_anomaly_predictors):
         fn(d)
         print(f"  [OK] {fn.__name__}")
-    print(f"\n8 figures written to {OUT}")
+    print(f"\n9 figures written to {OUT}")
     return 0
 
 

@@ -76,13 +76,26 @@ JITLine trained on BSZZ, evaluated under random k-fold:
 
 This is the finding with the largest effect size in the entire study (Cliff's δ = 0.955, essentially total separation between the paired distributions).
 
-### Finding 3 — FP-heavy noise *helps* batch learners, which is counter-intuitive and real
+### Finding 3 — FP-heavy labels help batch learners in some projects — mechanism unresolved
 
 Under chronological evaluation, oracle-scored: BSZZ-trained JITLine (**0.1285**) beats oracle-trained JITLine (**0.1027**), winning in 13 of 21 projects.
 
-**How to explain it:** the corpus is 8.5% defective. Training on oracle labels gives a Random Forest ~40 positive examples per project split, and it starves the minority class. BSZZ labels 29.5% of commits positive — three and a half times as many — and although ~81% of those are false alarms, the expanded positive set gives the trees far more minority-class mass to partition on. **FP-heavy label noise acts as accidental, badly-targeted data augmentation.**
+**The effect is real, not noise.** 97.7% of the between-project variance in the gap is genuine rather than seed variation, and 16 of 21 projects have a gap more than 2 SE from zero. Say this before anyone asks — it is the first thing a sceptic will probe.
 
-Be ready for "isn't that just your threshold being wrong?" — it isn't, and you can prove it. This effect was measured under four different decision-threshold protocols (the original tail-tuned one, out-of-bag tuning, chronologically blocked cross-validation, and the default 0.5) and survives all four, with the gap ranging +0.026 to +0.034. See §10, Q3.
+**The likely explanation, stated as a hypothesis:** the corpus is 8.5% defective. Training on oracle labels gives a Random Forest roughly 40 positives per project split, and it starves the minority class. BSZZ labels 29.5% of commits positive, and although ~81% are false alarms, the expanded positive set gives the trees more minority mass to partition on.
+
+**Do not present that as established, because it is not.** Two things to volunteer:
+
+1. **No project characteristic predicts where BSZZ wins.** Nine candidates tested — project size, oracle positive count, oracle positive rate, training-half positives, BSZZ positive rate, enrichment ratio, BSZZ precision, BSZZ recall, fix_ts coverage. Not one reaches uncorrected p < 0.05 across 18 tests. The starvation hypothesis is the closest: projects with few training positives gain +0.048 versus +0.002 for positive-rich ones, but Mann-Whitney **p = 0.245**.
+2. **`opennlp` contradicts the mechanism outright.** It is the second-largest BSZZ win (+0.162 ± 0.010), yet BSZZ flags a *lower* positive rate there than the oracle — 6.91% vs 8.38%, enrichment **0.82×**. No extra minority mass exists in that project, so augmentation cannot be what is happening.
+
+**And it is a batch phenomenon only.** Under the time-averaged estimator, BSZZ beats oracle for ORB in just 3 of 21 projects. It does not survive the move to streaming — which supports reading it as "how batch learners cope with imbalance" rather than anything about label quality.
+
+**How to say it:**
+
+> "FP-heavy labels help batch learners in some projects, and the effect is stable across seeds. Class-imbalance relief is the natural explanation and it matches the aggregate direction, but I could not confirm it: no project-level characteristic predicts where it happens, and opennlp is a large BSZZ win where BSZZ actually supplies fewer positives than the oracle. So I am reporting the phenomenon and treating the mechanism as open."
+
+The threshold-artifact objection is separately closed — see §10, Q3.
 
 ### Finding 4 — Under honest streaming evaluation, label quality does matter
 
@@ -317,7 +330,7 @@ Expect: *"You ran 54 tests. How many would be significant by chance?"*
 
 **Q2. "Why does BSZZ beat the oracle for JITLine? Doesn't that undermine your whole premise?"**
 
-> "It looks that way until you decompose it. BSZZ labels 29.5% of commits positive against a true rate of 8.5%, so it acts as accidental minority-class augmentation for a batch tree ensemble that would otherwise starve on ~40 positives per split. The effect is real and survives four different threshold protocols. But it is specific to batch learners: in the streaming setting, where labels arrive over time and the oversampling rate adapts, oracle labels beat BSZZ. So the finding is not 'noise is good' — it is 'batch learners under severe imbalance are so starved that even badly-targeted extra positives help,' which is itself a criticism of how the field evaluates."
+> "It doesn't, but I want to be precise about what I can and can't claim. The effect is real — 97.7% of the between-project variance is genuine rather than seed noise, and it survives three threshold protocols. The natural explanation is class-imbalance relief: the corpus is 8.5% defective, oracle training leaves the forest about 40 positives per split, and BSZZ's 29.5% positive rate supplies more minority mass even though most of it is wrong. But I tested nine project-level predictors of where BSZZ wins and none is significant, and opennlp is a large BSZZ win where BSZZ actually flags *fewer* commits than the oracle — so augmentation cannot be the mechanism there. I report the phenomenon and leave the mechanism open. Critically it is batch-only: under streaming, oracle beats BSZZ in 18 of 21 projects, so it says something about how batch learners handle imbalance, not about label quality."
 
 **Q3. "Is the JITLine anomaly just a decision-threshold artifact?"**
 
@@ -397,4 +410,6 @@ Keep this visible during the meeting.
 - ✗ "Latency causes the streaming performance drop" → it accounts for ~9% and is not significant (p = 0.84)
 - ✗ "n = 16,380" → the statistical unit is n = 21 projects
 - ✗ "Self-scoring inflates all models" → it inflates JITLine for all six variants, LApredict only for BSZZ
+- ✗ "FP-heavy noise acts as minority augmentation" stated as fact → the phenomenon is real (13/21, stable across seeds) but the mechanism is unconfirmed: nine predictors all non-significant, and opennlp is a large BSZZ win with *fewer* BSZZ positives than oracle. Say "consistent with class-imbalance relief, mechanism open."
+- ✗ Presenting the JITLine anomaly as a general result → it is batch-only; under streaming oracle beats BSZZ 18/21
 - ✗ Quoting a single MCC without naming the estimator → always say "terminal" or "time-averaged"
