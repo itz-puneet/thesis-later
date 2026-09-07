@@ -14,7 +14,7 @@ This document originally described only what was wrong. It now also describes wh
 | | |
 |---|---|
 | **Fixed and verified in CI** | Stale-label blocker (§1), heavy-pipeline-on-a-laptop problem (§1.4), batch/stream confound (§2), prequential terminal-vs-averaged estimator (§3a), no multiplicity correction (§3b), pooled self-deception tests (§3c), unstable JITLine threshold (§3d), duplicate result rows (§3f) |
-| **Fixed as disclosure only (no code change needed)** | Oracle-vs-BSZZ overclaim (§4) — now has the correct language ready to paste in |
+| **Fixed, and the fix reversed an earlier conclusion** | Oracle-vs-BSZZ (§4). The audit first said this claim was unsupported. That was an artifact of the terminal prequential estimator. Under the time-averaged estimator all six label-source comparisons are significant (Holm p ≤ 0.0025). `statistical_tests.csv` now reports both. |
 | **Not yet done — still needs your attention** | `fix_ts` SZZ-inside-SZZM-free construct (§5a, disclosure), unweighted project means / robustness check (§5b), rewriting the two report documents to match the new numbers (§6), Phase 3 parameterization from the *new* `phase1_bias.json`, which happens to be numerically unchanged but must be re-read, not assumed (§7) |
 
 **The single most important fact:** `phase1_bias.json` did not change. It was already the fresh label vintage before this remediation started — only `data/processed/phase2_commits.csv` was stale. So every Phase 1 number in your existing documents is still correct. Every Phase 2 number needs replacing with the values in §2–§3 below.
@@ -35,7 +35,7 @@ This assertion now runs automatically in CI, before any experiment compute is sp
 1. [What was found: the stale-label blocker, and how it was fixed](#1-what-was-found-the-stale-label-blocker-and-how-it-was-fixed)
 2. [What was found: the ladder's third rung confounded model with regime — fixed](#2-what-was-found-the-ladders-third-rung-confounded-model-with-regime--fixed)
 3. [What was found: six methodological gaps — all fixed](#3-what-was-found-six-methodological-gaps--all-fixed)
-4. [What was found: an overstated claim — resolved by disclosure](#4-what-was-found-an-overstated-claim--resolved-by-disclosure)
+4. [What was found: an overstated claim — and why the correction was itself wrong](#4-what-was-found-an-overstated-claim--and-why-the-correction-was-itself-wrong)
 5. [What remains open](#5-what-remains-open)
 6. [What you still need to do](#6-what-you-still-need-to-do)
 7. [Implications for Phase 3 and Phase 4](#7-implications-for-phase-3-and-phase-4)
@@ -231,33 +231,60 @@ This is disclosure, not a bug — see §5a for what's still open here.
 
 ---
 
-## 4. What was found: an overstated claim — resolved by disclosure
+## 4. What was found: an overstated claim — and why the correction was itself wrong
 
-### 4.1 What was found
+**This section was rewritten on 2026-09-07. The earlier version told you to stop
+claiming the oracle beats BSZZ. That advice was wrong, and the reason it was
+wrong is worth more than the claim itself.**
 
-The pitch document stated "Oracle ground truth conclusively outperforms all noisy SZZ variants (winning 14 of 21 projects against BSZZ)." The underlying test: `label_source_gap`, ORB, oracle vs BSZZ, **p = 0.3926, Cliff's δ = 0.156 ("small")**. A 14/21 win count at n=21 is not distinguishable from a coin flip, and BSZZ's few large wins (parquet-mr, commons-compress, commons-digester) explain why the signed-rank test came back non-significant.
+### 4.1 What was originally found
 
-### 4.2 What the fresh data says (does not need further code changes — this was a statistics/writing gap, not a bug)
+The pitch document stated "Oracle ground truth conclusively outperforms all noisy SZZ variants (winning 14 of 21 projects against BSZZ)." The test behind it — `label_source_gap`, ORB, oracle vs BSZZ — came back **p = 0.4948, Cliff's δ = 0.143**, which the project's own `metrics.py` thresholds classify as *negligible*. On that basis the audit concluded the claim was unsupported and should be withdrawn.
 
-Post label-fix and post Phase B, the comparison is, if anything, **weaker**:
+### 4.2 Why that conclusion was an artifact
 
-| Comparison | Before | After (current) |
-|---|---|---|
-| Oracle vs BSZZ, wins | 14/21 | **13/21** |
-| p-value | 0.3926 | **0.4948** |
-| Cliff's δ | 0.156 (small) | **0.1429 (negligible** — below your own `metrics.py` 0.147 cutoff) |
-| Imputed oracle vs BSZZ, wins | 12/21 | **11/21** |
-| Imputed p-value | 1.0000 | **0.8649** |
+Every one of those tests used the **terminal fading MCC** — the value of the fading confusion matrix at the end of the stream. With `fading = 0.99`, the weights sum to ~100 commits, so the statistic summarises roughly the last hundred commits of each project (about 8.5 expected positives). It is a tail sample, not a summary of the run.
 
-Against the five refined variants, the claim is fully supported and stronger than before — all five now survive Holm correction (AGSZZ, MASZZ, LSZZ, RSZZ, RASZZ: p_holm 0.0426–0.0451; MASZZ is now "large" at δ=0.5057).
+Finding §3a had already replaced this with the **time-averaged prequential value** (the standard Gama estimator) on methodological grounds, and measured its project-level variance at roughly half the terminal value's. But the statistical tests were never switched over to it. When they were, the picture changed completely:
 
-### 4.3 The language to use (paste-ready)
+| Oracle vs variant (ORB, prequential) | Terminal p_holm | **Time-averaged p_holm** | Averaged δ | Wins |
+|---|---|---|---|---|
+| **BSZZ** | 0.4948 ✗ | **0.0004 ✅** | 0.451 medium | **18/21** |
+| AGSZZ | 0.0451 ✅ | **0.0009 ✅** | 0.655 large | 17/21 |
+| MASZZ | 0.0451 ✅ | **0.0003 ✅** | 0.674 large | 18/21 |
+| LSZZ | 0.0451 ✅ | **0.0025 ✅** | 0.392 medium | 16/21 |
+| RSZZ | 0.0426 ✅ | **0.0001 ✅** | 0.710 large | 19/21 |
+| RASZZ | 0.0451 ✅ | **0.0004 ✅** | 0.669 large | 18/21 |
 
-Replace every instance of "Oracle conclusively outperforms all noisy SZZ variants" with:
+**All six comparisons are significant under the time-averaged estimator.** The original claim was right; the terminal estimator was simply too noisy to detect the BSZZ effect.
 
-> "Oracle ground truth significantly outperforms all five refined SZZ variants (AGSZZ, MASZZ, LSZZ, RSZZ, RASZZ; Holm-adjusted p ≤ 0.045, Cliff's δ 0.42–0.51). Against FP-heavy BSZZ specifically, the advantage is directionally consistent (13/21 projects, +0.012 MCC) but statistically negligible (p = 0.49, δ = 0.14) — and this negligibility is robust to full latency imputation (11/21, p = 0.86)."
+The same reversal appears in the deliverability-confound experiment:
 
-This is not a retreat. It is a *sharper* claim: label quality matters, specifically and measurably, for the five variants that are conservative enough to produce a real quality gap — and does not matter (on this corpus, at this sample size) for the one variant whose high recall happens to compensate for its high false-alarm rate. That asymmetry is itself worth a sentence in the discussion chapter.
+| Oracle imputed (100% fix_ts) vs BSZZ | Δ MCC | Wins | p (2-sided) | δ |
+|---|---|---|---|---|
+| Terminal estimator | +0.0037 | 11/21 | 0.8649 | 0.030 negligible |
+| **Time-averaged estimator** | **+0.0258** | **16/21** | **0.0101** | 0.293 small |
+
+So the deliverability confound **is** bounded: the oracle's advantage survives equalising timestamp coverage at 100%.
+
+### 4.3 Why this is not estimator-shopping
+
+Two facts make the choice defensible, and both should be stated in the thesis:
+
+1. **The estimator was chosen a priori.** The switch to time-averaging was made in Phase B on methodological grounds (§3a) — the terminal value summarises only the stream tail, and Gama's prequential protocol reports the trajectory. That decision predates running any label-source comparison with it.
+2. **It is not flattered by the early stream.** The obvious objection is that averaging includes the warm-up period and might inflate results. Measured on two projects, the warm-up *depresses* the average: mean MCC over the first 10% of the stream is **−0.039** (commons-math) and **−0.012** (ant-ivy), and excluding the warm-up would push the averages *higher* still. The time-averaged estimator is conservative here.
+
+The terminal value is demonstrably erratic — on ant-ivy it reads 0.057 against a trajectory average of 0.201, having sampled a bad patch at the end of that particular stream.
+
+**`results/phase2/statistical_tests.csv` now reports both estimators**, tagged by a `metric` column and Holm-corrected within (family, metric). Report both. Stating that the BSZZ result is estimator-dependent, and explaining why the averaged estimator is the right one, is stronger than quietly reporting the favourable number.
+
+### 4.4 The language to use (paste-ready)
+
+> "Under the time-averaged prequential estimator, oracle ground truth significantly outperforms all six SZZ variants (Holm-adjusted p ≤ 0.0025, Cliff's δ 0.39–0.71, winning 16–19 of 21 projects). The advantage survives equalising timestamp deliverability: with fix_ts imputed to 100% coverage from the empirical latency distribution, oracle still beats BSZZ (+0.026 MCC, 16/21 projects, p = 0.010). We report the terminal fading value alongside, under which the BSZZ comparison alone is not significant (p = 0.49); the terminal value summarises only the final ~100 commits of each stream and carries roughly twice the project-level variance, so we treat the time-averaged value as primary."
+
+### 4.5 The lesson worth keeping
+
+An underpowered estimator produced a null result, and that null was very nearly written into the thesis as a finding. The safeguard that caught it was asking *which estimator is this test using* — not re-examining the data. Worth a sentence in Threats to Validity: **the choice of prequential summary statistic materially changes which label-source differences are detectable.**
 
 ---
 
@@ -282,7 +309,7 @@ Every reported figure remains an unweighted mean over 21 projects ranging from 5
 This audit and its remediation fixed the *data and code*. It did not touch the *prose*. Concretely:
 
 1. **`reports/phase1_phase2_report.md` / `.html`** (auto-generated by `scripts/generate_report.py`) reflect the current numbers but were written by a report generator that predates Phase B — it does not know about `chronological_online`, `mcc_avg`, the Holm columns, or the new test families. It still frames the batch→stream gap as a latency effect. This needs a generator update, not just a re-run.
-2. **`Phase1_Phase2_Comprehensive_Analysis_and_Supervisor_Pitch.md`** is now stale in every Phase 2 number and in the "Oracle conclusively outperforms" framing (§4.3 gives you the replacement language). The Phase 1 numbers in it are still correct.
+2. **`Phase1_Phase2_Comprehensive_Analysis_and_Supervisor_Pitch.md`** is stale in every Phase 2 number. Its "Oracle conclusively outperforms all noisy SZZ variants" framing turns out to be *defensible* under the time-averaged estimator — see §4.4 for the wording that supports it without overclaiming. The Phase 1 numbers in it are still correct.
 3. §5a and §5b above are genuinely unstarted work, not documentation debt.
 4. Once 1–3 are done, re-verify the specific numeric corrections originally catalogued (median/coverage population labeling, BSZZ positive-rate percentage, the 81.7% vs 81.5% precision-ceiling rounding, the record-count footnote) — these were minor and mostly about *which* denominator a percentage uses; re-check them against the current `results/phase2/` rather than assuming they still apply verbatim.
 
@@ -311,7 +338,7 @@ Superseding §9 of the original document. All below are from `results/phase2/` a
 4. No SZZ variant exceeds 27.2% precision; asymmetric, variant-dependent noise. *(Phase 1 — unaffected.)*
 
 **Tier 2 — corrected, now stronger or more precisely scoped:**
-5. Oracle significantly outperforms all five refined SZZ variants (Holm p ≤ 0.045); the BSZZ comparison is negligible, not "conclusive" (§4).
+5. Oracle significantly outperforms **all six** SZZ variants under the time-averaged prequential estimator (Holm p ≤ 0.0025, δ 0.39–0.71, 16–19 of 21 projects), and the advantage survives 100% latency imputation (+0.026 MCC, 16/21, p = 0.010). Under the terminal estimator the BSZZ comparison alone is not significant (p = 0.49); report both and treat the averaged value as primary (§4).
 6. FP-heavy BSZZ still beats oracle for JITLine (13/21, gap +0.0258), now measured under a fourth, better-calibrated threshold protocol (§3d).
 7. **New, and arguably your strongest single result now:** once learner architecture is held fixed, verification latency does not measurably degrade absolute MCC (Δ=+0.0093, p=0.84) — the batch→stream drop in the old ladder was ~91% a learner-swap artifact, ~9% latency (§2.3). Verification latency's real cost shows up instead as *compression of the label-source ordering* (variant MCCs cluster together under real latency where they were more separated under chronological batch evaluation), not as an absolute penalty.
 
