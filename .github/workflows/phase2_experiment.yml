@@ -2,7 +2,7 @@ name: Phase 2 Pipeline
 
 # Runs the full chain on a GitHub runner:
 #   Phase 1 label evaluation -> dataset rebuild -> fix_ts -> GATE
-#   -> Phase 2 grid -> latency imputation sensitivity -> reports
+#   -> Phase 2 grid -> latency imputation sensitivity -> figures
 #
 # The gate (check_label_consistency) sits BEFORE the expensive steps, so a
 # label-vintage mismatch costs two minutes instead of two hours. The runner
@@ -34,7 +34,7 @@ on:
         default: true
         type: boolean
       run_grid:
-        description: 'Run the Phase 2 experiment grid (uncheck to re-run only the imputation sensitivity + reports)'
+        description: 'Run the Phase 2 experiment grid (uncheck to re-run only the imputation sensitivity + figures)'
         required: false
         default: true
         type: boolean
@@ -100,8 +100,8 @@ jobs:
       - name: Run latency imputation sensitivity
         run: python -m experiments.run_latency_imputation_sensitivity
 
-      - name: Generate reports and figures
-        run: python scripts/generate_report.py
+      - name: Generate figures
+        run: python scripts/make_figures.py
 
       # --- Publish --------------------------------------------------------
 
@@ -110,13 +110,12 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          # generate_report.py writes figures to BOTH reports/figures and
-          # manuscript/figures. Omitting manuscript/ left tracked PNGs modified
-          # but unstaged, and `git pull --rebase` refuses to run with a dirty
-          # tree -- which failed the push after a successful 2h run.
+          # --autostash below is deliberate: a successful 2h run once failed to
+          # push because a generated file outside the staged set left the tree
+          # dirty and `git pull --rebase` refuses to run against that.
           git add data/processed/phase2_commits.csv \
                   data/processed/phase2_commits.provenance.json \
-                  phase1_bias.json results/ reports/ manuscript/
+                  phase1_bias.json results/ reports/
           if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0

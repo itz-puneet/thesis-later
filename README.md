@@ -142,9 +142,9 @@ python -m experiments.run_phase2_impact --fast
   ```
 
 *Outputs (`results/phase2/`):*
-- `phase2_results.csv` *(14,700 evaluation runs)*
+- `phase2_results.csv` *(16,380 evaluation records, both prequential estimators)*
 - `phase2_summary.csv` *(mean and std metrics by model/regime/label)*
-- `statistical_tests.csv` *(paired Wilcoxon & Cliff's delta statistics)*
+- `statistical_tests.csv` *(66 paired Wilcoxon tests, Cliff's delta, Holm/BH-corrected, tagged by estimator)*
 - `inflation_ladder.csv` *(regime inflation metrics)*
 
 ---
@@ -177,7 +177,7 @@ so forgetting this sequence raises rather than silently producing stale results.
 ### Step 3c: Running the Heavy Pipeline on GitHub Actions
 
 The full chain (Phase 1 evaluation → rebuild → `fix_ts` → gate → Phase 2 → imputation
-sensitivity → reports) runs on a runner via the **Phase 2 Pipeline** workflow
+sensitivity → figures) runs on a runner via the **Phase 2 Pipeline** workflow
 (`.github/workflows/phase2_experiment.yml`), triggered from the Actions tab:
 
 | Input | Values | Notes |
@@ -185,6 +185,7 @@ sensitivity → reports) runs on a runner via the **Phase 2 Pipeline** workflow
 | `stage` | `smoke` / `full` | `smoke` = 3 seeds / 50 trees / 5 folds (~25 min); `full` = 10 seeds (~2 h) |
 | `latency_mode` | `real` / `uniform` | `real` requires the committed `fix_commit_dates.csv` |
 | `push_results` | true / false | Commits results back to `master`; `full` stage only |
+| `run_grid` | true / false | Uncheck to re-run only the imputation sensitivity + figures (~30 min instead of ~5 h) |
 
 Run `smoke` first — it exercises the entire chain including the gate, so a mistake costs
 minutes rather than hours. Results and figures are uploaded as artifacts on every run,
@@ -192,21 +193,28 @@ including failures.
 
 ---
 
-### Step 4: Report and Visualization Generation
-Regenerates publication-ready figures, tables, and reports from experimental outputs:
+### Step 4: Figure Generation
+Regenerates the eight result figures from the committed CSVs (no experiment re-run needed):
 ```bash
-python scripts/generate_report.py
+python scripts/make_figures.py
 ```
-*Outputs: HTML and Markdown summaries under `reports/` and figures in `reports/figures/`.*
+*Outputs: `reports/figures/f1..f8*.png`. The written report is
+`Phase1_Phase2_Master_Results.md`, which embeds these figures.*
 
 ---
 
 ## Project Structure & Documentation
 
+**Results and analysis (current):**
+- `Phase1_Phase2_Master_Results.md`: **single source of truth** — every Phase 1 and Phase 2 number, with the eight figures.
+- `Phase2_Supervisor_Explanation_Guide.md`: how to present Phase 2 and its statistical tests.
+- `Phase2_Audit_Findings_and_Remediation_Plan.md`: pipeline audit, what was fixed and how, what remains open.
+
+**Planning and reference:**
 - `01_Learning_Guide.md`: Theoretical concepts and learning guide for the thesis.
 - `02_Thesis_Outline.md`: Structure and chapter outline of the thesis.
 - `03_Execution_and_Supervisor_Plan.md`: Phase-wise milestones and meeting checklists.
-- `Code_Review_Report.md`: In-depth code review report, findings, and verified strengths.
+- `04_Alternative_Execution_Options.md`: Backup plans per phase.
 - `codebase/`:
   - `config.py`: Global constants, paths, and hyperparameters.
   - `data/loader.py`: Unified dataset loading and schema formatting.
@@ -215,5 +223,5 @@ python scripts/generate_report.py
   - `evaluation/regimes.py`: Naive $k$-fold, chronological split, and prequential streaming latency.
   - `evaluation/metrics.py`: MCC, G-mean, Prequential Tracker, Wilcoxon & Cliff's $\delta$.
 - `experiments/`: Experiment execution scripts (`evaluate_confusion_matrix.py`, `run_phase1_oracle.py`, `run_phase2_impact.py`).
-- `scripts/`: Utility scripts (`build_fix_ts.py`, `replicate_cabral_orb.py`, `generate_report.py`).
+- `scripts/`: Utility scripts (`build_fix_ts.py`, `replicate_cabral_orb.py`, `make_figures.py`, `extract_base_features.py`, `extract_fix_dates.py`).
 - `results/`: Artifacts, tables, and statistical outputs for Phase 1, Phase 2, and replication.

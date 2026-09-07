@@ -43,7 +43,7 @@ Every SZZ variant scored against the developer-verified oracle over an identical
 | RSZZ | 0.2318 | 0.2997 | 0.2615 | 0.0927 | 0.7003 | 0.1846 | 0.1828 | 699 | 2,316 | 1,633 | 22,671 |
 | RASZZ | 0.1840 | 0.4383 | 0.2592 | 0.1813 | 0.5617 | 0.1784 | 0.1580 | 1,022 | 4,531 | 1,310 | 20,456 |
 
-![Phase 1 noise profile](reports/figures_v2/f1_phase1_noise.png)
+![Phase 1 noise profile](reports/figures/f1_phase1_noise.png)
 
 **Two findings:**
 
@@ -97,7 +97,7 @@ Mean MCC over 21 projects × 10 seeds. **Oracle-scored** = measured against deve
 
 ## 3. The inflation ladder
 
-![Inflation ladder](reports/figures_v2/f2_inflation_ladder.png)
+![Inflation ladder](reports/figures/f2_inflation_ladder.png)
 
 | Step | Configuration | MCC | What was removed |
 |---|---|---|---|
@@ -133,7 +133,7 @@ Random k-fold vs chronological split, paired by project. m = 6.
 
 Self-scored vs oracle-scored MCC, paired by project, **per model** (pooling the two models would treat them as independent observations on the same project — they are not). m = 36 terminal + 6 time-averaged.
 
-![Self-deception gap](reports/figures_v2/f3_self_deception.png)
+![Self-deception gap](reports/figures/f3_self_deception.png)
 
 ### Naive k-fold — the headline rows
 
@@ -168,7 +168,7 @@ Self-scored vs oracle-scored MCC, paired by project, **per model** (pooling the 
 
 ORB oracle-trained vs each SZZ-trained variant, prequential + real latency, oracle-scored. m = 6 per estimator.
 
-![Label source gap](reports/figures_v2/f4_label_source.png)
+![Label source gap](reports/figures/f4_label_source.png)
 
 ### Primary: time-averaged prequential MCC
 
@@ -196,7 +196,7 @@ ORB oracle-trained vs each SZZ-trained variant, prequential + real latency, orac
 
 ### Why the estimators disagree on BSZZ — and why time-averaged is primary
 
-![Estimator comparison](reports/figures_v2/f7_estimators.png)
+![Estimator comparison](reports/figures/f7_estimators.png)
 
 The terminal fading value is the confusion matrix at end of stream. With `fading = 0.99` the weights sum to ≈ 100 commits, so it summarises roughly the **last hundred commits** of each project — about 8 positives. The time-averaged value is the mean of the whole trajectory, which is what Gama's prequential protocol prescribes.
 
@@ -220,7 +220,7 @@ The terminal fading value is the confusion matrix at end of stream. With `fading
 
 The ladder's third rung changed the learner *and* the regime simultaneously. Adding `chronological_online` — ORB trained sequentially on the past, frozen, tested on the future — holds the learner fixed and breaks the confound.
 
-![Decomposition](reports/figures_v2/f5_decomposition.png)
+![Decomposition](reports/figures/f5_decomposition.png)
 
 ### Regime effect (model held fixed) — m = 2
 
@@ -248,7 +248,7 @@ The ladder's third rung changed the learner *and* the regime simultaneously. Add
 
 ## 8. Verification latency and the deliverability confound
 
-![Latency distribution](reports/figures_v2/f6_latency.png)
+![Latency distribution](reports/figures/f6_latency.png)
 
 | Statistic | Value |
 |---|---|
@@ -299,7 +299,7 @@ Oracle has only 67.8% coverage vs BSZZ's 100%. Does oracle win on quality, or is
 
 ## 9. Per-project characteristics
 
-![JITLine anomaly](reports/figures_v2/f8_jitline_anomaly.png)
+![JITLine anomaly](reports/figures/f8_jitline_anomaly.png)
 
 **The JITLine anomaly:** BSZZ-trained JITLine (0.1285) beats oracle-trained (0.1027) in **13 of 21 projects** under chronological evaluation. BSZZ labels 29.5% of commits positive against a true rate of 8.5%; with only ~40 positives per oracle training split, the Random Forest starves, and BSZZ's extra minority mass — 81% of it false — acts as accidental data augmentation.
 
@@ -366,4 +366,4 @@ python -c "import pandas as pd; print(pd.read_csv('results/phase2/statistical_te
 | `results/phase2/latency_imputation_summary.csv` | Deliverability confound, both estimators |
 | `results/phase1/phase1_quality_corrected.csv` | Phase 1 table |
 | `phase1_bias.json` | ρ₀/ρ₁ for Phase 3 |
-| `reports/figures_v2/` | The eight figures above |
+| `reports/figures/` | The eight figures above |
