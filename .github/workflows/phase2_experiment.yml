@@ -33,6 +33,11 @@ on:
         required: false
         default: true
         type: boolean
+      run_grid:
+        description: 'Run the Phase 2 experiment grid (uncheck to re-run only the imputation sensitivity + reports)'
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: write
@@ -85,6 +90,7 @@ jobs:
       # --- Experiments ----------------------------------------------------
 
       - name: Run Phase 2 experiment grid
+        if: ${{ inputs.run_grid }}
         run: |
           FAST_FLAG=""
           if [ "${{ inputs.stage }}" = "smoke" ]; then FAST_FLAG="--fast"; fi
