@@ -220,7 +220,8 @@ def add_multiplicity_correction(df: pd.DataFrame) -> pd.DataFrame:
     df["p_holm"] = np.nan
     df["p_bh"] = np.nan
     df["family_size"] = 0
-    for fam, idx in df.groupby("comparison_type").groups.items():
+    group_keys = ["comparison_type", "metric"] if "metric" in df.columns else ["comparison_type"]
+    for fam, idx in df.groupby(group_keys).groups.items():
         pv = df.loc[idx, "p_value"].to_numpy(dtype=float)
         df.loc[idx, "p_holm"] = _holm(pv)
         df.loc[idx, "p_bh"] = _benjamini_hochberg(pv)
@@ -229,8 +230,15 @@ def add_multiplicity_correction(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
-    """Compute Wilcoxon signed-rank and Cliff's delta across projects."""
+def _tests_for_metric(df_results: pd.DataFrame, metric: str) -> list[dict]:
+    """Build every paired test using one outcome column.
+
+    `metric` is either "mcc" (terminal fading value) or "mcc_avg" (time-averaged
+    prequential value). mcc_avg exists only for prequential_latency rows, so the
+    .dropna() on each pivot naturally restricts the averaged pass to exactly the
+    comparisons where a trajectory exists -- batch regimes have no trajectory and
+    are correctly excluded rather than silently compared against NaN.
+    """
     test_rows = []
 
     # Filter to oracle-scored evaluations
@@ -239,7 +247,7 @@ def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
     # 1. Inflation Ladder: Naive vs Chronological vs Prequential
     # Group by project to get paired vectors across projects (averaged across seeds)
     proj_means = (
-        df_oracle.groupby(["project", "model", "train_label", "regime"])["mcc"]
+        df_oracle.groupby(["project", "model", "train_label", "regime"])[metric]
         .mean()
         .reset_index()
     )
@@ -248,7 +256,7 @@ def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
     for m in models:
         for lab in ["oracle", "BSZZ", "RSZZ"]:
             sub = proj_means[(proj_means["model"] == m) & (proj_means["train_label"] == lab)]
-            pivot = sub.pivot(index="project", columns="regime", values="mcc").dropna()
+            pivot = sub.pivot(index="project", columns="regime", values=metric).dropna()
 
             if "naive_kfold" in pivot and "chronological" in pivot:
                 res = wilcoxon_with_cliffs(pivot["naive_kfold"], pivot["chronological"])
@@ -272,7 +280,7 @@ def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
     for lab in ["oracle", "BSZZ"]:
         # (i) regime effect: ORB fixed, chronological -> prequential+latency
         sub = proj_means[(proj_means["model"] == "ORB") & (proj_means["train_label"] == lab)]
-        pivot = sub.pivot(index="project", columns="regime", values="mcc").dropna()
+        pivot = sub.pivot(index="project", columns="regime", values=metric).dropna()
         if "chronological_online" in pivot and "prequential_latency" in pivot:
             res = wilcoxon_with_cliffs(pivot["chronological_online"], pivot["prequential_latency"])
             test_rows.append({
@@ -289,10 +297,11 @@ def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
         for batch_model in ["JITLine", "LApredict"]:
             a = proj_means[(proj_means["model"] == batch_model)
                            & (proj_means["train_label"] == lab)
-                           & (proj_means["regime"] == "chronological")].set_index("project")["mcc"]
+                           & (proj_means["regime"] == "chronological")].set_index("project")[metric]
             b = proj_means[(proj_means["model"] == "ORB")
                            & (proj_means["train_label"] == lab)
-                           & (proj_means["regime"] == "chronological_online")].set_index("project")["mcc"]
+                           & (proj_means["regime"] == "chronological_online")].set_index("project")[metric]
+            a, b = a.dropna(), b.dropna()
             common = a.index.intersection(b.index)
             if len(common) < 3:
                 continue
@@ -311,7 +320,7 @@ def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
 
     # 2. Self-Scored vs Oracle-Scored (Self-deception gap)
     self_vs_oracle = (
-        df_results.groupby(["project", "model", "train_label", "regime", "eval_mode"])["mcc"]
+        df_results.groupby(["project", "model", "train_label", "regime", "eval_mode"])[metric]
         .mean()
         .reset_index()
     )
@@ -326,7 +335,7 @@ def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
             ]
             for mdl in sorted(sub_all["model"].unique()):
                 sub = sub_all[sub_all["model"] == mdl]
-                pivot = sub.pivot_table(index="project", columns="eval_mode", values="mcc").dropna()
+                pivot = sub.pivot_table(index="project", columns="eval_mode", values=metric).dropna()
                 if len(pivot) < 3 or "self" not in pivot or "oracle" not in pivot:
                     continue
                 res = wilcoxon_with_cliffs(pivot["self"], pivot["oracle"])
@@ -345,7 +354,7 @@ def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
 
     # 3. Label source comparison under Prequential-Latency (Oracle vs SZZ variants)
     orb_preq = proj_means[(proj_means["model"] == "ORB") & (proj_means["regime"] == "prequential_latency")]
-    orb_pivot = orb_preq.pivot(index="project", columns="train_label", values="mcc").dropna()
+    orb_pivot = orb_preq.pivot(index="project", columns="train_label", values=metric).dropna()
 
     if "oracle" in orb_pivot:
         for var in SZZ_VARIANTS:
@@ -364,7 +373,51 @@ def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
                     **res,
                 })
 
-    return add_multiplicity_correction(pd.DataFrame(test_rows))
+    for r in test_rows:
+        r["metric"] = metric
+    return test_rows
+
+
+def compute_statistical_tests(df_results: pd.DataFrame) -> pd.DataFrame:
+    """Paired tests under BOTH prequential estimators.
+
+    The terminal fading value summarises only the tail of the stream (with
+    fading=0.99 the weights sum to ~100 commits), and it is noisy enough to hide
+    real effects: under it, ORB oracle-vs-BSZZ reads p=0.49 / delta=0.14
+    ("negligible"), while under the time-averaged value -- the standard Gama
+    estimator, with roughly half the project-level variance -- the same
+    comparison is p=0.0001 / delta=0.45 over 18 of 21 projects.
+
+    Reporting only one of the two would be estimator-shopping in either
+    direction, so both are emitted, tagged by `metric`, and Holm/BH-corrected
+    within (family, metric). Rows with metric="mcc_avg" exist only for
+    comparisons where both sides are streaming runs.
+    """
+    rows = []
+    for metric in ("mcc", "mcc_avg"):
+        if metric not in df_results.columns:
+            continue
+        rows.extend(_tests_for_metric(df_results, metric))
+
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+
+    # A comparison with a batch regime on one side has no trajectory, so its
+    # mcc_avg pivot is empty or all-NaN. Those degenerate rows must be dropped
+    # BEFORE multiplicity correction -- left in, they inflate the family size
+    # and weaken every genuine test in that family.
+    valid = (
+        df["n_pairs"].fillna(0).astype(int).ge(3)
+        & df["mean_A"].notna()
+        & df["mean_B"].notna()
+        & df["p_value"].notna()
+    )
+    dropped = int((~valid).sum())
+    if dropped:
+        print(f"[stats] dropped {dropped} degenerate comparisons "
+              f"(batch regime has no prequential trajectory)")
+    return add_multiplicity_correction(df[valid].reset_index(drop=True))
 
 
 def main():
