@@ -136,7 +136,9 @@ Added `chronological_online()` to `codebase/evaluation/regimes.py`: it holds ORB
 | **Learner** (LApredict → ORB, regime fixed) | **+0.0957** | 0.0001 | **0.0004** | **large** |
 | **Regime/latency** (ORB fixed, chrono → prequential) | +0.0093 | **0.8382** | 0.8382 | **negligible** |
 
-**The finding inverts the original framing.** The ladder attributed the entire 0.1050 batch→stream MCC drop to "verification latency." The decomposition shows latency accounts for **~9%** of it and is statistically indistinguishable from zero once the learner is held fixed. The rest — ~91% — is the learner swap (batch Random Forest / logistic regression → 20-member online logistic ensemble).
+> **⚠️ SUPERSEDED (2026-09-12).** The decomposition below was itself unidentified and has been withdrawn. `chronological_online` and `prequential_latency` differ in **three** ways, not one: frozen vs adaptive, immediate vs delayed labels, **and** second-half plain MCC vs whole-stream faded MCC. The effects run in opposite directions and cancelled, which is why the latency term came out near zero. Matching only the evaluation window flips the sign of the contrast (+0.0093 → −0.0222). `experiments/run_latency_factorial.py` now runs the 2×2 that isolates them; preliminary (3 seeds, not significant): latency **+0.0233**, adaptivity **−0.0455**. See `Phase1_Phase2_Master_Results.md` §7. The fix in §2.2 — adding an online learner under a batch regime — was necessary but not sufficient.
+
+The original (now withdrawn) reading was that latency accounts for ~9% of the 0.1050 batch→stream drop and the learner swap for ~91%.
 
 This is a stronger, more defensible claim than the one it replaces: *once the learner architecture is held constant, verification latency does not measurably degrade MCC on this corpus.* It also changes what Chapter 5 should say about "the cost of latency" — that cost is real for the *variant-compression* finding (§8, Finding 7) but not for the *absolute MCC drop* the ladder previously implied.
 
@@ -149,6 +151,8 @@ For BSZZ labels the pattern is similar but noisier: learner effect +0.0867 (p=0.
 ### 3a. Prequential metric was a terminal value over an effective ~100-commit window — fixed
 
 **Found:** `PrequentialTracker.mcc()` returned the fading confusion matrix's value at the *end* of the stream. With `fading=0.99`, weights sum to 1/(1−0.99) = 100, so every ORB number was computed on roughly the last 100 commits per project (~8.5 expected positives). This is a different, far noisier estimator than the trajectory-average that Gama et al.'s prequential protocol normally reports.
+
+**Correction (2026-09-12):** this finding originally described the time-averaged value as "the standard Gama estimator". That is wrong. MCC is not a decomposable loss, so Gama et al.'s prequential-with-fading construction does not extend to it directly, and of the two summaries the *terminal fading* value is the closer analogue. Both are ad-hoc summaries of an MCC trajectory. The preference for the time-averaged value rests on its measured variance (roughly half), not on a citation. A warm-up rule and a fading-factor sensitivity analysis are outstanding.
 
 **Fixed:** `prequential_latency()` now also returns `mcc_avg` / `gmean_avg` — the mean of the tracker's full trajectory — alongside the terminal value, and `effective_window`. Both are persisted per run.
 
@@ -245,7 +249,7 @@ The pitch document stated "Oracle ground truth conclusively outperforms all nois
 
 Every one of those tests used the **terminal fading MCC** — the value of the fading confusion matrix at the end of the stream. With `fading = 0.99`, the weights sum to ~100 commits, so the statistic summarises roughly the last hundred commits of each project (about 8.5 expected positives). It is a tail sample, not a summary of the run.
 
-Finding §3a had already replaced this with the **time-averaged prequential value** (the standard Gama estimator) on methodological grounds, and measured its project-level variance at roughly half the terminal value's. But the statistical tests were never switched over to it. When they were, the picture changed completely:
+Finding §3a had already replaced this with the **time-averaged prequential value** on methodological grounds (it was described there as "the standard Gama estimator" -- see the correction note in §3a), and measured its project-level variance at roughly half the terminal value's. But the statistical tests were never switched over to it. When they were, the picture changed completely:
 
 | Oracle vs variant (ORB, prequential) | Terminal p_holm | **Time-averaged p_holm** | Averaged δ | Wins |
 |---|---|---|---|---|
@@ -340,7 +344,7 @@ Superseding §9 of the original document. All below are from `results/phase2/` a
 **Tier 2 — corrected, now stronger or more precisely scoped:**
 5. Oracle significantly outperforms **all six** SZZ variants under the time-averaged prequential estimator (Holm p ≤ 0.0025, δ 0.39–0.71, 16–19 of 21 projects), and the advantage survives 100% latency imputation (+0.026 MCC, 16/21, p = 0.010). Under the terminal estimator the BSZZ comparison alone is not significant (p = 0.49); report both and treat the averaged value as primary (§4).
 6. FP-heavy BSZZ still beats oracle for JITLine (13/21, gap +0.0258), now measured under a fourth, better-calibrated threshold protocol (§3d).
-7. **New, and arguably your strongest single result now:** once learner architecture is held fixed, verification latency does not measurably degrade absolute MCC (Δ=+0.0093, p=0.84) — the batch→stream drop in the old ladder was ~91% a learner-swap artifact, ~9% latency (§2.3). Verification latency's real cost shows up instead as *compression of the label-source ordering* (variant MCCs cluster together under real latency where they were more separated under chronological batch evaluation), not as an absolute penalty.
+7. ~~**Once learner architecture is held fixed, verification latency does not measurably degrade absolute MCC.**~~ **WITHDRAWN (2026-09-12)** — the contrast behind it was not identified; see the superseded note in §2.3. Separating learner from latency remains an open question, with `run_latency_factorial.py` as the instrument. What *does* still stand on Phase 2 evidence is the premise, not the effect size: 53% of defect labels arrive after the W=90d window, so latency imposes FN-like noise on every label source regardless of its quality.
 
 **Tier 3 — report as observations:**
 8. Absolute "deployable" MCC under realistic conditions is **~0.097** using the correct time-averaged prequential estimator (was reported as 0.0685 — a terminal-value artifact, §3a).

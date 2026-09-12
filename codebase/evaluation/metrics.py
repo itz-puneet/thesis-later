@@ -100,6 +100,70 @@ class PrequentialTracker:
         return float(num / den) if den > 0 else 0.0
 
 
+def paired_effect(a: np.ndarray | list, b: np.ndarray | list,
+                  n_boot: int = 10000, seed: int = 42) -> dict:
+    """Paired Wilcoxon test with PAIRED effect sizes.
+
+    The design pairs by project and the Wilcoxon test honours that, but
+    `wilcoxon_with_cliffs` reported Cliff's delta computed all-versus-all
+    (denominator n*m), which discards the pairing the design deliberately
+    preserves. This returns effect sizes that keep it:
+
+      rank_biserial   matched-pairs rank-biserial correlation, (W+ - W-)/(W+ + W-),
+                      derived from the same signed ranks the p-value uses
+      median_diff     median of the paired differences
+      hodges_lehmann  median of the Walsh averages of the differences, the
+                      location estimator that accompanies the signed-rank test
+      ci_low/ci_high  percentile bootstrap CI on the median paired difference
+
+    Magnitude thresholds follow the usual |r| convention: 0.1 small,
+    0.3 medium, 0.5 large. Cliff's delta is still returned, labelled
+    `cliffs_delta_unpaired`, so earlier tables remain comparable.
+    """
+    a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    if len(a) != len(b) or len(a) == 0:
+        return dict(wilcoxon_stat=0.0, p_value=1.0, rank_biserial=0.0,
+                    median_diff=0.0, hodges_lehmann=0.0, ci_low=0.0, ci_high=0.0,
+                    cliffs_delta_unpaired=0.0, magnitude="negligible", n_pairs=0)
+
+    d = a - b
+    nz = d[d != 0]
+    if len(nz) == 0:
+        return dict(wilcoxon_stat=0.0, p_value=1.0, rank_biserial=0.0,
+                    median_diff=0.0, hodges_lehmann=0.0, ci_low=0.0, ci_high=0.0,
+                    cliffs_delta_unpaired=0.0, magnitude="negligible", n_pairs=len(a))
+
+    try:
+        stat, p = stats.wilcoxon(a, b)
+    except Exception:
+        stat, p = 0.0, 1.0
+
+    # matched-pairs rank-biserial from the signed ranks
+    ranks = stats.rankdata(np.abs(nz))
+    w_pos, w_neg = ranks[nz > 0].sum(), ranks[nz < 0].sum()
+    total = w_pos + w_neg
+    rb = float((w_pos - w_neg) / total) if total > 0 else 0.0
+
+    # Hodges-Lehmann: median of Walsh averages
+    walsh = np.add.outer(d, d)[np.triu_indices(len(d))] / 2.0
+    hl = float(np.median(walsh))
+
+    rng = np.random.default_rng(seed)
+    boot = np.median(d[rng.integers(0, len(d), size=(n_boot, len(d)))], axis=1)
+    lo, hi = np.percentile(boot, [2.5, 97.5])
+
+    gt = sum((x > y) for x in a for y in b)
+    lt = sum((x < y) for x in a for y in b)
+    cd = (gt - lt) / (len(a) * len(b))
+
+    r = abs(rb)
+    mag = "negligible" if r < 0.1 else "small" if r < 0.3 else "medium" if r < 0.5 else "large"
+    return dict(wilcoxon_stat=float(stat), p_value=float(p), rank_biserial=rb,
+                median_diff=float(np.median(d)), hodges_lehmann=hl,
+                ci_low=float(lo), ci_high=float(hi),
+                cliffs_delta_unpaired=float(cd), magnitude=mag, n_pairs=int(len(a)))
+
+
 def wilcoxon_with_cliffs(a: np.ndarray | list, b: np.ndarray | list) -> dict:
     """Paired Wilcoxon signed-rank test + Cliff's delta effect size."""
     a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)

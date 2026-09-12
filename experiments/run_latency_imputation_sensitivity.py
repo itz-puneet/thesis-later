@@ -82,7 +82,7 @@ def main():
                 "oracle_imp_gmean": res_oracle_imp["gmean"],
                 "bszz_mcc": res_bszz["mcc"],
                 "bszz_gmean": res_bszz["gmean"],
-                # time-averaged prequential values (standard Gama estimator,
+                # time-averaged prequential values (mean of the MCC trajectory;
                 # ~half the variance of the terminal value -- this comparison is
                 # the most underpowered in the study, so the estimator matters)
                 "oracle_asis_mcc_avg": res_oracle_asis["mcc_avg"],

@@ -35,7 +35,7 @@ from codebase.online.orb import ORB
 from codebase.evaluation.regimes import (
     naive_kfold, chronological, prequential_latency, chronological_online,
 )
-from codebase.evaluation.metrics import wilcoxon_with_cliffs
+from codebase.evaluation.metrics import paired_effect
 
 
 def run_single_cell(args: tuple) -> list[dict]:
@@ -226,7 +226,15 @@ def add_multiplicity_correction(df: pd.DataFrame) -> pd.DataFrame:
         df.loc[idx, "p_holm"] = _holm(pv)
         df.loc[idx, "p_bh"] = _benjamini_hochberg(pv)
         df.loc[idx, "family_size"] = len(pv)
+    # Within-family correction is only defensible if the families were fixed in
+    # advance. They were not -- they emerged during analysis -- so every test is
+    # flagged exploratory and a global Holm across ALL tests is reported as the
+    # conservative sensitivity. A claim that survives p_holm_global needs no
+    # argument about family definitions at all.
+    df["p_holm_global"] = _holm(df["p_value"].to_numpy(dtype=float))
+    df["preregistered"] = False
     df["significant_holm_05"] = df["p_holm"] < 0.05
+    df["significant_holm_global_05"] = df["p_holm_global"] < 0.05
     return df
 
 
@@ -252,14 +260,18 @@ def _tests_for_metric(df_results: pd.DataFrame, metric: str) -> list[dict]:
         .reset_index()
     )
 
+    # All seven label sources. Earlier versions tested only oracle/BSZZ/RSZZ,
+    # a selection made during analysis rather than in advance -- reporting a
+    # hand-picked subset of a family invites exactly the selective-reporting
+    # criticism the multiplicity correction is meant to answer.
     models = ["LApredict", "JITLine"]
     for m in models:
-        for lab in ["oracle", "BSZZ", "RSZZ"]:
+        for lab in ["oracle"] + SZZ_VARIANTS:
             sub = proj_means[(proj_means["model"] == m) & (proj_means["train_label"] == lab)]
             pivot = sub.pivot(index="project", columns="regime", values=metric).dropna()
 
             if "naive_kfold" in pivot and "chronological" in pivot:
-                res = wilcoxon_with_cliffs(pivot["naive_kfold"], pivot["chronological"])
+                res = paired_effect(pivot["naive_kfold"], pivot["chronological"])
                 test_rows.append({
                     "comparison_type": "regime_inflation",
                     "model": m,
@@ -282,7 +294,7 @@ def _tests_for_metric(df_results: pd.DataFrame, metric: str) -> list[dict]:
         sub = proj_means[(proj_means["model"] == "ORB") & (proj_means["train_label"] == lab)]
         pivot = sub.pivot(index="project", columns="regime", values=metric).dropna()
         if "chronological_online" in pivot and "prequential_latency" in pivot:
-            res = wilcoxon_with_cliffs(pivot["chronological_online"], pivot["prequential_latency"])
+            res = paired_effect(pivot["chronological_online"], pivot["prequential_latency"])
             test_rows.append({
                 "comparison_type": "regime_effect_model_fixed",
                 "model": "ORB", "train_label": lab,
@@ -305,7 +317,7 @@ def _tests_for_metric(df_results: pd.DataFrame, metric: str) -> list[dict]:
             common = a.index.intersection(b.index)
             if len(common) < 3:
                 continue
-            res = wilcoxon_with_cliffs(a.loc[common], b.loc[common])
+            res = paired_effect(a.loc[common], b.loc[common])
             test_rows.append({
                 "comparison_type": "learner_effect_regime_fixed",
                 "model": f"{batch_model}_vs_ORB", "train_label": lab,
@@ -338,7 +350,7 @@ def _tests_for_metric(df_results: pd.DataFrame, metric: str) -> list[dict]:
                 pivot = sub.pivot_table(index="project", columns="eval_mode", values=metric).dropna()
                 if len(pivot) < 3 or "self" not in pivot or "oracle" not in pivot:
                     continue
-                res = wilcoxon_with_cliffs(pivot["self"], pivot["oracle"])
+                res = paired_effect(pivot["self"], pivot["oracle"])
                 test_rows.append({
                     "comparison_type": "self_deception_gap",
                     "model": mdl,
@@ -359,7 +371,7 @@ def _tests_for_metric(df_results: pd.DataFrame, metric: str) -> list[dict]:
     if "oracle" in orb_pivot:
         for var in SZZ_VARIANTS:
             if var in orb_pivot:
-                res = wilcoxon_with_cliffs(orb_pivot["oracle"], orb_pivot[var])
+                res = paired_effect(orb_pivot["oracle"], orb_pivot[var])
                 test_rows.append({
                     "comparison_type": "label_source_gap",
                     "model": "ORB",

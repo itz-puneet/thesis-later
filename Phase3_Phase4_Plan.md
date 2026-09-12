@@ -19,7 +19,7 @@ The review package these files arrived in was written against commit `05a8b3a` a
 
 > *"oracle-trained ORB significantly beats ORB trained on every refined variant — but NOT BSZZ, the crudest, most FP-heavy, highest-recall variant. Under verification latency, what hurts an online learner is not the false positives a noisy labeler adds, but the true positives a precise labeler withholds. Lead your next supervisor meeting with it."*
 
-**That claim does not survive.** It rested on the *terminal fading* prequential estimator, which summarises only the last ~100 commits of each stream and carries roughly twice the project-level variance of the time-averaged estimator (0.092 vs 0.051). Under the time-averaged value — the standard Gama estimator, and the one now treated as primary — oracle beats **all six** variants including BSZZ:
+**That claim does not survive.** It rested on the *terminal fading* prequential estimator, which summarises only the last ~100 commits of each stream and carries roughly twice the project-level variance of the time-averaged estimator (0.092 vs 0.051). Under the time-averaged value — the one now treated as primary, preferred on measured variance rather than as a canonical standard — oracle beats **all six** variants including BSZZ:
 
 | Oracle vs | Δ MCC | Holm p | Cliff's δ | Recall of variant |
 |---|---|---|---|---|
@@ -63,7 +63,7 @@ Full grid: 21 projects × 10 seeds × 4 profiles × 6 doses × 2 latency arms, p
 **The three questions Phase 3 must answer:**
 
 1. **Dose-response (uniform arm).** Does `fn_heavy` noise degrade ORB faster than `fp_heavy` at matched dose? `phase3_slopes.csv` gives MCC-per-10%-dose per profile. *Stated neutrally on purpose* — see the correction above; Phase 2 does not predict the answer.
-2. **Compression.** Are real-arm slopes flatter than uniform-arm slopes? This is the quantitative form of "latency masks label quality." Phase 2 supports this one: 53% of defect labels arrive after the W=90d window, imposing FN-like noise on every source regardless of quality.
+2. **Compression.** Are real-arm slopes flatter than uniform-arm slopes? This is the quantitative form of "latency masks label quality." Phase 2 supports the *premise* — 53% of defect labels arrive after the W=90d window — but note that Phase 2's attempt to size the latency effect was withdrawn as unidentified (see `Phase1_Phase2_Master_Results.md` §7). Phase 3's uniform-vs-real arms are a cleaner test of compression than anything Phase 2 produced, because the learner is held fixed by construction.
 3. **Repair verdict.** FN-restoration vs FP-removal on real BSZZ labels; `phase3_repair_stats.csv` carries the paired tests. If FN-repair > FP-repair, Phase 3 establishes FN-dominance through a controlled design — which Phase 2 could not.
 
 **Report both prequential estimators**, as Phase 2 now does. The runner records `mcc` and `mcc_avg`; treat `mcc_avg` as primary. This matters most here: dose-response slopes on the noisier terminal estimator will be harder to separate.

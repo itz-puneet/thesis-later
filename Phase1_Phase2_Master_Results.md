@@ -8,10 +8,13 @@
 | **Corpus** | 21 Apache Java projects, 27,319 commits, 2,332 developer-verified defective (8.54%) |
 | **Phase 2 scale** | 16,380 evaluation records = 21 projects × 10 seeds × 13 label/scoring cells × 6 model-regime combinations |
 | **Statistical unit** | **n = 21 projects** (seeds averaged first). Never n = 16,380. |
-| **Tests** | 66 paired Wilcoxon signed-rank + Cliff's δ, Holm/BH-corrected within (family, estimator). 32 significant after Holm. |
+| **Tests** | 74 paired Wilcoxon signed-rank with **paired** effect sizes (matched-pairs rank-biserial, Hodges–Lehmann, bootstrap CI). Corrected within (family, estimator) **and** globally across all 74. 32 survive within-family Holm, **21 survive global Holm**. |
+| **Pre-registration** | **None.** Every test is exploratory; families were defined during analysis. The global Holm column is the conservative sensitivity that needs no family argument. |
 | **Integrity** | Label-consistency gate passes — `phase1_bias.json` describes exactly the labels Phase 2 trained on. Enforced in CI before any compute. |
 
-**Two prequential estimators are reported throughout.** *Time-averaged* (primary — the standard Gama estimator, mean of the metric's trajectory) and *terminal fading* (secondary — the fading confusion matrix at end of stream, effective window ≈ 100 commits). They agree on all but one comparison; see §6.
+**Two prequential estimators are reported throughout.** *Time-averaged* (primary — the mean of the MCC trajectory) and *terminal fading* (secondary — the fading confusion matrix at end of stream, effective window ≈ 100 commits). They agree on all but one comparison; see §6.
+
+**On the estimator's provenance.** MCC is not a decomposable loss, so Gama et al.'s prequential-with-fading construction does not extend to it directly; of the two, the *terminal fading* value is the closer analogue. Neither is "the standard estimator" and this document no longer claims otherwise. The time-averaged value is preferred on a measured basis — roughly half the project-level variance — not by appeal to a standard. A warm-up rule and fading-factor sensitivity analysis are outstanding (see §7 and the audit).
 
 ---
 
@@ -23,7 +26,7 @@
 4. [Test family 1 — regime inflation](#4-test-family-1--regime-inflation)
 5. [Test family 2 — self-deception gap](#5-test-family-2--self-deception-gap)
 6. [Test family 3 — label source gap](#6-test-family-3--label-source-gap)
-7. [Test families 4 & 5 — batch→stream decomposition](#7-test-families-4--5--batchstream-decomposition)
+7. [The batch→stream contrast — WITHDRAWN as a decomposition](#7-the-batchstream-contrast--withdrawn-as-a-decomposition)
 8. [Verification latency and the deliverability confound](#8-verification-latency-and-the-deliverability-confound)
 9. [Per-project characteristics](#9-per-project-characteristics)
 10. [Headline claims, ranked by strength](#10-headline-claims-ranked-by-strength)
@@ -106,7 +109,7 @@ Mean MCC over 21 projects × 10 seeds. **Oracle-scored** = measured against deve
 | 2 | JITLine, oracle labels, chronological | 0.1027 | temporal leakage |
 | 3 | ORB, oracle labels, prequential + latency | **0.0970** (time-avg) | batch→stream |
 
-**Read the ladder carefully.** Step 3 changes the *learner* as well as the regime. §7 decomposes it — and the answer is that almost all of that step is the learner, not latency.
+**Read the ladder as descriptive only.** Step 3 changes the learner, the regime *and* the evaluation window at once. It is not a causal step and must not be decomposed — see §7, where the earlier decomposition is withdrawn.
 
 ---
 
@@ -216,33 +219,49 @@ The terminal fading value is the confusion matrix at end of stream. With `fading
 
 ---
 
-## 7. Test families 4 & 5 — batch→stream decomposition
+## 7. The batch→stream contrast — WITHDRAWN as a decomposition
 
-The ladder's third rung changed the learner *and* the regime simultaneously. Adding `chronological_online` — ORB trained sequentially on the past, frozen, tested on the future — holds the learner fixed and breaks the confound.
+> **This section previously claimed that verification latency accounts for ~9% of the batch-to-stream drop and the learner swap for ~91%. That claim is withdrawn.** It was not identified by the comparison that produced it.
 
-![Decomposition](reports/figures/f5_decomposition.png)
+### 7.1 Why the old comparison could not isolate latency
 
-### Regime effect (model held fixed) — m = 2
+`chronological_online` and `prequential_latency` differ in **three** ways simultaneously:
 
-| Labels | Chrono-online | Prequential+latency | Δ | p | Holm p | δ | Effect |
-|---|---|---|---|---|---|---|---|
-| **oracle** | 0.0777 | 0.0685 | **+0.0093** | **0.8382** | 0.8382 | −0.075 | **negligible** |
-| BSZZ | 0.0767 | 0.0566 | +0.0200 | 0.2428 | 0.4857 | 0.179 | small |
+| | `chronological_online` | `prequential_latency` |
+|---|---|---|
+| Learning after the split | **frozen** | **continually adapting** |
+| Label arrival | **immediate** | **delayed by real `fix_ts`** |
+| Evaluation window | 2nd half, plain MCC | whole stream, faded / time-averaged MCC |
 
-### Learner effect (regime held fixed) — m = 4
+Any difference between them mixes all three. The effects also run in *opposite* directions, which is precisely why the old number came out near zero: freezing hurts, delay hurts, and subtracting one from the other inside a single contrast cancels them.
 
-| Comparison | Labels | Batch | ORB | Δ | p | Holm p | δ | Effect |
-|---|---|---|---|---|---|---|---|---|
-| **LApredict vs ORB** | **oracle** | 0.1734 | 0.0777 | **+0.0957** | 0.0001 | **0.0004** | 0.533 | **large** |
-| LApredict vs ORB | BSZZ | 0.1634 | 0.0767 | +0.0867 | 0.0004 | **0.0011** | 0.488 | large |
-| JITLine vs ORB | BSZZ | 0.1285 | 0.0767 | +0.0519 | 0.0158 | **0.0316** | 0.297 | small |
-| JITLine vs ORB | oracle | 0.1027 | 0.0777 | +0.0250 | 0.2180 | 0.2180 | 0.249 | small |
+The window mismatch alone is enough to flip the sign. Re-scoring the identical old contrast on a matched window turns **+0.0093 into −0.0222**.
 
-**Three of four learner-effect tests are significant; neither regime-effect test is.** Of the 0.1050 MCC drop from LApredict-batch to ORB-streaming, **~91% is the learner swap and ~9% is latency** — and the latency component is statistically indistinguishable from zero.
+![Confounded ladder and the 2×2 that fixes it](reports/figures/f5_decomposition.png)
 
-**The honest caveat:** m = 2 with n = 21 pairs. A negligible result here is evidence of a *small* effect, not proof of zero. Say "no detectable effect at this sample size."
+### 7.2 The 2×2 that does identify them (preliminary)
 
-**What latency actually costs:** not absolute MCC, but *discriminability*. Over half of all defect labels arrive after the 90-day window, imposing false-negative noise on every label source and compressing the differences between them.
+`experiments/run_latency_factorial.py` runs the design the contrast needs, scoring every cell on an identical window (plain MCC over the second half) so the evaluation protocol contributes nothing:
+
+| Cell | MCC |
+|---|---|
+| A — frozen + immediate | +0.0798 |
+| **B — adaptive + immediate** *(previously missing)* | **+0.1253** |
+| C — adaptive + delayed | +0.1020 |
+
+| Effect | Contrast | Δ | p | rank-biserial |
+|---|---|---|---|---|
+| Adaptivity (labels held immediate) | A − B | **−0.0455** | 0.111 | −0.403 medium |
+| **Latency (adaptivity held fixed)** | B − C | **+0.0233** | 0.338 | +0.247 small |
+| *The old, confounded contrast* | A − C | −0.0222 | 0.495 | −0.177 small |
+
+Two things follow. **The latency effect is 2.5× larger than the withdrawn figure** (+0.0233 vs +0.0093). And **continual adaptation helps** — freezing costs 0.046 MCC — which the old framing obscured entirely.
+
+### 7.3 Status
+
+**21 projects × 3 seeds. Neither effect is significant. Do not quote these as results.** They exist to show the old claim was unidentified and to size the real design. A 10-seed run is required before anything here enters the thesis.
+
+The learner-vs-regime question is still worth answering — it is just not answered yet.
 
 ---
 
@@ -373,7 +392,7 @@ All means are **unweighted** across projects spanning 544–4,026 commits and 1.
 
 5. **Oracle labels beat all six SZZ variants** under honest streaming evaluation (time-averaged estimator; Holm p ≤ 0.0025, δ 0.39–0.71, 16–19/21 projects). Survives 100% latency imputation (+0.026, 16/21, p = 0.010). *Must add:* under the terminal estimator the BSZZ comparison alone is not significant; report both, treat time-averaged as primary.
 6. **FP-heavy labels help batch learners in some projects.** BSZZ-trained JITLine beats oracle-trained in 13/21 projects, and the effect survives three threshold protocols and is stable across seeds (97.7% real variance). The *mechanism* is not established: no project characteristic predicts where it happens, and `opennlp` is a large BSZZ win where BSZZ supplies fewer positives than the oracle. It does not carry into streaming (ORB: 3/21). See §9.
-7. **Latency is not what makes streaming hard.** Holding the learner fixed, latency costs +0.009 MCC (p = 0.84, negligible); the learner swap costs +0.096 (Holm p = 0.0004, large). ~91% of the batch→stream drop is the learner. **No prior JIT-SDP work separates these** — this is the novel contribution.
+7. ~~**Latency is not what makes streaming hard.**~~ **WITHDRAWN — the contrast was not identified** (§7). Preliminary factorial: latency ≈ +0.023 (p = 0.34), adaptivity ≈ −0.046 (p = 0.11), neither significant at 3 seeds. Separating learner from latency is still an open, worthwhile question; it is not yet a result.
 
 ### Tier 3 — observations
 

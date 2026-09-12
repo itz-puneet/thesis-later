@@ -3,7 +3,7 @@
 **For:** supervisor meeting on Phase 2 (Downstream Impact Under Honest Evaluation)
 **Data source:** `results/phase2/` at `master` @ `5126dae` — 16,380 evaluation records, 21 Apache projects × 10 seeds × 7 label sources × 3 models × 4 regime-scoring combinations
 **Verified:** label-consistency gate passes; the noise rates in `phase1_bias.json` describe exactly the labels these models trained on
-**Estimators:** every streaming result is reported under two prequential summary statistics — the *time-averaged* value (primary; the standard Gama estimator) and the *terminal* fading value (secondary). They agree on all but one comparison; see §7.
+**Estimators:** every streaming result is reported under two prequential summary statistics — the *time-averaged* value (primary) and the *terminal* fading value (secondary). Neither is a canonical standard; the preference is justified by measured variance, not citation. They agree on all but one comparison; see §7.
 
 ---
 
@@ -28,7 +28,7 @@
 
 If you have sixty seconds, say this:
 
-> "Phase 2 asked what SZZ label noise actually costs a defect prediction model, once you stop evaluating it dishonestly. I ran three models across seven label sources and four evaluation regimes — 16,380 runs — and tested everything with paired Wilcoxon signed-rank tests at the project level, Holm-corrected within test family. Three things came out. First, random k-fold cross-validation inflates JITLine's apparent performance by +0.127 MCC over a chronological split, a large effect at p < 1e-6. Second, evaluating a model on the same SZZ labels it was trained on inflates it by a further +0.248 MCC — models learn the heuristic's quirks, not bugs. Third, under honest streaming evaluation with real verification latency, training on developer-verified labels beats all six SZZ variants, every comparison significant after correction — so label quality demonstrably matters once you evaluate properly. And fourth, the one that surprised me: I added an experiment that holds the learner fixed while changing only the evaluation regime, and verification latency turns out to account for only about 9% of the batch-to-streaming performance drop. The other 91% is just that online learners are weaker than batch learners. The literature — and my own earlier draft — attributed all of it to latency."
+> "Phase 2 asked what SZZ label noise actually costs a defect prediction model, once you stop evaluating it dishonestly. I ran three models across seven label sources and four evaluation regimes — 16,380 runs — and tested everything with paired Wilcoxon signed-rank tests at the project level, Holm-corrected within test family. Three things came out. First, random k-fold cross-validation inflates JITLine's apparent performance by +0.127 MCC over a chronological split, a large effect at p < 1e-6. Second, evaluating a model on the same SZZ labels it was trained on inflates it by a further +0.248 MCC — models learn the heuristic's quirks, not bugs. Third, under honest streaming evaluation with real verification latency, training on developer-verified labels beats all six SZZ variants, every comparison significant after correction — so label quality demonstrably matters once you evaluate properly. And a correction I want to flag myself: I previously reported that latency accounts for only ~9% of the batch-to-streaming drop. That comparison was not identified — it changed the learner, the label timing and the evaluation window all at once — so I have withdrawn it and built the 2×2 that does isolate the effects. Preliminary results put latency about 2.5× higher than I claimed, but nothing is significant yet.""
 
 Then stop and let them ask.
 
@@ -72,7 +72,9 @@ JITLine trained on BSZZ, evaluated under random k-fold:
 - Scored against the developer-verified oracle: **0.1701**
 - Gap: **+0.248 MCC**
 
-**How to explain it:** BSZZ flags 8,060 of 27,319 commits as defect-inducing, but only 1,495 of those are real (18.6% precision). A Random Forest trained on those labels learns the *pattern of BSZZ's mistakes* — which commits look like the kind of commit BSZZ over-flags — because that pattern is systematic and learnable. Scored against BSZZ, this looks like skill. Scored against reality, most of it evaporates. **The model is an excellent BSZZ emulator and a mediocre bug detector.**
+**How to explain it — as an interpretation, not a demonstration:** BSZZ flags 8,060 of 27,319 commits as defect-inducing, but only 1,495 are real (18.6% precision). The gap is *compatible with* the model fitting systematic structure in BSZZ's errors rather than in defects: that structure would be learnable, and fitting it would score well against BSZZ and poorly against the oracle.
+
+**Be careful with the wording.** The measured quantity is the self-scored-minus-oracle-scored gap. It does not by itself demonstrate that the forest "learns which commits BSZZ over-flags" — that is a mechanism the gap is consistent with, not one it establishes. Demonstrating it needs a direct analysis, e.g. whether a model trained to predict BSZZ's false positives from the Kamei features achieves above-chance accuracy. That analysis has not been run. Say "consistent with", and if a supervisor pushes, name the experiment that would settle it.
 
 This is the finding with the largest effect size in the entire study (Cliff's δ = 0.955, essentially total separation between the paired distributions).
 
@@ -117,29 +119,40 @@ ORB under real verification latency, oracle-scored, **time-averaged prequential 
 
 **One caveat you must volunteer** (full detail in §7): under the *terminal* fading estimator the BSZZ comparison alone is not significant (p = 0.49). The two estimators disagree on that single row. Report both, explain that the time-averaged value is the standard prequential estimator with roughly half the variance, and treat it as primary.
 
-### Finding 5 — The new one: latency is not what makes streaming hard
+### Finding 5 — WITHDRAWN: "latency is not what makes streaming hard"
 
-This is your novel contribution and should get the most airtime.
+**Raise this yourself, early, before anyone asks.** It is the single most important correction in the current state of the work.
 
-| Configuration | MCC |
+**What I previously claimed:** holding the learner fixed, verification latency costs +0.009 MCC (p = 0.84, negligible) while the learner swap costs +0.096, so ~91% of the batch→stream drop is the learner and only ~9% is latency.
+
+**Why it is wrong.** The two regimes I compared differ in *three* ways at once:
+
+| | `chronological_online` | `prequential_latency` |
+|---|---|---|
+| Learning after the split | frozen | continually adapting |
+| Label arrival | immediate | delayed |
+| Evaluation window | 2nd half, plain MCC | whole stream, faded MCC |
+
+The effects run in opposite directions, so they cancelled and produced a near-zero difference that looked like "latency does nothing." Matching only the evaluation window already flips the sign of that contrast, from +0.0093 to −0.0222.
+
+**The 2×2 that does identify them** (`experiments/run_latency_factorial.py`, all cells scored on an identical window):
+
+| Cell | MCC |
 |---|---|
-| LApredict, chronological batch | 0.1734 |
-| JITLine, chronological batch | 0.1027 |
-| **ORB, chronological_online** (online learner, batch regime) | **0.0777** |
-| ORB, prequential + real latency | 0.0685 |
+| A frozen + immediate | +0.0798 |
+| **B adaptive + immediate** *(was missing)* | **+0.1253** |
+| C adaptive + delayed | +0.1020 |
 
-Decomposing the 0.1050 drop from LApredict-batch to ORB-streaming:
+| Effect | Δ | p |
+|---|---|---|
+| Adaptivity (A − B) | −0.0455 | 0.111 |
+| Latency (B − C) | **+0.0233** | 0.338 |
 
-| Component | Δ MCC | p | Holm p | Effect |
-|---|---|---|---|---|
-| **Learner** (batch LR → online ensemble, regime held fixed) | **+0.0957** | 0.0001 | **0.0004** | **large** (δ=0.53) |
-| **Regime/latency** (ORB held fixed, batch → streaming+latency) | +0.0093 | **0.8382** | 0.8382 | **negligible** (δ=−0.07) |
+**How to say it:**
 
-**How to explain it:** my earlier draft — and the framing in most of the streaming JIT-SDP literature — presented a ladder in which performance falls as evaluation gets more realistic, with the final step attributed to verification latency. But that step changed two things at once: it introduced latency *and* swapped a Random Forest for an online logistic ensemble. Adding the `chronological_online` cell holds the learner fixed. Once you do that, **latency costs about 0.009 MCC and is statistically indistinguishable from zero (p = 0.84). The learner swap costs 0.096.** Roughly 91% of what was being called "the cost of latency" is actually "the cost of learning incrementally."
+> "I need to correct something I showed you last time. The latency decomposition wasn't identified — my two regimes differed in three ways simultaneously, not one, and the effects cancelled. I've built the 2×2 that isolates them. Preliminarily latency looks about 2.5× larger than I claimed and continual adaptation actually helps, but at three seeds neither effect is significant, so I'm treating it as an open question rather than a result. The full run is queued."
 
-**Do not overstate this either.** Latency is not harmless — it does compress the differences *between* label sources (over half of all defect labels arrive after the 90-day window, so every label source suffers false-negative noise regardless of its quality). The correct claim is: latency changes *which label source you can distinguish*, not *how well the model performs in absolute terms*.
-
----
+**Do not replace one unidentified claim with another.** These numbers are 3 seeds and not significant. The correct position is *"not yet answered."*
 
 ## 4. The statistical tests: what they are and why these ones
 
@@ -151,11 +164,17 @@ Expect to be asked to justify the test choice. Here is the reasoning.
 - *Why non-parametric:* MCC across 21 projects is not normally distributed — it is bounded, skewed, and has outliers (parquet-mr and commons-compress behave very differently from commons-digester). A paired t-test assumes normality of the differences; Wilcoxon assumes only symmetry, which is far safer.
 - *Why the project is the unit:* seeds are not independent observations — they are repeated measurements of the same underlying project. Averaging over the 10 seeds first, then pairing on project, is the only defensible unit of analysis. **n = 21, not 210 and not 16,380.**
 
-**Effect size: Cliff's delta.** Reported alongside every p-value because a p-value tells you only whether an effect exists, not whether it matters. Cliff's δ is the non-parametric analogue of Cohen's d: it is the probability that a randomly chosen value from group A exceeds one from group B, minus the reverse. Thresholds used (Romano et al.): |δ| < 0.147 negligible, < 0.33 small, < 0.474 medium, ≥ 0.474 large.
+**Effect size: matched-pairs rank-biserial correlation**, plus the median paired difference, the Hodges–Lehmann estimate, and a bootstrap 95% CI.
+
+Earlier versions reported Cliff's δ computed all-versus-all (denominator n·m), which throws away the pairing the design deliberately preserves and the Wilcoxon test uses. The difference is large: for the regime-inflation headline, the paired rank-biserial is **+1.000** (every one of 21 projects moves the same way) where unpaired Cliff's δ read +0.74. Cliff's δ is retained in the CSV as `cliffs_delta_unpaired` so older tables stay comparable.
+
+Thresholds for |r|: 0.1 small, 0.3 medium, 0.5 large. **Quote the Hodges–Lehmann estimate with its CI** rather than a bare mean difference — it is the location estimator that belongs with a signed-rank test.
 
 **Multiplicity: Holm-Bonferroni within test family.** See §9.
 
-**Total: 54 tests across 5 families.** 33 significant on raw p; **21 survive Holm correction.**
+**Total: 74 tests across 5 families** (the regime-inflation family now covers all seven label sources, not a hand-picked three). **32 survive within-family Holm; 21 survive global Holm across all 74.**
+
+**Say this unprompted: nothing was pre-registered.** The families were defined during analysis, so within-family correction is a convenience, not a principled partition. That is why a global Holm column is also reported — every headline claim survives it, which makes the family-definition question moot for the claims that matter.
 
 ---
 
@@ -224,7 +243,7 @@ Expect to be asked to justify the test choice. Here is the reasoning.
 
 **This family must be reported under both prequential estimators, because they disagree on one row.**
 
-### Primary: time-averaged prequential MCC (the standard Gama estimator)
+### Primary: time-averaged prequential MCC
 
 | Comparison | Oracle | Variant | Δ | p | Holm p | δ | Effect | Wins |
 |---|---|---|---|---|---|---|---|---|
@@ -278,37 +297,13 @@ Oracle has only 67.8% `fix_ts` coverage, versus 100% for BSZZ. So does oracle wi
 
 **Why the refined variants lose by more than BSZZ:** they suppress false alarms by aggressive filtering but miss 52–73% of real defects. In a streaming setting a missed defect is not neutral — the model is actively trained on it as a *clean* example. BSZZ's high recall (64%) means it makes the opposite trade, and it loses by less.
 
-## 8. Test families 4 & 5 — The batch→stream decomposition
+## 8. Test families 4 & 5 — retired
 
-**Question:** the earlier "inflation ladder" showed performance dropping as evaluation got more realistic. But the final step changed the model *and* the regime simultaneously. Which one caused the drop?
+These two families (`regime_effect_model_fixed`, `learner_effect_regime_fixed`) were built to decompose the batch→stream drop. They rest on the confounded contrast described in Finding 5, so **they no longer support a decomposition claim** and should not be presented as one.
 
-**Design:** add `chronological_online` — ORB trained sequentially on the first 50% of the stream with immediate labels, frozen, then used to predict the second 50%. Same learner as the streaming condition, same regime as the batch condition. That single cell breaks the confound.
+They remain in `statistical_tests.csv` under `metric = mcc` because they are still valid *descriptive* comparisons between two named configurations — they simply do not isolate either effect. Their replacement is `results/phase2/latency_factorial_tests.csv`.
 
-### Family 4 — Regime effect, model held fixed (m = 2)
-
-| Labels | Chrono-online | Prequential+latency | Δ | p | Holm p | δ | Effect |
-|---|---|---|---|---|---|---|---|
-| **oracle** | 0.0777 | 0.0685 | **+0.0093** | **0.8382** | 0.8382 | −0.075 | **negligible** |
-| BSZZ | 0.0767 | 0.0566 | +0.0200 | 0.2428 | 0.4857 | 0.179 | small |
-
-### Family 5 — Learner effect, regime held fixed (m = 4)
-
-| Comparison | Labels | Batch model | ORB | Δ | p | Holm p | δ | Effect |
-|---|---|---|---|---|---|---|---|---|
-| **LApredict vs ORB** | **oracle** | 0.1734 | 0.0777 | **+0.0957** | 0.0001 | **0.0004** | 0.533 | **large** |
-| LApredict vs ORB | BSZZ | 0.1634 | 0.0767 | +0.0867 | 0.0004 | **0.0011** | 0.488 | large |
-| JITLine vs ORB | BSZZ | 0.1285 | 0.0767 | +0.0519 | 0.0158 | **0.0316** | 0.297 | small |
-| JITLine vs ORB | oracle | 0.1027 | 0.0777 | +0.0250 | 0.2180 | 0.2180 | 0.249 | small |
-
-**How to explain both tables together:**
-
-> "Three of the four learner-effect tests are significant after correction, with the largest at 0.096 MCC. Neither regime-effect test is significant — the oracle one is at p = 0.84 with a Cliff's delta of −0.07, which is not just non-significant but pointing marginally the wrong way. So the batch-to-streaming drop that I and the literature attributed to verification latency is, on this corpus, about 91% attributable to the change of learner and 9% to latency, with the latency component indistinguishable from noise."
-
-**Frame this as a correction you found, not a weakness.** It is a genuinely novel measurement — no prior JIT-SDP paper has separated these two effects, because none of them ran an online learner under a batch regime. It also gives Phase 4 a clean baseline: when Noise-Aware ORB is evaluated, you can now say whether it recovers the *learner* penalty or the *latency* penalty.
-
-**The honest caveat to state yourself:** the regime-effect family has only m = 2 tests and n = 21 pairs. A negligible result at n=21 is evidence of a small effect, not proof of zero effect. The right claim is "no detectable effect at this sample size," and the confidence interval is wide.
-
----
+If asked why they are still in the CSV: they describe real configurations and removing rows after the fact is worse practice than labelling them. They are flagged exploratory like every other test.
 
 ## 9. How to explain the multiplicity correction
 
@@ -381,7 +376,7 @@ Keep this visible during the meeting.
 | Regime inflation (JITLine, oracle, k-fold → chronological) | **+0.127 MCC**, Holm p = 5.7e-06, δ = 0.74 |
 | Self-deception gap (JITLine, BSZZ, k-fold) | **+0.248 MCC**, Holm p = 3.4e-05, δ = 0.955 |
 | Label quality (ORB, oracle vs all six variants, time-averaged) | **all six significant**, Holm p ≤ 0.0025, δ 0.39–0.71 |
-| Latency effect (ORB, model held fixed) | **+0.009 MCC**, p = 0.84, δ = −0.07, **negligible** |
+| ~~Latency effect~~ | **WITHDRAWN** — contrast not identified. Preliminary 2×2: latency +0.023 (p = 0.34), adaptivity −0.046 (p = 0.11), 3 seeds, neither significant |
 
 **Key MCCs, oracle-scored:**
 
@@ -397,9 +392,9 @@ Keep this visible during the meeting.
 | ORB, BSZZ, prequential + real latency | 0.0578 time-averaged / 0.0566 terminal |
 | ORB, MASZZ, prequential + real latency | 0.0353 time-averaged / −0.0030 terminal |
 
-**Test counts:** 66 total · **32 significant after within-family Holm**
+**Test counts:** 74 total · **32 survive within-family Holm · 21 survive global Holm** · nothing pre-registered, all exploratory
 
-**Effect size thresholds (Romano et al.):** |δ| < 0.147 negligible · < 0.33 small · < 0.474 medium · ≥ 0.474 large
+**Effect sizes:** matched-pairs rank-biserial (|r| 0.1 small · 0.3 medium · 0.5 large), reported with Hodges–Lehmann estimate and bootstrap 95% CI. Unpaired Cliff's δ retained only for comparability with older tables.
 
 **Latency facts:** 8,819 commits linked to a fix · median latency 113 days · p90 1,597 days · **53.0% of defect labels arrive after the W=90-day window**
 
@@ -407,7 +402,8 @@ Keep this visible during the meeting.
 
 **Things to say carefully:**
 - ✅ "Oracle outperforms all six SZZ variants" — **true under the time-averaged estimator**, Holm p ≤ 0.0025. Add: "under the terminal fading estimator the BSZZ comparison alone is not significant; I report both and treat the averaged value as primary."
-- ✗ "Latency causes the streaming performance drop" → it accounts for ~9% and is not significant (p = 0.84)
+- ✗ "Latency accounts for only ~9% of the streaming drop" → **withdrawn**, the contrast changed learner + label timing + evaluation window at once
+- ✗ Quoting the preliminary 2×2 numbers as results → 3 seeds, neither effect significant
 - ✗ "n = 16,380" → the statistical unit is n = 21 projects
 - ✗ "Self-scoring inflates all models" → it inflates JITLine for all six variants, LApredict only for BSZZ
 - ✗ "FP-heavy noise acts as minority augmentation" stated as fact → the phenomenon is real (13/21, stable across seeds) but the mechanism is unconfirmed: nine predictors all non-significant, and opennlp is a large BSZZ win with *fewer* BSZZ positives than oracle. Say "consistent with class-imbalance relief, mechanism open."

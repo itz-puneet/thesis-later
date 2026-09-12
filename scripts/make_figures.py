@@ -13,7 +13,7 @@ re-running any experiment:
   f2  The inflation ladder, literature number -> honest number
   f3  Self-deception gap, per model
   f4  Label-source comparison under both prequential estimators
-  f5  Learner-vs-latency decomposition of the batch->stream drop
+  f5  Why the batch->stream contrast is confounded, plus the 2x2 that fixes it
   f6  Verification latency distribution against the W=90d window
   f7  Why the two estimators disagree (variance comparison)
   f8  Per-project JITLine BSZZ-over-oracle anomaly
@@ -123,26 +123,66 @@ def f4_label_source(d):
 
 
 def f5_decomposition(d):
+    """The batch->stream contrast is confounded; show that, not a decomposition.
+
+    An earlier version of this figure split the drop into "91% learner, 9%
+    latency". That split was not identified: chronological_online and
+    prequential_latency differ in three ways at once (frozen vs adaptive,
+    immediate vs delayed labels, and second-half plain MCC vs whole-stream
+    faded MCC). Matching only the window already flips the sign of the old
+    contrast, from +0.0093 to -0.0222.
+
+    Left panel: the descriptive ladder, with the confounded step marked.
+    Right panel: the 2x2 that does identify the effects, from
+    results/phase2/latency_factorial.csv.
+    """
     g = d["oracle"].groupby(["model", "regime", "train_label"]).mcc.mean()
     la, ji = g[("LApredict", "chronological", "oracle")], g[("JITLine", "chronological", "oracle")]
     oc, op = g[("ORB", "chronological_online", "oracle")], g[("ORB", "prequential_latency", "oracle")]
-    fig, ax = plt.subplots(figsize=(8, 4.6))
-    names = ["LApredict\nchronological\n(batch LR)", "JITLine\nchronological\n(batch RF)",
-             "ORB\nchrono-online\n(online, batch regime)", "ORB\nprequential+latency\n(online, streaming)"]
+
+    fig, ax = plt.subplots(1, 2, figsize=(12, 4.4))
+
+    names = ["LApredict\nchronological", "JITLine\nchronological",
+             "ORB\nchrono-online", "ORB\nprequential\n+latency"]
     vals = [la, ji, oc, op]
-    ax.bar(names, vals, color=["#f1c40f", "#27ae60", "#2980b9", "#8e44ad"], width=0.6)
+    ax[0].bar(names, vals, color=["#f1c40f", "#27ae60", "#2980b9", "#8e44ad"], width=0.6)
     for i, v in enumerate(vals):
-        ax.text(i, v + 0.004, f"{v:.4f}", ha="center", fontsize=8.5, fontweight="bold")
-    ax.annotate("", xy=(2, 0.148), xytext=(0, 0.148), arrowprops=dict(arrowstyle="<->", color="#c0392b", lw=1.8))
-    ax.text(1.0, 0.153, f"LEARNER effect  {la-oc:+.4f}\np = 0.0001 · Holm 0.0004 · LARGE",
-            ha="center", fontsize=8, color="#c0392b", fontweight="bold")
-    ax.annotate("", xy=(3, 0.105), xytext=(2, 0.105), arrowprops=dict(arrowstyle="<->", color="#16a085", lw=1.8))
-    ax.text(2.5, 0.110, f"LATENCY effect  {oc-op:+.4f}\np = 0.84 · NEGLIGIBLE",
-            ha="center", fontsize=8, color="#16a085", fontweight="bold")
-    ax.set_ylabel("MCC (oracle-scored, terminal estimator)"); ax.set_ylim(0, 0.20)
-    ax.set_title("The batch→stream drop is ~91% learner, ~9% latency\n"
-                 "adding the chrono-online cell breaks the model/regime confound", fontsize=10)
-    plt.xticks(fontsize=8); plt.tight_layout(); fig.savefig(OUT / "f5_decomposition.png"); plt.close(fig)
+        ax[0].text(i, v + 0.004, f"{v:.4f}", ha="center", fontsize=8.5, fontweight="bold")
+    ax[0].annotate("", xy=(3, 0.13), xytext=(2, 0.13),
+                   arrowprops=dict(arrowstyle="<->", color="#c0392b", lw=1.8))
+    ax[0].text(2.5, 0.138, "CONFOUNDED\nlearner + regime + window\nall change here",
+               ha="center", fontsize=7.5, color="#c0392b", fontweight="bold")
+    ax[0].set_ylabel("MCC (oracle-scored, terminal)"); ax[0].set_ylim(0, 0.20)
+    ax[0].set_title("Descriptive ladder -- NOT a causal decomposition", fontsize=9.5)
+    ax[0].tick_params(labelsize=7.5)
+
+    fpath = ROOT / "results" / "phase2" / "latency_factorial.csv"
+    if fpath.exists():
+        f = pd.read_csv(fpath).groupby("project").mean(numeric_only=True)
+        cells = ["A_frozen_immediate", "B_adaptive_immediate", "C_adaptive_delayed"]
+        labs = ["A frozen\n+ immediate", "B adaptive\n+ immediate", "C adaptive\n+ delayed"]
+        m = [f[f"{c}_mcc"].mean() for c in cells]
+        ax[1].bar(labs, m, color=["#2980b9", "#16a085", "#8e44ad"], width=0.6)
+        for i, v in enumerate(m):
+            ax[1].text(i, v + 0.003, f"{v:.4f}", ha="center", fontsize=8.5, fontweight="bold")
+        top = max(m) * 1.68
+        ax[1].annotate("", xy=(1, top * 0.86), xytext=(0, top * 0.86),
+                       arrowprops=dict(arrowstyle="<->", color="#c0392b", lw=1.6))
+        ax[1].text(0.5, top * 0.875, f"adaptivity {m[0]-m[1]:+.4f}\np = 0.11",
+                   ha="center", fontsize=7.5, color="#c0392b", fontweight="bold")
+        ax[1].annotate("", xy=(2, top * 0.70), xytext=(1, top * 0.70),
+                       arrowprops=dict(arrowstyle="<->", color="#16a085", lw=1.6))
+        ax[1].text(1.5, top * 0.715, f"latency {m[1]-m[2]:+.4f}\np = 0.34",
+                   ha="center", fontsize=7.5, color="#16a085", fontweight="bold")
+        ax[1].set_ylim(0, top)
+        ax[1].set_ylabel("MCC (2nd half, plain -- identical window)")
+        ax[1].set_title("The 2x2 that identifies them\n(3 seeds -- preliminary, neither significant)", fontsize=9.5)
+        ax[1].tick_params(labelsize=7.5)
+    else:
+        ax[1].text(0.5, 0.5, "run experiments/run_latency_factorial.py",
+                   ha="center", va="center", transform=ax[1].transAxes)
+
+    plt.tight_layout(); fig.savefig(OUT / "f5_decomposition.png"); plt.close(fig)
 
 
 def f6_latency(d):
