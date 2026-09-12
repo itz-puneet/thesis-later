@@ -49,7 +49,25 @@ Set this up before showing any numbers, or the numbers won't land.
 
 **The critical conceptual point to make explicit:** the difference between *oracle-scored* and *self-scored* is the entire experiment. Everyone in the field trains on SZZ and tests on SZZ. That measures how well a model reproduces a heuristic, not how well it finds bugs. By keeping an independently-sourced oracle held out as the scoring key, you can measure the gap between those two things.
 
-**Provenance, and be precise about it.** The oracle comes from the JIT-Fine replication package on Zenodo (Ni et al.), whose dataset is built on LLTC4J (Herbold et al.), in which human annotators labelled lines **within bug-fixing commits**. `label_oracle` however marks **defect-introducing** commits, and the replication package does not document how Ni et al. mapped fixes to inducing commits — it ships no construction code. So say *"human-labelled bug-fixing commits, extended to introducing commits by a method not documented in the package"*, not *"developer-verified ground truth"*. It is demonstrably not this toolchain's SZZ output (32% of oracle positives are flagged by no variant; Jaccard ≈ 0.15), but that rules out one alternative, not all of them. Full detail in `Phase1_Phase2_Master_Results.md` §0b.
+**Provenance — know this cold, he asked for it specifically.** The oracle is JIT-Defects4J from Ni et al. (ESEC/FSE 2022), an extension of LLTC4J (Herbold et al.). It was built in two stages:
+
+| Stage | Method |
+|---|---|
+| Which lines in a bug-fix commit genuinely fix the bug | **human annotation, ≥3 participants agreeing** |
+| Which commit introduced those lines | **`git blame`** |
+| Which commits are clean | everything else, by residual |
+
+**So it is not manually verified ground truth for defect-introducing commits — it is `git blame` seeded with human-verified fix lines.** Do not call it "developer-verified ground truth."
+
+**What the comparison actually isolates.** SZZ blames *every* line touched in a fix, including refactoring and formatting. The oracle blames *only* the lines three annotators agreed were fixing the bug. Both then use the same `git blame` step. So the contrast measures **the cost of tangled commits** — and nothing else. Blame error is present on both sides and cancels.
+
+**Three things to volunteer:**
+
+1. The measured SZZ noise is a **lower bound**: any systematic blame error is shared and cancels out.
+2. Phase 1's precision ceiling of 27.2% is relative to a *blame-based reference*, not to absolute truth.
+3. The corpus itself is SZZ-shaped — the paper discards *"changes that do not add any new lines since the SZZ algorithm has an assumption that defects are introduced by adding new lines."* Bugs of omission are absent by construction.
+
+**Why this is good news, not bad.** "Ground truth vs heuristic" was vague and, as it turns out, wrong. "Controlling for tangled commits while holding the blame step fixed" is a precise mechanism claim — it names what you measured. Full detail in `Phase1_Phase2_Master_Results.md` §0b.
 
 **Why 21 projects × 10 seeds:** the seeds control for model initialisation and fold randomness; the projects are the unit of statistical analysis. Every test below is paired at the *project* level (n=21), averaging over seeds first. Do not let anyone think n=16,380 — that would be pseudo-replication and it is the first thing a methodologist would attack.
 

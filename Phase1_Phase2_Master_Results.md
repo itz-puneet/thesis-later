@@ -34,43 +34,54 @@
 
 ---
 
-## 0b. Provenance of the oracle — verified, with one unresolved link
+## 0b. Provenance of the oracle — fully traced and confirmed
 
-Traced through the repository rather than asserted. Every step below was checked.
+Traced through the repository and then confirmed against the source paper. Every step was checked; nothing here is assumed.
 
 | Step | Evidence |
 |---|---|
-| `label_oracle` in `phase2_commits.csv` | = `is_buggy_commit` in `data/jitfine/features_{train,valid,test}.pkl` (`codebase/data/loader.py`) |
+| `label_oracle` | = `is_buggy_commit` in `data/jitfine/features_{train,valid,test}.pkl` (`codebase/data/loader.py`) |
 | `data/raw/jit_ground_truth.csv` | a projection of those same pickles — **27,319/27,319 labels identical**, not an independent source |
-| The pickles | `data/raw/JIT-Fine-replication.zip` → `JIT-Fine-replication-zenodo/data.zip`, i.e. the **JIT-Fine replication package published on Zenodo** |
-| JIT-Fine | Ni et al., *"The Best of Both Worlds: Integrating Semantic Features with Expert Features for Defect Prediction and Localization"* (package README) |
-| The dataset | the README names it **Extension-LLTC4J**, built on **LLTC4J** (Herbold et al., arXiv:2011.06244). The name *JIT-Defects4J* is used for the same artifact in the JIT-Fine paper and its successors — cite whichever the paper uses, but record the LLTC4J lineage |
+| The pickles | `JIT-Fine-replication.zip` → `JIT-Fine-replication-zenodo/data.zip` — the JIT-Fine replication package on Zenodo |
+| The paper | Ni, Wang, Yang, Gall, Liu, *"The Best of Both Worlds: Integrating Semantic Features with Expert Features for Defect Prediction and Localization"*, **ESEC/FSE 2022** |
+| The dataset | **JIT-Defects4J**, which the paper defines as *"the extension of LLTC4J"* (Herbold et al.). Both names are correct; JIT-Defects4J is the citable one |
+| Corpus check | Paper Table 2 reports **2,332 buggy / 27,319 total = 8.54%** across 21 projects, and matches this repository **project by project** (commons-vfs 114/1110, giraph 163/844, gora 39/553, opennlp 91/1086, parquet-mr 158/1120) |
 
-### The unresolved link, and why it matters
+### How the labels were actually built — the decisive passage
 
-LLTC4J is a manually labelled dataset: human annotators classified lines **within bug-fixing commits**. That is the human verification the word "oracle" rests on.
+> *"For identifying bug-introducing commits, we start from all bug-fixing commits in the original dataset. Those commits have at least one agreed 'contributing to the bug-fixing' line, which means the line is labeled by **at least three participants with same label**... For each 'contributing to the bug-fixing' line in the candidate bug-fixing commits, **we use `git blame` to find its corresponding bug-introducing commit**... The remaining commits (i.e., not classified as bug-introducing commits) are treated as clean ones."*
+> — Ni et al., ESEC/FSE 2022, §4 (dataset construction)
 
-But `label_oracle` marks **defect-introducing** commits, not fixing ones. The JIT-Fine authors state they *extended* LLTC4J by "extracting the line label in defect-introducing commits" — and **the replication package does not document how**. It ships no dataset-construction code; every script merely consumes `is_buggy_commit`.
+**So the oracle is a two-stage construct:**
 
-So the chain is human-verified up to the bug-fixing commits, and **undocumented from there to the defect-introducing commits** — which is exactly the mapping the thesis treats as ground truth.
+| Stage | Method | Status |
+|---|---|---|
+| Which lines in a bug-fix commit genuinely fix the bug | **human annotation**, ≥3 participants agreeing | verified |
+| Which commit introduced those lines | **`git blame`** | algorithmic |
+| Which commits are clean | everything not flagged by the above | by residual, not verified |
 
-**What can be ruled out.** The oracle is not the output of this repository's SZZ toolchain:
+### What this means for the thesis — precisely
 
-| Check | Result |
-|---|---|
-| Oracle positives flagged by **no** SZZ variant | 751 / 2,332 (**32.2%**) |
-| SZZ-union positives absent from the oracle | 7,240 / 8,821 (**82.1%**) |
-| Jaccard with each variant | 0.149 – 0.168 |
+`label_oracle` is **not** manually verified ground truth for defect-introducing commits, and must not be described as such. It is **`git blame` seeded with human-verified bug-fixing lines**.
 
-If the oracle were an SZZ product these sets would largely coincide. They do not.
+That is still a meaningful contrast with SZZ, but it is a *specific* one:
 
-**What cannot yet be ruled out** is that Ni et al.'s fix→introducing extension is itself algorithmic (a blame- or SZZ-style step applied to human-verified *fix* lines). Until that is established from the JIT-Fine paper, the defensible description is:
+- **SZZ** blames *every* line modified in a bug-fix commit — including refactoring, formatting and comments — then applies filters to clean up afterwards.
+- **The oracle** blames *only* the lines three human annotators agreed were fixing the bug.
 
-> "Labels derive from LLTC4J, in which human annotators labelled lines within bug-fixing commits; the mapping from those fixes to defect-introducing commits was performed by Ni et al. and its verification status is not documented in the replication package."
+**Both share the same `git blame` inducing step.** So the comparison isolates exactly one thing: **the value of knowing which lines in a fix actually fix the bug** — that is, the cost of tangled commits. It does not isolate blame error, because both sides inherit it.
 
-**Do not write "developer-verified defect-introducing commits" until the extension method is confirmed.** If it turns out to be algorithmic, the framing becomes *oracle = human-verified fixes plus a documented, higher-quality inducing mapping*, which is still a meaningful contrast with SZZ but is a different claim from the one currently made.
+Three consequences to state in Chapter 5:
 
-This compounds with the timestamp threat in §8: the oracle is contaminated in timing by SZZ mappings, and possibly in derivation by a non-manual extension step. Both belong in Threats to Validity.
+1. **The measured SZZ noise is a lower bound.** Any systematic error in `git blame` — the "syntactic line-blame fallacy" this thesis names as an FP mechanism — is present on *both* sides of every comparison and cancels. True noise relative to real ground truth would be larger.
+2. **Phase 1's ρ₀ and ρ₁ measure tangling-induced disagreement**, not total labelling error. The precision ceiling of 27.2% is the ceiling *relative to a blame-based reference*.
+3. **The corpus is itself SZZ-shaped.** The paper's filtering explicitly discards *"changes that do not add any new lines since the SZZ algorithm has an assumption that defects are introduced by adding new lines."* Commits that could only be defect-introducing by deletion or omission are absent by construction — which is the FN mechanism §2.4 attributes to conservative variants.
+
+### The wording to use
+
+> "Labels derive from JIT-Defects4J (Ni et al., ESEC/FSE 2022), an extension of LLTC4J (Herbold et al.). Bug-fixing lines were labelled manually with at least three annotators in agreement; defect-introducing commits were then identified by applying `git blame` to those verified lines. The oracle therefore controls for tangled commits — the dominant false-positive mechanism in SZZ — while sharing SZZ's blame-based inducing step. Comparisons against it isolate the cost of tangling rather than total labelling error."
+
+This is a **sharper** contribution than "ground truth versus heuristic," because it names the specific mechanism being measured. It also makes §8's timing threat worse rather than better: the oracle is blame-derived in *construction* and SZZ-derived in *timing*.
 
 ---
 
