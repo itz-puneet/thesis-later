@@ -59,7 +59,7 @@ Present them in this order. It builds from "the field has a measurement problem"
 
 ### Finding 1 — Random k-fold inflates results, badly, and only for high-capacity models
 
-JITLine oracle-trained: **0.2300** under random k-fold → **0.1027** under a chronological split. A drop of **0.127 MCC**, more than half its apparent performance.
+JITLine oracle-trained: **0.2430** under random k-fold → **0.1016** under a chronological split. A drop of **0.141 MCC**, more than half its apparent performance.
 
 LApredict oracle-trained: 0.2058 → 0.1734. A drop of only 0.032, not significant.
 
@@ -68,9 +68,9 @@ LApredict oracle-trained: 0.2058 → 0.1734. A drop of only 0.032, not significa
 ### Finding 2 — Self-scoring on SZZ inflates results even more
 
 JITLine trained on BSZZ, evaluated under random k-fold:
-- Scored against BSZZ's own labels: **0.4181**
-- Scored against the developer-verified oracle: **0.1701**
-- Gap: **+0.248 MCC**
+- Scored against BSZZ's own labels: **0.4129**
+- Scored against the developer-verified oracle: **0.1751**
+- Gap: **+0.238 MCC**
 
 **How to explain it — as an interpretation, not a demonstration:** BSZZ flags 8,060 of 27,319 commits as defect-inducing, but only 1,495 are real (18.6% precision). The gap is *compatible with* the model fitting systematic structure in BSZZ's errors rather than in defects: that structure would be learnable, and fitting it would score well against BSZZ and poorly against the oracle.
 
@@ -80,7 +80,7 @@ This is the finding with the largest effect size in the entire study (Cliff's δ
 
 ### Finding 3 — FP-heavy labels help batch learners in some projects — mechanism unresolved
 
-Under chronological evaluation, oracle-scored: BSZZ-trained JITLine (**0.1285**) beats oracle-trained JITLine (**0.1027**), winning in 13 of 21 projects.
+Under chronological evaluation, oracle-scored: BSZZ-trained JITLine (**0.1324**) beats oracle-trained JITLine (**0.1016**), winning in 15 of 21 projects.
 
 **The effect is real, not noise.** 97.7% of the between-project variance in the gap is genuine rather than seed variation, and 16 of 21 projects have a gap more than 2 SE from zero. Say this before anyone asks — it is the first thing a sceptic will probe.
 
@@ -139,20 +139,24 @@ The effects run in opposite directions, so they cancelled and produced a near-ze
 
 | Cell | MCC |
 |---|---|
-| A frozen + immediate | +0.0798 |
-| **B adaptive + immediate** *(was missing)* | **+0.1253** |
-| C adaptive + delayed | +0.1020 |
+| A frozen + immediate | +0.0827 |
+| **B adaptive + immediate** *(was missing)* | **+0.1268** |
+| C adaptive + delayed | +0.1013 |
 
-| Effect | Δ | p |
-|---|---|---|
-| Adaptivity (A − B) | −0.0455 | 0.111 |
-| Latency (B − C) | **+0.0233** | 0.338 |
+**21 projects × 10 seeds:**
+
+| Effect | Hodges–Lehmann | 95% CI | p |
+|---|---|---|---|
+| Adaptivity (A − B) | −0.0415 | [−0.0776, +0.0035] | 0.065 |
+| Latency (B − C) | **+0.0228** | [−0.0186, +0.0647] | 0.288 |
 
 **How to say it:**
 
-> "I need to correct something I showed you last time. The latency decomposition wasn't identified — my two regimes differed in three ways simultaneously, not one, and the effects cancelled. I've built the 2×2 that isolates them. Preliminarily latency looks about 2.5× larger than I claimed and continual adaptation actually helps, but at three seeds neither effect is significant, so I'm treating it as an open question rather than a result. The full run is queued."
+> "I need to correct something I showed you last time. The latency decomposition wasn't identified — my two regimes differed in three ways simultaneously, not one, and the effects cancelled, which is why latency looked like nothing. I've built the 2×2 that isolates them and run it at ten seeds. Latency comes out about 2.5× larger than I claimed and continual adaptation actually helps, but neither effect is significant and both confidence intervals cross zero. So the honest answer is that 21 projects cannot resolve it — that's a limitation I'll state, not a result I'll claim."
 
-**Do not replace one unidentified claim with another.** These numbers are 3 seeds and not significant. The correct position is *"not yet answered."*
+**Do not replace one unidentified claim with another.** At 10 seeds both CIs still cross zero. The correct position is *"not resolvable at this sample size."* Offering that yourself is far stronger than being pushed to it.
+
+**If asked what would resolve it:** more projects, not more seeds. Seed variance is already small; the limit is 21 paired observations.
 
 ## 4. The statistical tests: what they are and why these ones
 
@@ -273,7 +277,11 @@ Five of six significant; **BSZZ is not**.
 
 > "The two estimators disagree on exactly one comparison, oracle versus BSZZ. The terminal fading value is the confusion matrix at the end of the stream: with a fading factor of 0.99 the weights sum to about a hundred commits, so it summarises roughly the last hundred commits of each project — about eight positives. The time-averaged value is the mean of the metric's whole trajectory, which is what Gama's prequential protocol actually prescribes. Its project-level standard deviation is about half the terminal value's, 0.047 against 0.094. The BSZZ effect is real but modest, and the terminal estimator does not have the power to resolve it."
 
-**Pre-empt the estimator-shopping objection.** Two things defend the choice:
+**The strongest defence is now empirical.** `run_prequential_sensitivity.py` varies the fading factor across 0.90–0.999 (effective windows 10 to 1000 commits) and the warm-up skip across 0/5/10/25% — 20 combinations. **Oracle beats all six variants in every single one, worst p = 0.0080.** The conclusion does not depend on the estimator, the fading factor, or the warm-up rule.
+
+Say that instead of arguing about which summary is canonical. It answers the objection outright.
+
+**Two further points:**
 
 1. **It was chosen before this comparison was run under it.** The switch to time-averaging was a methodological decision made when the prequential evaluation was reviewed — the terminal value is a tail statistic — not a choice made after seeing which one gave significance.
 2. **Averaging does not flatter the result.** The obvious worry is that including the model's warm-up period inflates the average. It does the opposite: mean MCC over the first 10% of the stream is **−0.039** on commons-math and **−0.012** on ant-ivy. Excluding the warm-up would push the averages *higher*. The estimator is conservative here.
@@ -393,6 +401,10 @@ Keep this visible during the meeting.
 | ORB, MASZZ, prequential + real latency | 0.0353 time-averaged / −0.0030 terminal |
 
 **Test counts:** 74 total · **32 survive within-family Holm · 21 survive global Holm** · nothing pre-registered, all exploratory
+
+**Estimator robustness:** 20/20 fading × warm-up combinations give oracle beating all six variants, worst p = 0.0080
+
+**Threshold protocol:** forward-chaining (only looks backwards). Anomaly survives all four protocols tried
 
 **Effect sizes:** matched-pairs rank-biserial (|r| 0.1 small · 0.3 medium · 0.5 large), reported with Hodges–Lehmann estimate and bootstrap 95% CI. Unpaired Cliff's δ retained only for comparability with older tables.
 

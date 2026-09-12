@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Commit** | `master` @ `5126dae` |
+| **Commit** | `master` @ `1bcb777` |
 | **Corpus** | 21 Apache Java projects, 27,319 commits, 2,332 developer-verified defective (8.54%) |
 | **Phase 2 scale** | 16,380 evaluation records = 21 projects × 10 seeds × 13 label/scoring cells × 6 model-regime combinations |
 | **Statistical unit** | **n = 21 projects** (seeds averaged first). Never n = 16,380. |
@@ -27,6 +27,7 @@
 5. [Test family 2 — self-deception gap](#5-test-family-2--self-deception-gap)
 6. [Test family 3 — label source gap](#6-test-family-3--label-source-gap)
 7. [The batch→stream contrast — WITHDRAWN as a decomposition](#7-the-batchstream-contrast--withdrawn-as-a-decomposition)
+7b. [Sensitivity to the prequential summary statistic](#7b-sensitivity-to-the-prequential-summary-statistic)
 8. [Verification latency and the deliverability confound](#8-verification-latency-and-the-deliverability-confound)
 9. [Per-project characteristics](#9-per-project-characteristics)
 10. [Headline claims, ranked by strength](#10-headline-claims-ranked-by-strength)
@@ -65,8 +66,8 @@ Mean MCC over 21 projects × 10 seeds. **Oracle-scored** = measured against deve
 
 | Model | Labels | k-fold oracle-scored | k-fold **self**-scored | chrono oracle-scored | chrono **self**-scored |
 |---|---|---|---|---|---|
-| **JITLine** | **oracle** | **0.2300** | — | **0.1027** | — |
-| JITLine | BSZZ | 0.1701 | **0.4181** | **0.1285** | 0.2176 |
+| **JITLine** | **oracle** | **0.2430** | — | **0.1016** | — |
+| JITLine | BSZZ | 0.1751 | **0.4129** | **0.1324** | 0.2176 |
 | JITLine | AGSZZ | 0.1144 | 0.3091 | 0.0835 | 0.1299 |
 | JITLine | MASZZ | 0.1205 | 0.3305 | 0.0752 | 0.1321 |
 | JITLine | LSZZ | 0.1380 | 0.2453 | 0.0791 | 0.1509 |
@@ -104,9 +105,9 @@ Mean MCC over 21 projects × 10 seeds. **Oracle-scored** = measured against deve
 
 | Step | Configuration | MCC | What was removed |
 |---|---|---|---|
-| 0 | JITLine, BSZZ labels, k-fold, self-scored | **0.4181** | — (the literature's number) |
-| 1 | JITLine, BSZZ labels, k-fold, oracle-scored | 0.1701 | circular self-scoring (**−0.248**) |
-| 2 | JITLine, oracle labels, chronological | 0.1027 | temporal leakage |
+| 0 | JITLine, BSZZ labels, k-fold, self-scored | **0.4129** | — (the literature's number) |
+| 1 | JITLine, BSZZ labels, k-fold, oracle-scored | 0.1751 | circular self-scoring (**−0.238**) |
+| 2 | JITLine, oracle labels, chronological | 0.1016 | temporal leakage |
 | 3 | ORB, oracle labels, prequential + latency | **0.0970** (time-avg) | batch→stream |
 
 **Read the ladder as descriptive only.** Step 3 changes the learner, the regime *and* the evaluation window at once. It is not a causal step and must not be decomposed — see §7, where the earlier decomposition is withdrawn.
@@ -245,23 +246,47 @@ The window mismatch alone is enough to flip the sign. Re-scoring the identical o
 
 | Cell | MCC |
 |---|---|
-| A — frozen + immediate | +0.0798 |
-| **B — adaptive + immediate** *(previously missing)* | **+0.1253** |
-| C — adaptive + delayed | +0.1020 |
+| A — frozen + immediate | +0.0827 |
+| **B — adaptive + immediate** *(previously missing)* | **+0.1268** |
+| C — adaptive + delayed | +0.1013 |
 
-| Effect | Contrast | Δ | p | rank-biserial |
-|---|---|---|---|---|
-| Adaptivity (labels held immediate) | A − B | **−0.0455** | 0.111 | −0.403 medium |
-| **Latency (adaptivity held fixed)** | B − C | **+0.0233** | 0.338 | +0.247 small |
-| *The old, confounded contrast* | A − C | −0.0222 | 0.495 | −0.177 small |
+**21 projects × 10 seeds**, Hodges–Lehmann estimate with bootstrap 95% CI:
 
-Two things follow. **The latency effect is 2.5× larger than the withdrawn figure** (+0.0233 vs +0.0093). And **continual adaptation helps** — freezing costs 0.046 MCC — which the old framing obscured entirely.
+| Effect | Contrast | HL | 95% CI | rank-biserial | p |
+|---|---|---|---|---|---|
+| Adaptivity (labels held immediate) | A − B | **−0.0415** | [−0.0776, +0.0035] | −0.463 medium | 0.065 |
+| **Latency (adaptivity held fixed)** | B − C | **+0.0228** | [−0.0186, +0.0647] | +0.273 small | 0.288 |
+| *The old, confounded contrast* | A − C | −0.0142 | [−0.0855, +0.0424] | −0.134 small | 0.609 |
 
-### 7.3 Status
+Two things follow. **The latency effect is ~2.5× the withdrawn figure** (+0.023 vs +0.009). And **continual adaptation helps** — freezing costs ~0.042 MCC, the largest of the three effects — which the old framing obscured entirely by folding it into the same contrast with the opposite sign.
 
-**21 projects × 3 seeds. Neither effect is significant. Do not quote these as results.** They exist to show the old claim was unidentified and to size the real design. A 10-seed run is required before anything here enters the thesis.
+### 7.3 Status — open, not answered
 
-The learner-vs-regime question is still worth answering — it is just not answered yet.
+**Neither effect is significant at n = 21, and both confidence intervals cross zero.** The adaptivity effect is the closer of the two (p = 0.065).
+
+This is the honest end state: with 21 projects the design cannot resolve either effect. That is a **limitation to state**, not a gap to paper over. What the factorial does establish is that the earlier claim was an artifact of a confounded contrast, and roughly how large the real effects would have to be to detect them.
+
+---
+
+## 7b. Sensitivity to the prequential summary statistic
+
+The choice between the two MCC summaries is a free parameter, and the fading factor inside the terminal one is another. `experiments/run_prequential_sensitivity.py` varies both and recomputes the headline label-source comparison at every combination — fading 0.90–0.999 (effective windows **10 to 1000** commits) × warm-up skip 0/5/10/25%.
+
+| Fading | Eff. window | Warm-up 0% | 5% | 10% | 25% |
+|---|---|---|---|---|---|
+| 0.900 | 10 | 6/6 | 6/6 | 6/6 | 6/6 |
+| 0.950 | 20 | 6/6 | 6/6 | 6/6 | 6/6 |
+| 0.990 | 100 | 6/6 | 6/6 | 6/6 | 6/6 |
+| 0.995 | 200 | 6/6 | 6/6 | 6/6 | 6/6 |
+| 0.999 | 1000 | 6/6 | 6/6 | 6/6 | 6/6 |
+
+*Cells show how many of the six SZZ variants oracle significantly beats.*
+
+**All 20 combinations: oracle beats all six. Worst p anywhere in the grid: 0.0080.**
+
+The label-source conclusion does not depend on the summary statistic, the fading factor, or the warm-up rule. Only the *terminal* value — a different statistic, not a parameter setting — disagrees, and only on BSZZ.
+
+Warm-up skip raises oracle MCC monotonically (0.097 → 0.106 at fading 0.90), confirming for a third time that the early stream depresses the average rather than inflating it.
 
 ---
 
@@ -320,7 +345,7 @@ Oracle has only 67.8% coverage vs BSZZ's 100%. Does oracle win on quality, or is
 
 ![JITLine anomaly](reports/figures/f8_jitline_anomaly.png)
 
-**The JITLine anomaly:** BSZZ-trained JITLine (0.1285) beats oracle-trained (0.1027) in **13 of 21 projects** under chronological evaluation.
+**The JITLine anomaly:** BSZZ-trained JITLine (0.1324) beats oracle-trained (0.1016) in **15 of 21 projects** under chronological evaluation.
 
 **The effect is real and project-specific, but unexplained.** It is not seed noise: **97.7%** of the between-project variance in the gap is real, and **16 of 21** projects have a gap more than 2 SE from zero. But no project characteristic predicts which projects those are.
 
@@ -391,7 +416,7 @@ All means are **unweighted** across projects spanning 544–4,026 commits and 1.
 ### Tier 2 — solid, with the right framing
 
 5. **Oracle labels beat all six SZZ variants** under honest streaming evaluation (time-averaged estimator; Holm p ≤ 0.0025, δ 0.39–0.71, 16–19/21 projects). Survives 100% latency imputation (+0.026, 16/21, p = 0.010). *Must add:* under the terminal estimator the BSZZ comparison alone is not significant; report both, treat time-averaged as primary.
-6. **FP-heavy labels help batch learners in some projects.** BSZZ-trained JITLine beats oracle-trained in 13/21 projects, and the effect survives three threshold protocols and is stable across seeds (97.7% real variance). The *mechanism* is not established: no project characteristic predicts where it happens, and `opennlp` is a large BSZZ win where BSZZ supplies fewer positives than the oracle. It does not carry into streaming (ORB: 3/21). See §9.
+6. **FP-heavy labels help batch learners in some projects.** BSZZ-trained JITLine beats oracle-trained in 15/21 projects, and the effect survives four threshold protocols and is stable across seeds (97.7% real variance). The *mechanism* is not established: no project characteristic predicts where it happens, and `opennlp` is a large BSZZ win where BSZZ supplies fewer positives than the oracle. It does not carry into streaming (ORB: 3/21). See §9.
 7. ~~**Latency is not what makes streaming hard.**~~ **WITHDRAWN — the contrast was not identified** (§7). Preliminary factorial: latency ≈ +0.023 (p = 0.34), adaptivity ≈ −0.046 (p = 0.11), neither significant at 3 seeds. Separating learner from latency is still an open, worthwhile question; it is not yet a result.
 
 ### Tier 3 — observations
