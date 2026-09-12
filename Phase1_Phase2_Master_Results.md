@@ -120,7 +120,7 @@ Random k-fold vs chronological split, paired by project. **m = 14** — all seve
 
 | Model | Labels | k-fold | Chrono | Hodges–Lehmann | 95% CI | rank-biserial | p | Holm (family) | Holm (global) |
 |---|---|---|---|---|---|---|---|---|---|
-| **JITLine** | **oracle** | 0.2430 | 0.1016 | **+0.1373** | [+0.1000, +0.1717] | **+1.000** large | 9.5e-07 | **1.3e-05** | **7.1e-05** |
+| **JITLine** | **oracle** | 0.2430 | 0.1016 | **+0.1373** | [+0.1046, +0.1721] | **+1.000** large | 9.5e-07 | **1.3e-05** | **7.1e-05** |
 | JITLine | LSZZ | 0.1391 | 0.0804 | +0.0667 | [+0.0149, +0.1118] | +0.792 large | 7.2e-04 | **0.0094** | **0.0389** |
 | JITLine | RSZZ | 0.1131 | 0.0626 | +0.0515 | [+0.0287, +0.0736] | +0.706 large | 0.0033 | **0.0393** | 0.1607 |
 | LApredict | LSZZ | 0.2078 | 0.1706 | +0.0410 | [+0.0008, +0.0923] | +0.576 large | 0.0195 | 0.2142 | 0.7205 |
@@ -151,7 +151,7 @@ Self-scored vs oracle-scored MCC, paired by project, **per model** (pooling the 
 
 | Model | Labels | Self | Oracle | Hodges–Lehmann | 95% CI | rank-biserial | Holm (family) | Holm (global) |
 |---|---|---|---|---|---|---|---|---|
-| **JITLine** | **BSZZ** | 0.4129 | 0.1751 | **+0.2303** | [+0.1799, +0.2695] | +0.991 | **6.3e-05** | **1.3e-04** |
+| **JITLine** | **BSZZ** | 0.4129 | 0.1751 | **+0.2303** | [+0.1886, +0.2784] | +0.991 | **6.3e-05** | **1.3e-04** |
 | JITLine | MASZZ | 0.3295 | 0.1272 | +0.1985 | [+0.0867, +0.2720] | **+1.000** | **3.4e-05** | **7.1e-05** |
 | JITLine | RASZZ | 0.3070 | 0.1164 | +0.1861 | [+0.0726, +0.2666] | **+1.000** | **3.4e-05** | **7.1e-05** |
 | JITLine | AGSZZ | 0.3037 | 0.1164 | +0.1797 | [+0.0766, +0.2572] | **+1.000** | **3.4e-05** | **7.1e-05** |
@@ -206,7 +206,7 @@ Five of six significant; **BSZZ is not** — the single comparison on which the 
 
 ![Estimator comparison](reports/figures/f7_estimators.png)
 
-The terminal fading value is the confusion matrix at end of stream. With `fading = 0.99` the weights sum to ≈ 100 commits, so it summarises roughly the **last hundred commits** of each project — about 8 positives. The time-averaged value is the mean of the whole trajectory, which is what Gama's prequential protocol prescribes.
+The terminal fading value is the confusion matrix at end of stream. With `fading = 0.99` the weights sum to ≈ 100 commits, so it summarises roughly the **last hundred commits** of each project — about 8 positives. The time-averaged value is the mean of the metric's whole trajectory. Neither summary is canonical: MCC is not a decomposable loss, so Gama et al.'s prequential-with-fading construction does not extend to it, and of the two the terminal value is the closer analogue. The preference is empirical.
 
 | | Terminal | Time-averaged |
 |---|---|---|
@@ -242,55 +242,56 @@ Any difference between them mixes all three. The effects also run in *opposite* 
 
 The window mismatch alone is enough to flip the sign. Re-scoring the identical old contrast on a matched window turns **+0.0093 into −0.0222**.
 
-![Confounded ladder and the 2×2 that fixes it](reports/figures/f5_decomposition.png)
+![Confounded ladder and the full 2×2 that fixes it](reports/figures/f5_decomposition.png)
 
-### 7.2 The 2×2 that does identify them (preliminary)
+### 7.2 The full 2x2 that does identify them
 
-`experiments/run_latency_factorial.py` runs the design the contrast needs, scoring every cell on an identical window (plain MCC over the second half) so the evaluation protocol contributes nothing:
+`experiments/run_latency_factorial.py` crosses continual adaptation with label delay, scoring every cell on an identical window (plain MCC over the second half) so the evaluation protocol contributes nothing to any contrast. **21 projects x 10 seeds.**
 
-| Cell | MCC |
+| MCC | Immediate labels | Delayed labels |
+|---|---|---|
+| **Frozen** | A **0.0827** | D **0.0781** |
+| **Adaptive** | B **0.1268** | C **0.1013** |
+
+Simple effects and the interaction, with Hodges-Lehmann estimates and bootstrap CIs for that estimator:
+
+| Contrast | HL | 95% CI | rank-biserial | p |
+|---|---|---|---|---|
+| Adaptivity, labels immediate (A-B) | -0.0415 | [-0.0834, +0.0018] | -0.463 | 0.065 |
+| Adaptivity, labels delayed (D-C) | -0.0146 | [-0.0440, +0.0110] | -0.221 | 0.393 |
+| Delay, adaptive learner (B-C) | +0.0227 | [-0.0111, +0.0522] | +0.273 | 0.288 |
+| Delay, frozen learner (A-D) | -0.0118 | [-0.0651, +0.0471] | -0.117 | 0.658 |
+| **Adaptivity x delay interaction** | -0.0296 | [-0.0726, +0.0238] | -0.247 | 0.338 |
+| *The old, confounded contrast (A-C)* | -0.0142 | [-0.0686, +0.0331] | -0.134 | 0.609 |
+
+### 7.3 Status - open, and honestly so
+
+**Every contrast above has a confidence interval containing zero.** Nothing here is significant at n = 21.
+
+The estimated delay penalty is positive for an adaptive learner (+0.023) and near zero for a frozen one (-0.012), and the interaction runs in the direction that intuition suggests: a learner that has stopped updating barely cares when its labels arrive. But the interaction CI spans [-0.073, +0.024], so the data do not support that reading either.
+
+**State the delay effect as an imprecise estimate, not as a comparison against the withdrawn figure.** It would be a mistake to replace "latency is 9% of the drop" with "latency is 2.5x larger than I said": both treat a non-significant point estimate as if it carried information about magnitude. The defensible sentence is that the delay penalty is estimated at about +0.02 MCC with an interval from -0.01 to +0.05, and that 21 paired projects cannot resolve it.
+
+What the factorial *does* establish is that the earlier claim was an artifact of a contrast that changed three things at once, and roughly how large an effect would have to be before this corpus could detect it. Resolving it needs more projects, not more seeds: seed-level variance is already small.
+
+## 7b. Robustness of the label-source result to the summary statistic
+
+This is a **robustness analysis, not a second body of confirmatory tests.** The 120 comparisons below re-examine one already-reported result under different summary choices; they are not 120 independent findings. What matters is that the direction and the intervals are stable, not that each cell has a small p-value.
+
+`experiments/run_prequential_sensitivity.py` varies the fading factor across 0.90-0.999 (effective windows **10 to 1000** commits) and the warm-up skip across 0/5/10/25% - 20 combinations x 6 variants.
+
+| Quantity | Result |
 |---|---|
-| A — frozen + immediate | +0.0827 |
-| **B — adaptive + immediate** *(previously missing)* | **+0.1268** |
-| C — adaptive + delayed | +0.1013 |
+| Hodges-Lehmann estimates positive (oracle ahead) | **120 / 120** |
+| Bootstrap CIs excluding zero | **120 / 120** |
+| Surviving grid-wide Holm across all 120 | **120 / 120** |
+| Oracle MCC across the grid | 0.090 - 0.114 |
 
-**21 projects × 10 seeds**, Hodges–Lehmann estimate with bootstrap 95% CI:
+Grid-wide Holm is reported because foregrounding 120 individual p-values without correction would be exactly the selective-reporting problem the rest of the analysis avoids. It changes nothing here - every comparison survives - but the correction is applied rather than assumed unnecessary.
 
-| Effect | Contrast | HL | 95% CI | rank-biserial | p |
-|---|---|---|---|---|---|
-| Adaptivity (labels held immediate) | A − B | **−0.0415** | [−0.0776, +0.0035] | −0.463 medium | 0.065 |
-| **Latency (adaptivity held fixed)** | B − C | **+0.0228** | [−0.0186, +0.0647] | +0.273 small | 0.288 |
-| *The old, confounded contrast* | A − C | −0.0142 | [−0.0855, +0.0424] | −0.134 small | 0.609 |
+**The label-source conclusion does not depend on the summary statistic, the fading factor, or the warm-up rule.** Only the *terminal* value disagrees, and only on BSZZ - and that is a different statistic, not a parameter setting within this grid.
 
-Two things follow. **The latency effect is ~2.5× the withdrawn figure** (+0.023 vs +0.009). And **continual adaptation helps** — freezing costs ~0.042 MCC, the largest of the three effects — which the old framing obscured entirely by folding it into the same contrast with the opposite sign.
-
-### 7.3 Status — open, not answered
-
-**Neither effect is significant at n = 21, and both confidence intervals cross zero.** The adaptivity effect is the closer of the two (p = 0.065).
-
-This is the honest end state: with 21 projects the design cannot resolve either effect. That is a **limitation to state**, not a gap to paper over. What the factorial does establish is that the earlier claim was an artifact of a confounded contrast, and roughly how large the real effects would have to be to detect them.
-
----
-
-## 7b. Sensitivity to the prequential summary statistic
-
-The choice between the two MCC summaries is a free parameter, and the fading factor inside the terminal one is another. `experiments/run_prequential_sensitivity.py` varies both and recomputes the headline label-source comparison at every combination — fading 0.90–0.999 (effective windows **10 to 1000** commits) × warm-up skip 0/5/10/25%.
-
-| Fading | Eff. window | Warm-up 0% | 5% | 10% | 25% |
-|---|---|---|---|---|---|
-| 0.900 | 10 | 6/6 | 6/6 | 6/6 | 6/6 |
-| 0.950 | 20 | 6/6 | 6/6 | 6/6 | 6/6 |
-| 0.990 | 100 | 6/6 | 6/6 | 6/6 | 6/6 |
-| 0.995 | 200 | 6/6 | 6/6 | 6/6 | 6/6 |
-| 0.999 | 1000 | 6/6 | 6/6 | 6/6 | 6/6 |
-
-*Cells show how many of the six SZZ variants oracle significantly beats.*
-
-**All 20 combinations: oracle beats all six. Worst p anywhere in the grid: 0.0080.**
-
-The label-source conclusion does not depend on the summary statistic, the fading factor, or the warm-up rule. Only the *terminal* value — a different statistic, not a parameter setting — disagrees, and only on BSZZ.
-
-Warm-up skip raises oracle MCC monotonically (0.097 → 0.106 at fading 0.90), confirming for a third time that the early stream depresses the average rather than inflating it.
+Warm-up skip raises oracle MCC monotonically (0.097 -> 0.106 at fading 0.90), confirming again that the early stream depresses the average rather than inflating it.
 
 ---
 
@@ -341,7 +342,15 @@ Oracle has only 67.8% coverage vs BSZZ's 100%. Does oracle win on quality, or is
 
 **Why imputation costs the oracle something (0.097 → 0.084):** the empirical pool it samples from has a 113-day median and a 1,597-day p90. More than half the imputed labels arrive after the window and are first delivered as *wrong clean* labels; a third arrive after a year. Handing the oracle its missing labels at realistic delays is close to a no-op.
 
-**Still open (disclosure):** the oracle's `fix_ts` is the union of the six SZZ variants' fix→inducing mappings, since JIT-Defects4J has no oracle-native linkage here. Imputation addresses the *coverage* half but not the *timing* half — a linked oracle commit's arrival date is still whichever SZZ variant matched it. This belongs in Threats to Validity.
+### The central construct-validity threat
+
+**The oracle's timestamps are SZZ-derived.** `fix_ts` for `label_oracle` is the union of the six SZZ variants' fix→inducing mappings, because JIT-Defects4J carries no oracle-native linkage in this corpus. So the condition presented as *SZZ-free* depends on SZZ for its timing.
+
+The imputation experiment addresses only the **coverage** half (67.8% → 100%). The **timing** half is untouched: for a linked oracle commit, the arrival date is still whichever SZZ variant matched it, and if that match is wrong the date is wrong.
+
+This is not a footnote. Every streaming result — the label-source comparison, the factorial, the sensitivity grid — inherits it, because all of them depend on when a label is deemed to arrive. It should be stated as a primary threat to construct validity in Chapter 5 and again in the thesis-level Threats section, not filed among minor limitations.
+
+What would resolve it: JIT-Defects4J's own fix→inducing linkage, if it can be obtained. Short of that, the honest framing is that the oracle condition is *label-quality-clean but timing-contaminated*, and that the comparison isolates label quality only to the extent that timing errors are uncorrelated with variant identity — which has not been verified.
 
 ---
 
@@ -413,7 +422,7 @@ All means are **unweighted** across projects spanning 544–4,026 commits and 1.
 ### Tier 1 — bulletproof
 
 1. **Random k-fold inflates JITLine by +0.137 MCC** over a chronological split (global Holm 7.1e-05, rank-biserial +1.000, δ = 0.742). Held in **21/21 projects**. Inflation scales with model capacity — LApredict barely moves.
-2. **Self-scoring on SZZ inflates JITLine/BSZZ by +0.230 MCC** (HL +0.2303, CI [+0.180, +0.270], rank-biserial +0.991; global Holm 1.3e-04). Largest effect in the study. Model-dependent: significant for all six variants under JITLine, only BSZZ under LApredict.
+2. **Self-scoring on SZZ inflates JITLine/BSZZ by +0.230 MCC** (HL +0.2303, CI [+0.189, +0.278], rank-biserial +0.991; global Holm 1.3e-04). Largest effect in the study. Model-dependent: significant for all six variants under JITLine, only BSZZ under LApredict.
 3. **SZZ precision never exceeds 27.2%**; noise is asymmetric and variant-dependent (ρ₀ 6.7–26.3%, ρ₁ 35.9–73.3%).
 4. **SZZ variants agree with each other (κ up to 0.933) far more than with truth (κ 0.158–0.202).**
 

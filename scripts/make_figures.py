@@ -133,7 +133,7 @@ def f5_decomposition(d):
     contrast, from +0.0093 to -0.0222.
 
     Left panel: the descriptive ladder, with the confounded step marked.
-    Right panel: the 2x2 that does identify the effects, from
+    Right panel: the full 2x2 that does identify the effects, from
     results/phase2/latency_factorial.csv.
     """
     g = d["oracle"].groupby(["model", "regime", "train_label"]).mcc.mean()
@@ -159,25 +159,21 @@ def f5_decomposition(d):
     fpath = ROOT / "results" / "phase2" / "latency_factorial.csv"
     if fpath.exists():
         f = pd.read_csv(fpath).groupby("project").mean(numeric_only=True)
-        cells = ["A_frozen_immediate", "B_adaptive_immediate", "C_adaptive_delayed"]
-        labs = ["A frozen\n+ immediate", "B adaptive\n+ immediate", "C adaptive\n+ delayed"]
-        m = [f[f"{c}_mcc"].mean() for c in cells]
-        ax[1].bar(labs, m, color=["#2980b9", "#16a085", "#8e44ad"], width=0.6)
-        for i, v in enumerate(m):
-            ax[1].text(i, v + 0.003, f"{v:.4f}", ha="center", fontsize=8.5, fontweight="bold")
-        top = max(m) * 1.68
-        ax[1].annotate("", xy=(1, top * 0.86), xytext=(0, top * 0.86),
-                       arrowprops=dict(arrowstyle="<->", color="#c0392b", lw=1.6))
-        ax[1].text(0.5, top * 0.875, f"adaptivity {m[0]-m[1]:+.4f}\np = 0.11",
-                   ha="center", fontsize=7.5, color="#c0392b", fontweight="bold")
-        ax[1].annotate("", xy=(2, top * 0.70), xytext=(1, top * 0.70),
-                       arrowprops=dict(arrowstyle="<->", color="#16a085", lw=1.6))
-        ax[1].text(1.5, top * 0.715, f"latency {m[1]-m[2]:+.4f}\np = 0.34",
-                   ha="center", fontsize=7.5, color="#16a085", fontweight="bold")
-        ax[1].set_ylim(0, top)
-        ax[1].set_ylabel("MCC (2nd half, plain -- identical window)")
-        ax[1].set_title("The 2x2 that identifies them\n(3 seeds -- preliminary, neither significant)", fontsize=9.5)
-        ax[1].tick_params(labelsize=7.5)
+        grid = np.array([[f["A_frozen_immediate_mcc"].mean(), f["D_frozen_delayed_mcc"].mean()],
+                         [f["B_adaptive_immediate_mcc"].mean(), f["C_adaptive_delayed_mcc"].mean()]])
+        im = ax[1].imshow(grid, cmap="viridis", vmin=grid.min() * 0.9, vmax=grid.max() * 1.02)
+        ax[1].set_xticks([0, 1]); ax[1].set_xticklabels(["immediate\nlabels", "delayed\nlabels"])
+        ax[1].set_yticks([0, 1]); ax[1].set_yticklabels(["frozen", "adaptive"])
+        cells = [["A", "D"], ["B", "C"]]
+        for i in range(2):
+            for j in range(2):
+                ax[1].text(j, i, f"{cells[i][j]}\n{grid[i, j]:.4f}", ha="center", va="center",
+                           color="white" if grid[i, j] < grid.mean() else "black",
+                           fontsize=11, fontweight="bold")
+        ax[1].set_title("Full 2x2, identical evaluation window\n"
+                        "simple effects and interaction all n.s. at n=21", fontsize=9.5)
+        ax[1].grid(False)
+        plt.colorbar(im, ax=ax[1], fraction=0.046, label="MCC (2nd half, plain)")
     else:
         ax[1].text(0.5, 0.5, "run experiments/run_latency_factorial.py",
                    ha="center", va="center", transform=ax[1].transAxes)

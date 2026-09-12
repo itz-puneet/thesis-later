@@ -28,7 +28,7 @@
 
 If you have sixty seconds, say this:
 
-> "Phase 2 asked what SZZ label noise actually costs a defect prediction model, once you stop evaluating it dishonestly. I ran three models across seven label sources and four evaluation regimes — 16,380 runs — and tested everything with paired Wilcoxon signed-rank tests at the project level, Holm-corrected within test family. Three things came out. First, random k-fold cross-validation inflates JITLine's apparent performance by +0.137 MCC over a chronological split — it held in all 21 projects, so the exact test saturates at p = 9.5e-07. Second, evaluating a model on the same SZZ labels it was trained on inflates it by a further +0.230 MCC — a gap consistent with models fitting the heuristic's error structure rather than defects. Third, under honest streaming evaluation with real verification latency, training on developer-verified labels beats all six SZZ variants, every comparison significant after correction — so label quality demonstrably matters once you evaluate properly. And a correction I want to flag myself: I previously reported that latency accounts for only ~9% of the batch-to-streaming drop. That comparison was not identified — it changed the learner, the label timing and the evaluation window all at once — so I have withdrawn it and built the 2×2 that does isolate the effects. At ten seeds latency comes out about 2.5× higher than I claimed, but both confidence intervals cross zero, so the honest answer is that 21 projects cannot resolve it."
+> "Phase 2 asked what SZZ label noise actually costs a defect prediction model, once you stop evaluating it dishonestly. I ran three models across seven label sources and four evaluation regimes — 16,380 runs — and tested everything with paired Wilcoxon signed-rank tests at the project level, Holm-corrected within test family. Three things came out. First, random k-fold cross-validation inflates JITLine's apparent performance by +0.137 MCC over a chronological split — it held in all 21 projects, so the exact test saturates at p = 9.5e-07. Second, evaluating a model on the same SZZ labels it was trained on inflates it by a further +0.230 MCC — a gap consistent with models fitting the heuristic's error structure rather than defects. Third, under honest streaming evaluation with real verification latency, training on developer-verified labels beats all six SZZ variants, every comparison significant after correction — so label quality demonstrably matters once you evaluate properly. And a correction I want to flag myself: I previously reported that latency accounts for only ~9% of the batch-to-streaming drop. That comparison was not identified — it changed the learner, the label timing and the evaluation window all at once — so I have withdrawn it and built the full 2×2 that does isolate the effects. At ten seeds the delay penalty is estimated at about +0.02 MCC for an adaptive learner, but every contrast in the 2×2 — including the interaction — has a confidence interval spanning zero, so the honest answer is that 21 paired projects cannot resolve it."
 
 Then stop and let them ask.
 
@@ -135,26 +135,30 @@ ORB under real verification latency, oracle-scored, **time-averaged prequential 
 
 The effects run in opposite directions, so they cancelled and produced a near-zero difference that looked like "latency does nothing." Matching only the evaluation window already flips the sign of that contrast, from +0.0093 to −0.0222.
 
-**The 2×2 that does identify them** (`experiments/run_latency_factorial.py`, all cells scored on an identical window):
+**The full 2×2 that does identify them** (`experiments/run_latency_factorial.py`, all cells on an identical window, 21 projects × 10 seeds):
 
-| Cell | MCC |
-|---|---|
-| A frozen + immediate | +0.0827 |
-| **B adaptive + immediate** *(was missing)* | **+0.1268** |
-| C adaptive + delayed | +0.1013 |
+| MCC | Immediate labels | Delayed labels |
+|---|---|---|
+| **Frozen** | A 0.0827 | D 0.0781 |
+| **Adaptive** | B 0.1268 | C 0.1013 |
 
-**21 projects × 10 seeds:**
-
-| Effect | Hodges–Lehmann | 95% CI | p |
+| Contrast | HL | 95% CI | p |
 |---|---|---|---|
-| Adaptivity (A − B) | −0.0415 | [−0.0776, +0.0035] | 0.065 |
-| Latency (B − C) | **+0.0228** | [−0.0186, +0.0647] | 0.288 |
+| Adaptivity, immediate (A−B) | −0.0415 | [−0.0834, +0.0018] | 0.065 |
+| Adaptivity, delayed (D−C) | −0.0146 | [−0.0440, +0.0110] | 0.393 |
+| Delay, adaptive (B−C) | +0.0227 | [−0.0111, +0.0522] | 0.288 |
+| Delay, frozen (A−D) | −0.0118 | [−0.0651, +0.0471] | 0.658 |
+| **Interaction** | −0.0296 | [−0.0726, +0.0238] | 0.338 |
+
+**Every interval contains zero.** Nothing here is significant.
 
 **How to say it:**
 
-> "I need to correct something I showed you last time. The latency decomposition wasn't identified — my two regimes differed in three ways simultaneously, not one, and the effects cancelled, which is why latency looked like nothing. I've built the 2×2 that isolates them and run it at ten seeds. Latency comes out about 2.5× larger than I claimed and continual adaptation actually helps, but neither effect is significant and both confidence intervals cross zero. So the honest answer is that 21 projects cannot resolve it — that's a limitation I'll state, not a result I'll claim."
+> "I need to correct something I showed you last time. The latency decomposition wasn't identified — my two regimes differed in three ways simultaneously, not one, and the effects cancelled, which is why latency looked like nothing. I've built the full 2×2 that isolates them and run it at ten seeds. The delay penalty is estimated at about +0.02 MCC for an adaptive learner, but the interval runs from −0.01 to +0.05, and every other contrast including the interaction also spans zero. So the honest answer is that 21 paired projects cannot resolve it. That's a limitation I'll state, not a result I'll claim."
 
-**Do not replace one unidentified claim with another.** At 10 seeds both CIs still cross zero. The correct position is *"not resolvable at this sample size."* Offering that yourself is far stronger than being pushed to it.
+**Do not say "2.5× larger than I previously claimed."** That compares two non-significant point estimates as though the difference were informative. State the estimate with its interval and stop.
+
+**Do not replace one unidentified claim with another.** At 10 seeds every CI crosses zero, including the interaction. The correct position is *"not resolvable at this sample size."* Offering that yourself is far stronger than being pushed to it.
 
 **If asked what would resolve it:** more projects, not more seeds. Seed variance is already small; the limit is 21 paired observations.
 
@@ -168,11 +172,11 @@ Expect to be asked to justify the test choice. Here is the reasoning.
 - *Why non-parametric:* MCC across 21 projects is not normally distributed — it is bounded, skewed, and has outliers (parquet-mr and commons-compress behave very differently from commons-digester). A paired t-test assumes normality of the differences; Wilcoxon assumes only symmetry, which is far safer.
 - *Why the project is the unit:* seeds are not independent observations — they are repeated measurements of the same underlying project. Averaging over the 10 seeds first, then pairing on project, is the only defensible unit of analysis. **n = 21, not 210 and not 16,380.**
 
-**Effect size: matched-pairs rank-biserial correlation**, plus the median paired difference, the Hodges–Lehmann estimate, and a bootstrap 95% CI.
+**Effect size: matched-pairs rank-biserial correlation**, plus the Hodges–Lehmann estimate with a bootstrap 95% CI **for that estimator** (the HL statistic is recomputed inside every resample), and the median paired difference with its own separate interval.
 
 Earlier versions reported Cliff's δ computed all-versus-all (denominator n·m), which throws away the pairing the design deliberately preserves and the Wilcoxon test uses. The difference is large: for the regime-inflation headline, the paired rank-biserial is **+1.000** (every one of 21 projects moves the same way) where unpaired Cliff's δ read +0.74. Cliff's δ is retained in the CSV as `cliffs_delta_unpaired` so older tables stay comparable.
 
-Thresholds for |r|: 0.1 small, 0.3 medium, 0.5 large. **Quote the Hodges–Lehmann estimate with its CI** rather than a bare mean difference — it is the location estimator that belongs with a signed-rank test.
+Thresholds for |r|: 0.1 small, 0.3 medium, 0.5 large. **Quote the Hodges–Lehmann estimate with its CI** rather than a bare mean difference — it is the location estimator that belongs with a signed-rank test. An earlier version bootstrapped the *median* difference and printed that interval beside the HL point estimate; the interval then qualified a different quantity from the one it appeared to describe. Both are now bootstrapped as themselves.
 
 **Multiplicity: Holm-Bonferroni within test family.** See §9.
 
@@ -189,7 +193,7 @@ Thresholds for |r|: 0.1 small, 0.3 medium, 0.5 large. **Quote the Hodges–Lehma
 
 | Model | Labels | k-fold | Chrono | Hodges-Lehmann | 95% CI | rank-biserial | Holm (family) | Holm (global) |
 |---|---|---|---|---|---|---|---|---|
-| **JITLine** | **oracle** | 0.2430 | 0.1016 | **+0.1373** | [+0.1000, +0.1717] | **+1.000** | **1.3e-05** | **7.1e-05** |
+| **JITLine** | **oracle** | 0.2430 | 0.1016 | **+0.1373** | [+0.1046, +0.1721] | **+1.000** | **1.3e-05** | **7.1e-05** |
 | JITLine | LSZZ | 0.1391 | 0.0804 | +0.0667 | [+0.0149, +0.1118] | +0.792 | **0.0094** | **0.0389** |
 | JITLine | RSZZ | 0.1131 | 0.0626 | +0.0515 | [+0.0287, +0.0736] | +0.706 | **0.0393** | 0.1607 |
 | JITLine | BSZZ | 0.1751 | 0.1324 | +0.0549 | [+0.0248, +0.1093] | +0.558 | 0.2147 | 0.8349 |
@@ -213,7 +217,7 @@ Thresholds for |r|: 0.1 small, 0.3 medium, 0.5 large. **Quote the Hodges–Lehma
 
 | Model | Labels | Self | Oracle | Hodges-Lehmann | 95% CI | rank-biserial | Holm (global) |
 |---|---|---|---|---|---|---|---|
-| **JITLine** | **BSZZ** | 0.4129 | 0.1751 | **+0.2303** | [+0.1799, +0.2695] | +0.991 | **1.3e-04** |
+| **JITLine** | **BSZZ** | 0.4129 | 0.1751 | **+0.2303** | [+0.1886, +0.2784] | +0.991 | **1.3e-04** |
 | JITLine | MASZZ | 0.3295 | 0.1272 | +0.1985 | [+0.0867, +0.2720] | **+1.000** | **7.1e-05** |
 | JITLine | RASZZ | 0.3070 | 0.1164 | +0.1861 | [+0.0726, +0.2666] | **+1.000** | **7.1e-05** |
 | JITLine | AGSZZ | 0.3037 | 0.1164 | +0.1797 | [+0.0766, +0.2572] | **+1.000** | **7.1e-05** |
@@ -276,11 +280,17 @@ Five of six significant; **BSZZ is not**.
 
 ### How to explain the discrepancy — you will be asked
 
-> "The two estimators disagree on exactly one comparison, oracle versus BSZZ. The terminal fading value is the confusion matrix at the end of the stream: with a fading factor of 0.99 the weights sum to about a hundred commits, so it summarises roughly the last hundred commits of each project — about eight positives. The time-averaged value is the mean of the metric's whole trajectory, which is what Gama's prequential protocol actually prescribes. Its project-level standard deviation is about half the terminal value's, 0.047 against 0.094. The BSZZ effect is real but modest, and the terminal estimator does not have the power to resolve it."
+> "The two estimators disagree on exactly one comparison, oracle versus BSZZ. The terminal fading value is the confusion matrix at the end of the stream: with a fading factor of 0.99 the weights sum to about a hundred commits, so it summarises roughly the last hundred commits of each project — about eight positives. The time-averaged value is the mean of the metric's whole trajectory. Neither summary is canonical: MCC is not a decomposable loss, so Gama et al.'s prequential-with-fading construction does not extend to it, and of the two the terminal value is the closer analogue. The preference is empirical. Its project-level standard deviation is about half the terminal value's, 0.047 against 0.094. The BSZZ effect is real but modest, and the terminal estimator does not have the power to resolve it."
 
-**The strongest defence is now empirical.** `run_prequential_sensitivity.py` varies the fading factor across 0.90–0.999 (effective windows 10 to 1000 commits) and the warm-up skip across 0/5/10/25% — 20 combinations. **Oracle beats all six variants in every single one, worst p = 0.0080.** The conclusion does not depend on the estimator, the fading factor, or the warm-up rule.
+**The strongest defence is now empirical — but frame it as robustness, not as more tests.** `run_prequential_sensitivity.py` varies the fading factor across 0.90–0.999 (effective windows 10 to 1000 commits) and the warm-up skip across 0/5/10/25%.
 
-Say that instead of arguing about which summary is canonical. It answers the objection outright.
+| Across all 120 comparisons | |
+|---|---|
+| Hodges–Lehmann estimates with oracle ahead | **120 / 120** |
+| Bootstrap CIs excluding zero | **120 / 120** |
+| Surviving grid-wide Holm | **120 / 120** |
+
+**Say "the direction and the intervals are stable across every summary choice I examined."** Do not present it as 120 new significant findings — it is one result re-examined 120 ways. Grid-wide Holm is applied and reported so the framing cannot be mistaken.
 
 **Two further points:**
 
@@ -354,7 +364,7 @@ Expect: *"You ran 54 tests. How many would be significant by chance?"*
 
 **Q7. "You report two different MCC estimators and they disagree. Isn't that convenient?"**
 
-> "They disagree on exactly one of fifty-four comparisons — oracle versus BSZZ — so it is not a case of one estimator rewriting the results. The time-averaged value is the standard Gama prequential estimator and it is what I report as primary; the terminal fading value summarises only the last hundred commits of each stream and has about twice the project-level variance. I made that choice on methodological grounds before running this comparison under it, not after seeing which gave significance. And the obvious objection — that averaging inflates results by including the model's warm-up — is backwards: mean MCC over the first 10% of the stream is negative, around −0.04, so averaging is conservative here. I report both estimators in `statistical_tests.csv` precisely so the reader can check that."
+> "They disagree on exactly one of the 74 comparisons — oracle versus BSZZ — so it is not a case of one estimator rewriting the results. The time-averaged value is what I report as primary, but not because it is canonical: MCC is not a decomposable loss, so Gama's construction does not extend to it and neither summary is standard; the terminal fading value summarises only the last hundred commits of each stream and has about twice the project-level variance. I made that choice on methodological grounds before running this comparison under it, not after seeing which gave significance. And the obvious objection — that averaging inflates results by including the model's warm-up — is backwards: mean MCC over the first 10% of the stream is negative, around −0.04, so averaging is conservative here. I report both estimators in `statistical_tests.csv` precisely so the reader can check that."
 
 **Q8. "Are the 21 projects comparable?"**
 
@@ -382,8 +392,8 @@ Keep this visible during the meeting.
 
 | | Value |
 |---|---|
-| Regime inflation (JITLine, oracle, k-fold → chronological) | **HL +0.137**, CI [+0.100,+0.172], rank-biserial +1.000 (21/21), global Holm 7.1e-05, δ = 0.74 |
-| Self-deception gap (JITLine, BSZZ, k-fold) | **HL +0.230**, CI [+0.180,+0.270], rank-biserial +0.991, global Holm 1.3e-04, δ = 0.955 |
+| Regime inflation (JITLine, oracle, k-fold → chronological) | **HL +0.137**, CI [+0.105,+0.172], rank-biserial +1.000 (21/21), global Holm 7.1e-05, δ = 0.74 |
+| Self-deception gap (JITLine, BSZZ, k-fold) | **HL +0.230**, CI [+0.189,+0.278], rank-biserial +0.991, global Holm 1.3e-04, δ = 0.955 |
 | Label quality (ORB, oracle vs all six variants, time-averaged) | **all six significant**, Holm p ≤ 0.0025, δ 0.39–0.71 |
 | ~~Latency effect~~ | **WITHDRAWN** — contrast not identified. Preliminary 2×2: latency +0.023 (p = 0.34), adaptivity −0.046 (p = 0.11), 3 seeds, neither significant |
 

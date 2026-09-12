@@ -1,4 +1,4 @@
-"""Factorial isolation of the verification-latency effect.
+"""Factorial (2x2) isolation of the verification-latency effect.
 
 WHY THIS EXISTS. An earlier analysis compared `chronological_online` against
 `prequential_latency` and concluded that verification latency accounts for only
@@ -49,14 +49,26 @@ from codebase.evaluation.metrics import mcc, gmean, paired_effect
 from codebase.online.orb import ORB
 
 OUT = BASE_DIR / "results" / "phase2"
-CONDITIONS = {"A_frozen_immediate": "frozen",
-              "B_adaptive_immediate": "immediate",
-              "C_adaptive_delayed": "delayed"}
+CONDITIONS = {"A_frozen_immediate": ("frozen", False),
+              "B_adaptive_immediate": ("adaptive", False),
+              "C_adaptive_delayed": ("adaptive", True),
+              "D_frozen_delayed": ("frozen", True)}
 
 
-def run_cell(pdf: pd.DataFrame, mode: str, seed: int,
+def run_cell(pdf: pd.DataFrame, adapt: str, delayed: bool, seed: int,
              label_col: str = "label_oracle", fix_ts_col: str = "fix_ts") -> dict:
-    """One factorial cell. Scored on the second half with a plain MCC, always."""
+    """One factorial cell. Scored on the second half with a plain MCC, always.
+
+    adapt   "frozen"   -- learning stops at the midpoint
+            "adaptive" -- learning continues over the whole stream
+    delayed  False     -- a label is available at the commit's own timestamp
+             True      -- a label arrives on the real verification schedule
+                          (tentative clean at t+W, corrected at fix_ts)
+
+    Crossing the two gives a genuine 2x2, so the adaptivity x delay interaction
+    is estimable. An earlier version had only three cells and should not have
+    been called factorial.
+    """
     d = pdf.sort_values("author_ts").reset_index(drop=True)
     X = d[KAMEI_FEATURES].to_numpy(float)
     y_train = d[label_col].to_numpy(int)
@@ -71,19 +83,24 @@ def run_cell(pdf: pd.DataFrame, mode: str, seed: int,
     tie = 0
 
     for i in range(n):
-        if mode == "delayed":
+        # A frozen learner stops consuming arrivals at the midpoint; labels that
+        # would have landed later are simply never seen, which is what freezing
+        # means under a delayed schedule.
+        learning = (adapt == "adaptive") or (i < cut)
+
+        if delayed and learning:
             while pending and pending[0][0] <= t[i]:
                 _, _, j, lab = heapq.heappop(pending)
                 m.learn_one(X[j], lab)
 
         preds[i] = m.predict_one(X[i])
 
-        if mode == "frozen":
-            if i < cut:
-                m.learn_one(X[i], int(y_train[i]))
-        elif mode == "immediate":
+        if not learning:
+            continue
+
+        if not delayed:
             m.learn_one(X[i], int(y_train[i]))
-        else:  # delayed -- same arrival semantics as prequential_latency
+        else:  # same arrival semantics as prequential_latency
             if y_train[i] == 1 and np.isfinite(fx[i]):
                 if fx[i] <= t[i] + W:
                     heapq.heappush(pending, (fx[i], (tie := tie + 1), i, 1))
@@ -109,8 +126,8 @@ def main(fast: bool) -> int:
         pdf = get_project_dataset(p, df)
         for s in seeds:
             rec = dict(project=p, seed=s)
-            for name, mode in CONDITIONS.items():
-                r = run_cell(pdf, mode, s)
+            for name, (adapt, delayed) in CONDITIONS.items():
+                r = run_cell(pdf, adapt, delayed, s)
                 rec[f"{name}_mcc"], rec[f"{name}_gmean"] = r["mcc"], r["gmean"]
             rows.append(rec)
         print(f"  {p}")
@@ -120,13 +137,26 @@ def main(fast: bool) -> int:
     per = res.groupby("project").mean(numeric_only=True)
 
     tests = []
-    for a, b, name in [("A_frozen_immediate", "B_adaptive_immediate", "adaptivity_effect (labels immediate)"),
-                       ("B_adaptive_immediate", "C_adaptive_delayed", "latency_effect (adaptivity fixed)"),
-                       ("A_frozen_immediate", "C_adaptive_delayed", "confounded_contrast (the old comparison)")]:
+    for a, b, name in [("A_frozen_immediate", "B_adaptive_immediate", "adaptivity | labels immediate"),
+                       ("D_frozen_delayed", "C_adaptive_delayed", "adaptivity | labels delayed"),
+                       ("B_adaptive_immediate", "C_adaptive_delayed", "delay | adaptive learner"),
+                       ("A_frozen_immediate", "D_frozen_delayed", "delay | frozen learner"),
+                       ("A_frozen_immediate", "C_adaptive_delayed", "confounded contrast (the old comparison)")]:
         e = paired_effect(per[f"{a}_mcc"], per[f"{b}_mcc"])
         tests.append(dict(comparison=name, condition_A=a, condition_B=b,
                           mean_A=per[f"{a}_mcc"].mean(), mean_B=per[f"{b}_mcc"].mean(),
                           n_seeds=len(seeds), fast=fast, **e))
+
+    # Interaction: does delay cost more when the learner keeps adapting?
+    # (A - B) - (D - C), tested on the per-project difference of differences.
+    inter = (per["A_frozen_immediate_mcc"] - per["B_adaptive_immediate_mcc"]) - \
+            (per["D_frozen_delayed_mcc"] - per["C_adaptive_delayed_mcc"])
+    e = paired_effect(inter, pd.Series(0.0, index=inter.index))
+    tests.append(dict(comparison="adaptivity x delay INTERACTION",
+                      condition_A="(A-B)", condition_B="(D-C)",
+                      mean_A=float((per["A_frozen_immediate_mcc"]-per["B_adaptive_immediate_mcc"]).mean()),
+                      mean_B=float((per["D_frozen_delayed_mcc"]-per["C_adaptive_delayed_mcc"]).mean()),
+                      n_seeds=len(seeds), fast=fast, **e))
     tdf = pd.DataFrame(tests)
     tdf.to_csv(OUT / "latency_factorial_tests.csv", index=False)
 

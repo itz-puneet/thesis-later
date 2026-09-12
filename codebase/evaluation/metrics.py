@@ -114,7 +114,13 @@ def paired_effect(a: np.ndarray | list, b: np.ndarray | list,
       median_diff     median of the paired differences
       hodges_lehmann  median of the Walsh averages of the differences, the
                       location estimator that accompanies the signed-rank test
-      ci_low/ci_high  percentile bootstrap CI on the median paired difference
+      ci_low/ci_high  percentile bootstrap CI **for the Hodges-Lehmann
+                      estimator** -- the HL statistic is recomputed inside every
+                      resample, so the interval targets the quantity it is
+                      reported beside
+      median_ci_low/high
+                      percentile bootstrap CI for the median paired difference,
+                      reported separately because it is a different estimator
 
     Magnitude thresholds follow the usual |r| convention: 0.1 small,
     0.3 medium, 0.5 large. Cliff's delta is still returned, labelled
@@ -148,9 +154,20 @@ def paired_effect(a: np.ndarray | list, b: np.ndarray | list,
     walsh = np.add.outer(d, d)[np.triu_indices(len(d))] / 2.0
     hl = float(np.median(walsh))
 
+    # Bootstrap BOTH estimators, each resampled as itself. An earlier version
+    # bootstrapped the median of the differences and reported that interval
+    # beside the Hodges-Lehmann point estimate; the interval then targeted a
+    # different quantity from the one it appeared to qualify.
     rng = np.random.default_rng(seed)
-    boot = np.median(d[rng.integers(0, len(d), size=(n_boot, len(d)))], axis=1)
-    lo, hi = np.percentile(boot, [2.5, 97.5])
+    n = len(d)
+    idx = rng.integers(0, n, size=(n_boot, n))
+    D = d[idx]                                     # (n_boot, n)
+    iu = np.triu_indices(n)
+    walsh_boot = (D[:, iu[0]] + D[:, iu[1]]) / 2.0  # (n_boot, n(n+1)/2)
+    hl_boot = np.median(walsh_boot, axis=1)
+    lo, hi = np.percentile(hl_boot, [2.5, 97.5])
+    med_boot = np.median(D, axis=1)
+    mlo, mhi = np.percentile(med_boot, [2.5, 97.5])
 
     gt = sum((x > y) for x in a for y in b)
     lt = sum((x < y) for x in a for y in b)
@@ -160,7 +177,8 @@ def paired_effect(a: np.ndarray | list, b: np.ndarray | list,
     mag = "negligible" if r < 0.1 else "small" if r < 0.3 else "medium" if r < 0.5 else "large"
     return dict(wilcoxon_stat=float(stat), p_value=float(p), rank_biserial=rb,
                 median_diff=float(np.median(d)), hodges_lehmann=hl,
-                ci_low=float(lo), ci_high=float(hi),
+                ci_low=float(lo), ci_high=float(hi),              # targets HL
+                median_ci_low=float(mlo), median_ci_high=float(mhi),
                 cliffs_delta_unpaired=float(cd), magnitude=mag, n_pairs=int(len(a)))
 
 
