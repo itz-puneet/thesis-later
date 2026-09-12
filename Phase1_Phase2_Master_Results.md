@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | **Commit** | `master` @ `1bcb777` |
-| **Corpus** | 21 Apache Java projects, 27,319 commits, 2,332 developer-verified defective (8.54%) |
+| **Corpus** | 21 Apache Java projects, 27,319 commits, 2,332 labelled defective (8.54%). Oracle provenance: Extension-LLTC4J / LLTC4J — see §0b, the label chain is verified but one link is undocumented |
 | **Phase 2 scale** | 16,380 evaluation records = 21 projects × 10 seeds × 13 label/scoring cells × 6 model-regime combinations |
 | **Statistical unit** | **n = 21 projects** (seeds averaged first). Never n = 16,380. |
 | **Tests** | 74 paired Wilcoxon signed-rank with **paired** effect sizes (matched-pairs rank-biserial, Hodges–Lehmann, bootstrap CI). Corrected within (family, estimator) **and** globally across all 74. 32 survive within-family Holm, **21 survive global Holm**. |
@@ -34,9 +34,49 @@
 
 ---
 
+## 0b. Provenance of the oracle — verified, with one unresolved link
+
+Traced through the repository rather than asserted. Every step below was checked.
+
+| Step | Evidence |
+|---|---|
+| `label_oracle` in `phase2_commits.csv` | = `is_buggy_commit` in `data/jitfine/features_{train,valid,test}.pkl` (`codebase/data/loader.py`) |
+| `data/raw/jit_ground_truth.csv` | a projection of those same pickles — **27,319/27,319 labels identical**, not an independent source |
+| The pickles | `data/raw/JIT-Fine-replication.zip` → `JIT-Fine-replication-zenodo/data.zip`, i.e. the **JIT-Fine replication package published on Zenodo** |
+| JIT-Fine | Ni et al., *"The Best of Both Worlds: Integrating Semantic Features with Expert Features for Defect Prediction and Localization"* (package README) |
+| The dataset | the README names it **Extension-LLTC4J**, built on **LLTC4J** (Herbold et al., arXiv:2011.06244). The name *JIT-Defects4J* is used for the same artifact in the JIT-Fine paper and its successors — cite whichever the paper uses, but record the LLTC4J lineage |
+
+### The unresolved link, and why it matters
+
+LLTC4J is a manually labelled dataset: human annotators classified lines **within bug-fixing commits**. That is the human verification the word "oracle" rests on.
+
+But `label_oracle` marks **defect-introducing** commits, not fixing ones. The JIT-Fine authors state they *extended* LLTC4J by "extracting the line label in defect-introducing commits" — and **the replication package does not document how**. It ships no dataset-construction code; every script merely consumes `is_buggy_commit`.
+
+So the chain is human-verified up to the bug-fixing commits, and **undocumented from there to the defect-introducing commits** — which is exactly the mapping the thesis treats as ground truth.
+
+**What can be ruled out.** The oracle is not the output of this repository's SZZ toolchain:
+
+| Check | Result |
+|---|---|
+| Oracle positives flagged by **no** SZZ variant | 751 / 2,332 (**32.2%**) |
+| SZZ-union positives absent from the oracle | 7,240 / 8,821 (**82.1%**) |
+| Jaccard with each variant | 0.149 – 0.168 |
+
+If the oracle were an SZZ product these sets would largely coincide. They do not.
+
+**What cannot yet be ruled out** is that Ni et al.'s fix→introducing extension is itself algorithmic (a blame- or SZZ-style step applied to human-verified *fix* lines). Until that is established from the JIT-Fine paper, the defensible description is:
+
+> "Labels derive from LLTC4J, in which human annotators labelled lines within bug-fixing commits; the mapping from those fixes to defect-introducing commits was performed by Ni et al. and its verification status is not documented in the replication package."
+
+**Do not write "developer-verified defect-introducing commits" until the extension method is confirmed.** If it turns out to be algorithmic, the framing becomes *oracle = human-verified fixes plus a documented, higher-quality inducing mapping*, which is still a meaningful contrast with SZZ but is a different claim from the one currently made.
+
+This compounds with the timestamp threat in §8: the oracle is contaminated in timing by SZZ mappings, and possibly in derivation by a non-manual extension step. Both belong in Threats to Validity.
+
+---
+
 ## 1. Phase 1 — SZZ label quality
 
-Every SZZ variant scored against the developer-verified oracle over an identical 27,319-commit denominator. **These numbers are unchanged throughout the entire remediation** — Phase 1 was always correct.
+Every SZZ variant scored against the LLTC4J-derived oracle over an identical 27,319-commit denominator *(see §0b — human verification is established for the bug-fixing commits; the fix→introducing extension is undocumented)*. **These numbers are unchanged throughout the entire remediation** — Phase 1 was always correct.
 
 | Variant | Precision | Recall | F1 | ρ₀ (FPR) | ρ₁ (FNR) | MCC | κ | TP | FP | FN | TN |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -60,7 +100,7 @@ Every SZZ variant scored against the developer-verified oracle over an identical
 
 ## 2. Phase 2 — the full results matrix
 
-Mean MCC over 21 projects × 10 seeds. **Oracle-scored** = measured against developer-verified truth (real bug-finding ability). **Self-scored** = measured against the same noisy SZZ labels used for training (what the literature does).
+Mean MCC over 21 projects × 10 seeds. **Oracle-scored** = measured against the LLTC4J-derived oracle (§0b). **Self-scored** = measured against the same noisy SZZ labels used for training (what the literature does).
 
 ### Batch models
 
