@@ -182,6 +182,8 @@ Spread halved: terminal sd 0.0985 → averaged sd 0.0534. **MASZZ's negative MCC
 
 **Fixed:** tests are now computed per model with honest project-level pairing (n=21 per model per variant per regime). This surfaced something the pooled test was hiding — the two models' self-deception gaps are very different in size:
 
+*Numbers below are from the run current when this finding was written. They were superseded by the forward-chaining threshold re-run; see `Phase1_Phase2_Master_Results.md` §5 for the current values. The qualitative point — the gap is significant for all six variants under JITLine and only BSZZ under LApredict — is unchanged.*
+
 | Variant (naive k-fold) | JITLine gap | JITLine Holm p | LApredict gap | LApredict Holm p |
 |---|---|---|---|---|
 | BSZZ | +0.2480 | 0.0000 | +0.1569 | 0.0003 |

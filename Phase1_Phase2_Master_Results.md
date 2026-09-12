@@ -116,20 +116,28 @@ Mean MCC over 21 projects × 10 seeds. **Oracle-scored** = measured against deve
 
 ## 4. Test family 1 — regime inflation
 
-Random k-fold vs chronological split, paired by project. m = 6.
+Random k-fold vs chronological split, paired by project. **m = 14** — all seven label sources × two batch models.
 
-| Model | Labels | k-fold | Chrono | Δ | p | Holm p | δ | Effect |
-|---|---|---|---|---|---|---|---|---|
-| **JITLine** | **oracle** | 0.2300 | 0.1027 | **+0.1273** | 9.5e-07 | **5.7e-06** | 0.742 | **large** |
-| JITLine | RSZZ | 0.1103 | 0.0662 | +0.0441 | 0.0022 | **0.0108** | 0.374 | medium |
-| JITLine | BSZZ | 0.1701 | 0.1285 | +0.0415 | 0.0646 | 0.2008 | 0.311 | small |
-| LApredict | oracle | 0.2058 | 0.1734 | +0.0324 | 0.0502 | 0.2008 | 0.247 | small |
-| LApredict | BSZZ | 0.1941 | 0.1634 | +0.0307 | 0.0646 | 0.2008 | 0.252 | small |
-| LApredict | RSZZ | 0.2016 | 0.1731 | +0.0285 | 0.1111 | 0.2008 | 0.247 | small |
+| Model | Labels | k-fold | Chrono | Hodges–Lehmann | 95% CI | rank-biserial | p | Holm (family) | Holm (global) |
+|---|---|---|---|---|---|---|---|---|---|
+| **JITLine** | **oracle** | 0.2430 | 0.1016 | **+0.1373** | [+0.1000, +0.1717] | **+1.000** large | 9.5e-07 | **1.3e-05** | **7.1e-05** |
+| JITLine | LSZZ | 0.1391 | 0.0804 | +0.0667 | [+0.0149, +0.1118] | +0.792 large | 7.2e-04 | **0.0094** | **0.0389** |
+| JITLine | RSZZ | 0.1131 | 0.0626 | +0.0515 | [+0.0287, +0.0736] | +0.706 large | 0.0033 | **0.0393** | 0.1607 |
+| LApredict | LSZZ | 0.2078 | 0.1706 | +0.0410 | [+0.0008, +0.0923] | +0.576 large | 0.0195 | 0.2142 | 0.7205 |
+| JITLine | MASZZ | 0.1272 | 0.0786 | +0.0503 | [+0.0257, +0.0947] | +0.576 large | 0.0195 | 0.2142 | 0.7205 |
+| JITLine | BSZZ | 0.1751 | 0.1324 | +0.0549 | [+0.0248, +0.1093] | +0.558 large | 0.0239 | 0.2147 | 0.8349 |
+| LApredict | oracle | 0.2058 | 0.1734 | +0.0339 | [−0.0001, +0.0856] | +0.489 medium | 0.0502 | 0.4015 | 1.0000 |
+| LApredict | MASZZ | 0.1995 | 0.1664 | +0.0367 | [+0.0012, +0.0825] | +0.489 medium | 0.0502 | 0.4015 | 1.0000 |
+| LApredict | BSZZ | 0.1941 | 0.1634 | +0.0357 | [−0.0055, +0.0824] | +0.463 medium | 0.0646 | 0.4015 | 1.0000 |
+| LApredict | RASZZ | 0.2000 | 0.1679 | +0.0362 | [+0.0029, +0.0888] | +0.463 medium | 0.0646 | 0.4015 | 1.0000 |
+| LApredict | AGSZZ | 0.2003 | 0.1685 | +0.0361 | [−0.0043, +0.0789] | +0.429 medium | 0.0888 | 0.4015 | 1.0000 |
+| JITLine | RASZZ | 0.1164 | 0.0857 | +0.0418 | [+0.0120, +0.0812] | +0.420 medium | 0.0958 | 0.4015 | 1.0000 |
+| LApredict | RSZZ | 0.2016 | 0.1731 | +0.0355 | [+0.0006, +0.0906] | +0.403 medium | 0.1111 | 0.4015 | 1.0000 |
+| JITLine | AGSZZ | 0.1164 | 0.0904 | +0.0352 | [+0.0174, +0.0540] | +0.377 medium | 0.1373 | 0.4015 | 1.0000 |
 
-**p = 9.5e-07 is the floor of the exact test at n = 21** (2/2²¹). JITLine's k-fold score exceeded its chronological score in **21 of 21 projects, no exceptions**.
+**All fourteen point the same way** — every model × label source shows k-fold inflation. That universality was invisible when only three hand-picked sources were tested. Three survive within-family Holm and two survive global Holm.
 
-**Interpretation:** leakage inflates in proportion to model capacity. A 14-feature Random Forest memorises project-specific temporal patterns that shuffled folds expose; a one-feature logistic regression cannot memorise anything, so it barely moves. **This is why weak baselines look competitive in the literature — they were never the ones being inflated.**
+**JITLine on clean oracle labels is the headline**: rank-biserial **+1.000** means k-fold exceeded chronological in **21 of 21 projects, no exceptions**, which is why the exact test saturates at its floor of 2/2²¹ = 9.5e-07.
 
 ---
 
@@ -141,30 +149,24 @@ Self-scored vs oracle-scored MCC, paired by project, **per model** (pooling the 
 
 ### Naive k-fold — the headline rows
 
-| Model | Labels | Self | Oracle | Δ | Holm p | δ | Effect |
-|---|---|---|---|---|---|---|---|
-| **JITLine** | **BSZZ** | 0.4181 | 0.1701 | **+0.2480** | **3.4e-05** | **0.955** | **large** |
-| JITLine | MASZZ | 0.3305 | 0.1205 | +0.2100 | 0.0000 | 0.905 | large |
-| JITLine | AGSZZ | 0.3091 | 0.1144 | +0.1948 | 0.0000 | 0.819 | large |
-| JITLine | RASZZ | 0.3069 | 0.1156 | +0.1913 | 0.0001 | 0.791 | large |
-| LApredict | BSZZ | 0.3510 | 0.1941 | +0.1569 | 0.0003 | 0.850 | large |
-| JITLine | LSZZ | 0.2453 | 0.1380 | +0.1072 | 0.0002 | 0.692 | large |
-| JITLine | RSZZ | 0.1803 | 0.1103 | +0.0701 | 0.0230 | 0.542 | large |
+| Model | Labels | Self | Oracle | Hodges–Lehmann | 95% CI | rank-biserial | Holm (family) | Holm (global) |
+|---|---|---|---|---|---|---|---|---|
+| **JITLine** | **BSZZ** | 0.4129 | 0.1751 | **+0.2303** | [+0.1799, +0.2695] | +0.991 | **6.3e-05** | **1.3e-04** |
+| JITLine | MASZZ | 0.3295 | 0.1272 | +0.1985 | [+0.0867, +0.2720] | **+1.000** | **3.4e-05** | **7.1e-05** |
+| JITLine | RASZZ | 0.3070 | 0.1164 | +0.1861 | [+0.0726, +0.2666] | **+1.000** | **3.4e-05** | **7.1e-05** |
+| JITLine | AGSZZ | 0.3037 | 0.1164 | +0.1797 | [+0.0766, +0.2572] | **+1.000** | **3.4e-05** | **7.1e-05** |
+| LApredict | BSZZ | 0.3510 | 0.1941 | +0.1549 | [+0.1387, +0.2099] | +0.957 | **3.1e-04** | **6.5e-04** |
+| JITLine | LSZZ | 0.2434 | 0.1391 | +0.1076 | [+0.0533, +0.1572] | +0.939 | **5.6e-04** | **0.0012** |
+| LApredict | MASZZ | 0.2626 | 0.1995 | +0.0689 | [−0.0070, +0.1170] | +0.498 | 0.6439 | 1.0000 |
+| JITLine | RSZZ | 0.1801 | 0.1131 | +0.0647 | [+0.0299, +0.0901] | +0.758 | **0.0371** | 0.0728 |
+| LApredict | LSZZ | 0.2679 | 0.2078 | +0.0615 | [−0.0209, +0.1341] | +0.541 | 0.5223 | 0.8995 |
+| LApredict | RASZZ | 0.2603 | 0.2000 | +0.0598 | [+0.0050, +0.1122] | +0.481 | 0.7110 | 1.0000 |
+| LApredict | AGSZZ | 0.2472 | 0.2003 | +0.0510 | [−0.0191, +0.1273] | +0.351 | 0.9428 | 1.0000 |
+| LApredict | RSZZ | 0.1779 | 0.2016 | **−0.0238** | [−0.0723, +0.0325] | −0.221 | 0.9714 | 1.0000 |
 
-### The gap is model-dependent
+**The gap is model-dependent.** All six JITLine rows are significant within family; only BSZZ is for LApredict. Three JITLine rows reach rank-biserial **+1.000** — the gap held in every one of 21 projects. LApredict/RSZZ is *negative*: RSZZ's very low false-alarm rate leaves almost no systematic error structure for a low-capacity model to fit.
 
-| Variant (k-fold) | JITLine Δ | JITLine Holm | LApredict Δ | LApredict Holm |
-|---|---|---|---|---|
-| BSZZ | +0.2480 | 3.4e-05 ✅ | +0.1569 | 0.0003 ✅ |
-| AGSZZ | +0.1948 | 0.0000 ✅ | +0.0469 | 0.9428 ✗ |
-| MASZZ | +0.2100 | 0.0000 ✅ | +0.0632 | 0.6439 ✗ |
-| LSZZ | +0.1072 | 0.0002 ✅ | +0.0602 | 0.5009 ✗ |
-| RASZZ | +0.1913 | 0.0001 ✅ | +0.0603 | 0.6563 ✗ |
-| RSZZ | +0.0701 | 0.0230 ✅ | **−0.0237** | 0.9714 ✗ |
-
-**JITLine's gap is large and significant for all six variants. LApredict's only for BSZZ.** Memorising a heuristic's error pattern requires capacity. Note LApredict/RSZZ is *negative* — RSZZ's very low false-alarm rate leaves almost no systematic error pattern to exploit.
-
-**Mechanism:** BSZZ flags 8,060 commits, only 1,495 correctly (18.6% precision). A Random Forest learns *which commits BSZZ over-flags* — a systematic, learnable pattern. Scored against BSZZ this looks like skill; scored against reality it evaporates. **The model is an excellent BSZZ emulator and a mediocre bug detector.**
+**Mechanism — stated as interpretation, not demonstration.** BSZZ flags 8,060 commits, only 1,495 correctly (18.6% precision). The gap is *compatible with* a high-capacity model fitting systematic structure in BSZZ's errors rather than in defects. It does not by itself establish that; the measured quantity is the self-scored-minus-oracle-scored difference. Demonstrating the mechanism needs a direct test — e.g. whether BSZZ's false positives are themselves predictable from the Kamei features above chance — which has not been run.
 
 ---
 
@@ -176,27 +178,29 @@ ORB oracle-trained vs each SZZ-trained variant, prequential + real latency, orac
 
 ### Primary: time-averaged prequential MCC
 
-| Comparison | Oracle | Variant | Δ | p | Holm p | δ | Effect | Wins |
-|---|---|---|---|---|---|---|---|---|
-| oracle vs RSZZ | 0.0970 | 0.0315 | +0.0655 | 0.0000 | **0.0001** | 0.710 | large | 19/21 |
-| oracle vs MASZZ | 0.0970 | 0.0353 | +0.0617 | 0.0001 | **0.0003** | 0.674 | large | 18/21 |
-| oracle vs AGSZZ | 0.0970 | 0.0365 | +0.0605 | 0.0004 | **0.0009** | 0.655 | large | 17/21 |
-| oracle vs RASZZ | 0.0970 | 0.0395 | +0.0575 | 0.0001 | **0.0004** | 0.669 | large | 18/21 |
-| **oracle vs BSZZ** | 0.0970 | 0.0578 | **+0.0392** | 0.0001 | **0.0004** | 0.451 | medium | **18/21** |
-| oracle vs LSZZ | 0.0970 | 0.0582 | +0.0388 | 0.0025 | **0.0025** | 0.392 | medium | 16/21 |
+| Comparison | Oracle | Variant | Hodges–Lehmann | 95% CI | rank-biserial | Holm (family) | Holm (global) |
+|---|---|---|---|---|---|---|---|
+| oracle vs MASZZ | 0.0970 | 0.0352 | **+0.0638** | [+0.0415, +0.0861] | +0.896 large | **3.3e-04** | **0.0042** |
+| oracle vs RSZZ | 0.0970 | 0.0315 | +0.0603 | [+0.0416, +0.0835] | +0.948 large | **8.0e-05** | **8.8e-04** |
+| oracle vs AGSZZ | 0.0970 | 0.0365 | +0.0600 | [+0.0280, +0.0808] | +0.818 large | **8.5e-04** | **0.0243** |
+| oracle vs RASZZ | 0.0970 | 0.0395 | +0.0577 | [+0.0304, +0.0842] | +0.879 large | **4.2e-04** | **0.0064** |
+| **oracle vs BSZZ** | 0.0970 | 0.0578 | **+0.0412** | [+0.0313, +0.0525] | +0.879 large | **4.2e-04** | **0.0064** |
+| oracle vs LSZZ | 0.0970 | 0.0582 | +0.0341 | [+0.0102, +0.0523] | +0.723 large | **0.0025** | 0.1241 |
 
-**All six significant after Holm correction.**
+**All six significant within family; five of six survive global Holm** (LSZZ at 0.124 is the exception). Every confidence interval excludes zero.
 
 ### Secondary: terminal fading MCC
 
-| Comparison | Δ | Holm p | δ | Effect |
-|---|---|---|---|---|
-| oracle vs MASZZ | +0.0714 | 0.0451 | 0.506 | large |
-| oracle vs RSZZ | +0.0580 | 0.0426 | 0.474 | medium |
-| oracle vs AGSZZ | +0.0559 | 0.0451 | 0.415 | medium |
-| oracle vs RASZZ | +0.0500 | 0.0451 | 0.456 | medium |
-| oracle vs LSZZ | +0.0476 | 0.0451 | 0.451 | medium |
-| **oracle vs BSZZ** | +0.0118 | **0.4948** | 0.143 | **negligible** |
+| Comparison | Hodges–Lehmann | rank-biserial | Holm (family) |
+|---|---|---|---|
+| oracle vs MASZZ | +0.0718 | +0.636 large | **0.0451** |
+| oracle vs AGSZZ | +0.0605 | +0.636 large | **0.0451** |
+| oracle vs RSZZ | +0.0488 | +0.654 large | **0.0426** |
+| oracle vs RASZZ | +0.0453 | +0.619 large | **0.0451** |
+| oracle vs LSZZ | +0.0435 | +0.602 large | **0.0451** |
+| **oracle vs BSZZ** | +0.0147 | +0.177 small | **0.4948** |
+
+Five of six significant; **BSZZ is not** — the single comparison on which the two estimators disagree. §7b shows that disagreement is a property of the terminal statistic specifically, not of the fading factor or warm-up rule.
 
 ### Why the estimators disagree on BSZZ — and why time-averaged is primary
 
@@ -408,8 +412,8 @@ All means are **unweighted** across projects spanning 544–4,026 commits and 1.
 
 ### Tier 1 — bulletproof
 
-1. **Random k-fold inflates JITLine by +0.127 MCC** over a chronological split (Holm p = 5.7e-06, δ = 0.742). Held in **21/21 projects**. Inflation scales with model capacity — LApredict barely moves.
-2. **Self-scoring on SZZ inflates JITLine/BSZZ by +0.248 MCC** (Holm p = 3.4e-05, δ = 0.955, 21/21 projects). Largest effect in the study. Model-dependent: significant for all six variants under JITLine, only BSZZ under LApredict.
+1. **Random k-fold inflates JITLine by +0.137 MCC** over a chronological split (global Holm 7.1e-05, rank-biserial +1.000, δ = 0.742). Held in **21/21 projects**. Inflation scales with model capacity — LApredict barely moves.
+2. **Self-scoring on SZZ inflates JITLine/BSZZ by +0.230 MCC** (HL +0.2303, CI [+0.180, +0.270], rank-biserial +0.991; global Holm 1.3e-04). Largest effect in the study. Model-dependent: significant for all six variants under JITLine, only BSZZ under LApredict.
 3. **SZZ precision never exceeds 27.2%**; noise is asymmetric and variant-dependent (ρ₀ 6.7–26.3%, ρ₁ 35.9–73.3%).
 4. **SZZ variants agree with each other (κ up to 0.933) far more than with truth (κ 0.158–0.202).**
 

@@ -1,7 +1,7 @@
 # Phase 2: How to Explain the Results and the Statistical Tests
 
 **For:** supervisor meeting on Phase 2 (Downstream Impact Under Honest Evaluation)
-**Data source:** `results/phase2/` at `master` @ `5126dae` — 16,380 evaluation records, 21 Apache projects × 10 seeds × 7 label sources × 3 models × 4 regime-scoring combinations
+**Data source:** `results/phase2/` at `master` @ `0a07a82` — 16,380 evaluation records, 21 Apache projects × 10 seeds × 7 label sources × 3 models × 4 regime-scoring combinations
 **Verified:** label-consistency gate passes; the noise rates in `phase1_bias.json` describe exactly the labels these models trained on
 **Estimators:** every streaming result is reported under two prequential summary statistics — the *time-averaged* value (primary) and the *terminal* fading value (secondary). Neither is a canonical standard; the preference is justified by measured variance, not citation. They agree on all but one comparison; see §7.
 
@@ -28,7 +28,7 @@
 
 If you have sixty seconds, say this:
 
-> "Phase 2 asked what SZZ label noise actually costs a defect prediction model, once you stop evaluating it dishonestly. I ran three models across seven label sources and four evaluation regimes — 16,380 runs — and tested everything with paired Wilcoxon signed-rank tests at the project level, Holm-corrected within test family. Three things came out. First, random k-fold cross-validation inflates JITLine's apparent performance by +0.127 MCC over a chronological split, a large effect at p < 1e-6. Second, evaluating a model on the same SZZ labels it was trained on inflates it by a further +0.248 MCC — models learn the heuristic's quirks, not bugs. Third, under honest streaming evaluation with real verification latency, training on developer-verified labels beats all six SZZ variants, every comparison significant after correction — so label quality demonstrably matters once you evaluate properly. And a correction I want to flag myself: I previously reported that latency accounts for only ~9% of the batch-to-streaming drop. That comparison was not identified — it changed the learner, the label timing and the evaluation window all at once — so I have withdrawn it and built the 2×2 that does isolate the effects. Preliminary results put latency about 2.5× higher than I claimed, but nothing is significant yet.""
+> "Phase 2 asked what SZZ label noise actually costs a defect prediction model, once you stop evaluating it dishonestly. I ran three models across seven label sources and four evaluation regimes — 16,380 runs — and tested everything with paired Wilcoxon signed-rank tests at the project level, Holm-corrected within test family. Three things came out. First, random k-fold cross-validation inflates JITLine's apparent performance by +0.137 MCC over a chronological split — it held in all 21 projects, so the exact test saturates at p = 9.5e-07. Second, evaluating a model on the same SZZ labels it was trained on inflates it by a further +0.230 MCC — a gap consistent with models fitting the heuristic's error structure rather than defects. Third, under honest streaming evaluation with real verification latency, training on developer-verified labels beats all six SZZ variants, every comparison significant after correction — so label quality demonstrably matters once you evaluate properly. And a correction I want to flag myself: I previously reported that latency accounts for only ~9% of the batch-to-streaming drop. That comparison was not identified — it changed the learner, the label timing and the evaluation window all at once — so I have withdrawn it and built the 2×2 that does isolate the effects. At ten seeds latency comes out about 2.5× higher than I claimed, but both confidence intervals cross zero, so the honest answer is that 21 projects cannot resolve it."
 
 Then stop and let them ask.
 
@@ -76,7 +76,7 @@ JITLine trained on BSZZ, evaluated under random k-fold:
 
 **Be careful with the wording.** The measured quantity is the self-scored-minus-oracle-scored gap. It does not by itself demonstrate that the forest "learns which commits BSZZ over-flags" — that is a mechanism the gap is consistent with, not one it establishes. Demonstrating it needs a direct analysis, e.g. whether a model trained to predict BSZZ's false positives from the Kamei features achieves above-chance accuracy. That analysis has not been run. Say "consistent with", and if a supervisor pushes, name the experiment that would settle it.
 
-This is the finding with the largest effect size in the entire study (Cliff's δ = 0.955, essentially total separation between the paired distributions).
+This is the largest effect in the study: matched-pairs rank-biserial **+0.991**, Hodges–Lehmann +0.2303 with a 95% CI of [+0.180, +0.270] — near-total separation between the paired distributions.
 
 ### Finding 3 — FP-heavy labels help batch learners in some projects — mechanism unresolved
 
@@ -185,20 +185,20 @@ Thresholds for |r|: 0.1 small, 0.3 medium, 0.5 large. **Quote the Hodges–Lehma
 ## 5. Test family 1 — Regime inflation
 
 **Question:** does the choice of evaluation regime change measured performance?
-**Test:** naive k-fold vs chronological, paired by project, per model × label source. m = 6.
+**Test:** naive k-fold vs chronological, paired by project, all seven label sources × two models. m = 14.
 
-| Model | Labels | k-fold | Chrono | Δ | p | Holm p | δ | Effect |
+| Model | Labels | k-fold | Chrono | Hodges-Lehmann | 95% CI | rank-biserial | Holm (family) | Holm (global) |
 |---|---|---|---|---|---|---|---|---|
-| **JITLine** | **oracle** | 0.2300 | 0.1027 | **+0.1273** | 9.5e-07 | **5.7e-06** | 0.742 | **large** |
-| JITLine | RSZZ | 0.1103 | 0.0662 | +0.0441 | 0.0022 | **0.0108** | 0.374 | medium |
-| JITLine | BSZZ | 0.1701 | 0.1285 | +0.0415 | 0.0646 | 0.2008 | 0.311 | small |
-| LApredict | oracle | 0.2058 | 0.1734 | +0.0324 | 0.0502 | 0.2008 | 0.247 | small |
-| LApredict | BSZZ | 0.1941 | 0.1634 | +0.0307 | 0.0646 | 0.2008 | 0.252 | small |
-| LApredict | RSZZ | 0.2016 | 0.1731 | +0.0285 | 0.1111 | 0.2008 | 0.247 | small |
+| **JITLine** | **oracle** | 0.2430 | 0.1016 | **+0.1373** | [+0.1000, +0.1717] | **+1.000** | **1.3e-05** | **7.1e-05** |
+| JITLine | LSZZ | 0.1391 | 0.0804 | +0.0667 | [+0.0149, +0.1118] | +0.792 | **0.0094** | **0.0389** |
+| JITLine | RSZZ | 0.1131 | 0.0626 | +0.0515 | [+0.0287, +0.0736] | +0.706 | **0.0393** | 0.1607 |
+| JITLine | BSZZ | 0.1751 | 0.1324 | +0.0549 | [+0.0248, +0.1093] | +0.558 | 0.2147 | 0.8349 |
+| LApredict | oracle | 0.2058 | 0.1734 | +0.0339 | [-0.0001, +0.0856] | +0.489 | 0.4015 | 1.0000 |
+| *...9 further rows, all positive* | | | | | | | | |
 
 **How to explain this table:**
 
-> "Two of the six comparisons survive correction. Both are JITLine — the high-capacity model. None of the LApredict rows are significant. That is not a failure of the experiment; it *is* the result. Temporal leakage inflates models in proportion to their ability to memorise, and a one-feature logistic regression cannot memorise. The headline number is JITLine on clean oracle labels: +0.127 MCC, Cliff's delta 0.74, Holm-corrected p below 6e-06. That is as strong as a result gets at n=21."
+> "Three of the fourteen comparisons survive within-family correction and two survive global correction. All three are JITLine — the high-capacity model. Not one of the seven LApredict rows is significant. That is not a failure of the experiment; it *is* the result. Temporal leakage inflates models in proportion to their ability to memorise, and a one-feature logistic regression cannot memorise. The headline number is JITLine on clean oracle labels: +0.127 MCC, Cliff's delta 0.74, Holm-corrected p below 6e-06. That is as strong as a result gets at n=21."
 
 **If asked why p = 9.5e-07 exactly:** that is the floor of the exact Wilcoxon signed-rank test at n=21 — it is 2/2²¹. The test is saturated: JITLine's k-fold score exceeded its chronological score in all 21 projects with no exceptions. Say that, it is more impressive than the p-value.
 
@@ -211,26 +211,27 @@ Thresholds for |r|: 0.1 small, 0.3 medium, 0.5 large. **Quote the Hodges–Lehma
 
 **The headline rows:**
 
-| Model | Labels | Regime | Self | Oracle | Δ | Holm p | δ | Effect |
-|---|---|---|---|---|---|---|---|---|
-| **JITLine** | **BSZZ** | k-fold | 0.4181 | 0.1701 | **+0.2480** | **3.4e-05** | **0.955** | **large** |
-| JITLine | MASZZ | k-fold | 0.3305 | 0.1205 | +0.2100 | 0.0000 | 0.905 | large |
-| JITLine | AGSZZ | k-fold | 0.3091 | 0.1144 | +0.1948 | 0.0000 | 0.819 | large |
-| JITLine | RASZZ | k-fold | 0.3069 | 0.1156 | +0.1913 | 0.0001 | 0.791 | large |
-| LApredict | BSZZ | k-fold | 0.3510 | 0.1941 | +0.1569 | 0.0003 | 0.850 | large |
-| JITLine | LSZZ | k-fold | 0.2453 | 0.1380 | +0.1072 | 0.0002 | 0.692 | large |
-| JITLine | RSZZ | k-fold | 0.1803 | 0.1103 | +0.0701 | 0.0230 | 0.542 | large |
+| Model | Labels | Self | Oracle | Hodges-Lehmann | 95% CI | rank-biserial | Holm (global) |
+|---|---|---|---|---|---|---|---|
+| **JITLine** | **BSZZ** | 0.4129 | 0.1751 | **+0.2303** | [+0.1799, +0.2695] | +0.991 | **1.3e-04** |
+| JITLine | MASZZ | 0.3295 | 0.1272 | +0.1985 | [+0.0867, +0.2720] | **+1.000** | **7.1e-05** |
+| JITLine | RASZZ | 0.3070 | 0.1164 | +0.1861 | [+0.0726, +0.2666] | **+1.000** | **7.1e-05** |
+| JITLine | AGSZZ | 0.3037 | 0.1164 | +0.1797 | [+0.0766, +0.2572] | **+1.000** | **7.1e-05** |
+| LApredict | BSZZ | 0.3510 | 0.1941 | +0.1549 | [+0.1387, +0.2099] | +0.957 | **6.5e-04** |
+| JITLine | LSZZ | 0.2434 | 0.1391 | +0.1076 | [+0.0533, +0.1572] | +0.939 | **0.0012** |
+
+Three rows reach rank-biserial **+1.000** -- the gap held in all 21 projects.
 
 **The critical nuance — this gap is model-dependent:**
 
-| Variant (k-fold) | JITLine Δ | JITLine Holm p | LApredict Δ | LApredict Holm p |
+| Variant (k-fold) | JITLine HL | JITLine Holm | LApredict HL | LApredict Holm |
 |---|---|---|---|---|
-| BSZZ | +0.2480 | 3.4e-05 ✅ | +0.1569 | 0.0003 ✅ |
-| AGSZZ | +0.1948 | 0.0000 ✅ | +0.0469 | 0.9428 ✗ |
-| MASZZ | +0.2100 | 0.0000 ✅ | +0.0632 | 0.6439 ✗ |
-| LSZZ | +0.1072 | 0.0002 ✅ | +0.0602 | 0.5009 ✗ |
-| RASZZ | +0.1913 | 0.0001 ✅ | +0.0603 | 0.6563 ✗ |
-| RSZZ | +0.0701 | 0.0230 ✅ | **−0.0237** | 0.9714 ✗ |
+| BSZZ | +0.2303 | 6.3e-05 sig | +0.1549 | 3.1e-04 sig |
+| MASZZ | +0.1985 | 3.4e-05 sig | +0.0689 | 0.6439 n.s. |
+| RASZZ | +0.1861 | 3.4e-05 sig | +0.0598 | 0.7110 n.s. |
+| AGSZZ | +0.1797 | 3.4e-05 sig | +0.0510 | 0.9428 n.s. |
+| LSZZ | +0.1076 | 5.6e-04 sig | +0.0615 | 0.5223 n.s. |
+| RSZZ | +0.0647 | 0.0371 sig | **-0.0238** | 0.9714 n.s. |
 
 **How to explain it:**
 
@@ -381,8 +382,8 @@ Keep this visible during the meeting.
 
 | | Value |
 |---|---|
-| Regime inflation (JITLine, oracle, k-fold → chronological) | **+0.127 MCC**, Holm p = 5.7e-06, δ = 0.74 |
-| Self-deception gap (JITLine, BSZZ, k-fold) | **+0.248 MCC**, Holm p = 3.4e-05, δ = 0.955 |
+| Regime inflation (JITLine, oracle, k-fold → chronological) | **HL +0.137**, CI [+0.100,+0.172], rank-biserial +1.000 (21/21), global Holm 7.1e-05, δ = 0.74 |
+| Self-deception gap (JITLine, BSZZ, k-fold) | **HL +0.230**, CI [+0.180,+0.270], rank-biserial +0.991, global Holm 1.3e-04, δ = 0.955 |
 | Label quality (ORB, oracle vs all six variants, time-averaged) | **all six significant**, Holm p ≤ 0.0025, δ 0.39–0.71 |
 | ~~Latency effect~~ | **WITHDRAWN** — contrast not identified. Preliminary 2×2: latency +0.023 (p = 0.34), adaptivity −0.046 (p = 0.11), 3 seeds, neither significant |
 
@@ -390,11 +391,11 @@ Keep this visible during the meeting.
 
 | Configuration | MCC |
 |---|---|
-| JITLine, BSZZ labels, k-fold, **self-scored** (the literature's number) | 0.4181 |
-| JITLine, oracle, k-fold | 0.2300 |
+| JITLine, BSZZ labels, k-fold, **self-scored** (the literature's number) | 0.4129 |
+| JITLine, oracle, k-fold | 0.2430 |
 | LApredict, oracle, chronological | 0.1734 |
-| JITLine, BSZZ, chronological | 0.1285 |
-| JITLine, oracle, chronological | 0.1027 |
+| JITLine, BSZZ, chronological | 0.1324 |
+| JITLine, oracle, chronological | 0.1016 |
 | ORB, oracle, chronological-online | 0.0777 |
 | **ORB, oracle, prequential + real latency** | **0.0970 time-averaged** / 0.0685 terminal |
 | ORB, BSZZ, prequential + real latency | 0.0578 time-averaged / 0.0566 terminal |
