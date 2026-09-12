@@ -65,7 +65,7 @@ Set this up before showing any numbers, or the numbers won't land.
 
 1. The measured SZZ noise is a **lower bound**: any systematic blame error is shared and cancels out.
 2. Phase 1's precision ceiling of 27.2% is relative to a *blame-based reference*, not to absolute truth.
-3. The corpus itself is SZZ-shaped — the paper discards *"changes that do not add any new lines since the SZZ algorithm has an assumption that defects are introduced by adding new lines."* Bugs of omission are absent by construction.
+3. The corpus is SZZ-shaped — the paper discards *"changes that do not add any new lines since the SZZ algorithm has an assumption that defects are introduced by adding new lines,"* so purely deletion-introduced defects cannot appear. And because the oracle **is** blame output, every oracle positive is blame-reachable by construction, so **"blame cannot trace it" is not an available explanation for any false negative measured here.** The measured alternative — roughly half seed-line divergence, roughly half the variants' own filters discarding correct answers — is in `Phase1_Phase2_Master_Results.md` §1.4.
 
 **Why this is good news, not bad.** "Ground truth vs heuristic" was vague and, as it turns out, wrong. "Controlling for tangled commits while holding the blame step fixed" is a precise mechanism claim — it names what you measured. Full detail in `Phase1_Phase2_Master_Results.md` §0b.
 

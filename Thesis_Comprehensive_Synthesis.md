@@ -234,7 +234,19 @@ Every variant scored against the reference labels over an identical 27,319-commi
 
 **Finding 1.2 — The noise is asymmetric and bifurcated, not random.** BSZZ is false-positive-heavy (ρ₀ = 26.3%, recall 64%). LSZZ and RSZZ are false-negative-heavy (ρ₀ ≈ 7–9% but missing 70–73% of defects). This is why Phase 3's noise injection must be calibrated per variant rather than using uniform random flips.
 
-**Finding 1.3 — Variants agree with each other far more than with the reference.** AGSZZ, MASZZ and RASZZ agree pairwise at κ = 0.859–0.933, but with the reference at only κ = 0.158–0.202. **They share failure modes.** High inter-tool agreement in the literature was mistaken for accuracy.
+**Finding 1.3 — The misses come from the refinements, not from blame.** It is tempting to explain a 70–73% miss rate structurally: line-tracking cannot blame code that was never written. That explanation is unavailable here, because the reference labels are themselves `git blame` output, so every reference positive is blame-reachable by construction. Decomposing the false negatives against BSZZ instead:
+
+| Variant | Total FN | Also missed by BSZZ | Found by BSZZ, then filtered away |
+|---|---|---|---|
+| AGSZZ | 1,242 | 765 (62%) | 477 (38%) |
+| MASZZ | 1,208 | 763 (63%) | 445 (37%) |
+| RASZZ | 1,310 | 765 (58%) | 545 (42%) |
+| RSZZ | 1,633 | 808 (49%) | **825 (51%)** |
+| LSZZ | 1,710 | 807 (47%) | **903 (53%)** |
+
+Two mechanisms of similar weight: **seed-line divergence** (both procedures blame, but from different lines, and land on different commits) and **self-inflicted filtering** (the variant's own refinement discards a commit BSZZ had correctly found). For the most conservative variants the second dominates — LSZZ discards 60.4% of the reference defects BSZZ had already identified. The refinements succeed at cutting false alarms from 26.3% to 6.7%, but over half of what they remove is correct.
+
+**Finding 1.4 — Variants agree with each other far more than with the reference.** AGSZZ, MASZZ and RASZZ agree pairwise at κ = 0.859–0.933, but with the reference at only κ = 0.158–0.202. **They share failure modes.** High inter-tool agreement in the literature was mistaken for accuracy.
 
 ### 4.2 Phase 2 — What that noise costs
 
@@ -395,7 +407,7 @@ Concretely, and all on one corpus with one protocol:
 
 **The measured noise is a lower bound.** The reference labels and SZZ share the same `git blame` step, so systematic blame error cancels. True noise against genuine ground truth would be larger by an unknown amount.
 
-**The corpus is SZZ-shaped by construction.** The dataset authors discarded *"changes that do not add any new lines since the SZZ algorithm has an assumption that defects are introduced by adding new lines."* Defects caused by *missing* code cannot appear — yet that is precisely the mechanism this thesis attributes to conservative variants' 70–73% miss rates. **A failure mode the corpus excludes cannot be measured on it.**
+**The corpus is SZZ-shaped by construction.** The dataset authors discarded *"changes that do not add any new lines since the SZZ algorithm has an assumption that defects are introduced by adding new lines,"* so defects introduced purely by deleting code cannot appear at all. Separately, because the reference labels are themselves blame output, every reference positive is blame-reachable by definition — so blame-unreachability is not an available explanation for any measured false negative. Both constraints narrow what the corpus can speak to, and §4.1 reports the mechanisms that remain measurable on it.
 
 **Label-arrival timing is SZZ-derived.** The reference labels have no native fix-to-inducing linkage in the published package, so arrival times were reconstructed from the union of SZZ mappings. A coverage sensitivity analysis (67.8% → 100% imputed) bounds part of this, but not the timing itself. The oracle is therefore blame-derived in construction *and* SZZ-derived in timing. **This is the central construct-validity threat.**
 
@@ -411,7 +423,7 @@ Concretely, and all on one corpus with one protocol:
 
 **Implemented, not yet executed:** Phase 3 (noise dose-response and mechanism diagnosis) and Phase 4 (Noise-Aware ORB, an online learner that modulates its oversampling by per-instance label confidence and provisionally rescues likely-delayed defect labels). Both runners are written, smoke-tested against the current codebase, and awaiting compute.
 
-One finding already constrains Phase 3's scope: because bugs of omission are absent from the corpus by construction, Phase 3 can test false-negative noise arising from filtering, but not from omission. That limit should be declared before the experiment runs, not discovered afterwards.
+One finding already constrains Phase 3's scope. Defects introduced by pure deletion are absent from the corpus by construction, and — more fundamentally — because the reference labels are themselves blame output, no false negative measured against them can be attributed to blame's structural inability to trace a defect. Phase 3 can therefore study false-negative noise arising from **over-filtering** and from **seed-line divergence**, which §4.1 shows are the two mechanisms actually operating, but not from blame-unreachability. That limit should be declared before the experiment runs rather than discovered afterwards.
 
 ### 5.6 Closing
 

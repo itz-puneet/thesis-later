@@ -75,7 +75,9 @@ Three consequences to state in Chapter 5:
 
 1. **The measured SZZ noise is a lower bound.** Any systematic error in `git blame` — the "syntactic line-blame fallacy" this thesis names as an FP mechanism — is present on *both* sides of every comparison and cancels. True noise relative to real ground truth would be larger.
 2. **Phase 1's ρ₀ and ρ₁ measure tangling-induced disagreement**, not total labelling error. The precision ceiling of 27.2% is the ceiling *relative to a blame-based reference*.
-3. **The corpus is itself SZZ-shaped.** The paper's filtering explicitly discards *"changes that do not add any new lines since the SZZ algorithm has an assumption that defects are introduced by adding new lines."* Commits that could only be defect-introducing by deletion or omission are absent by construction — which is the FN mechanism §2.4 attributes to conservative variants.
+3. **The corpus is SZZ-shaped, and one explanation of false negatives is logically unavailable.** The paper discards *"changes that do not add any new lines since the SZZ algorithm has an assumption that defects are introduced by adding new lines,"* so defects introduced by pure deletion cannot appear at all.
+
+   More importantly: because the oracle **is** `git blame` output, every oracle positive is blame-reachable from some fix line *by construction*. **No false negative measured against this oracle can be caused by blame being structurally unable to trace a defect.** The "ghost commit" explanation — that line-tracking cannot blame code which was never written — is therefore not available here, whether or not it is true of SZZ in general. §1.4 gives the measured alternative.
 
 ### The wording to use
 
@@ -104,6 +106,29 @@ Every SZZ variant scored against the LLTC4J-derived oracle over an identical 27,
 
 - **Precision ceiling.** No variant exceeds **27.2%** precision. Between 72.8% and 81.7% of everything SZZ flags is a false alarm.
 - **Noise is asymmetric and bifurcated.** BSZZ is FP-heavy (ρ₀ = 26.3%, high recall 64%). LSZZ and RSZZ are FN-heavy (ρ₀ ≈ 7–9% but miss 70–73% of real defects). The refined variants sit in between. This is *not* symmetric random noise, which is why Phase 3's injection must be calibrated per-variant.
+
+### 1.4 Where the false negatives actually come from — measured, not assumed
+
+The conservative variants miss 70–73% of oracle-labelled defects. It is tempting to explain that structurally — that line-tracking heuristics cannot blame code that was never written. **That explanation is unavailable here**, for the reason in §0b: the oracle is itself blame output, so every oracle positive is blame-reachable by construction.
+
+Decomposing each variant's false negatives against BSZZ, the most permissive variant:
+
+| Variant | Total FN | Also missed by BSZZ | Found by BSZZ, filtered away |
+|---|---|---|---|
+| AGSZZ | 1,242 | 765 (62%) | 477 (38%) |
+| MASZZ | 1,208 | 763 (63%) | 445 (37%) |
+| RASZZ | 1,310 | 765 (58%) | 545 (42%) |
+| RSZZ | 1,633 | 808 (49%) | **825 (51%)** |
+| LSZZ | 1,710 | 807 (47%) | **903 (53%)** |
+
+**Two mechanisms of roughly equal weight:**
+
+1. **Seed-line divergence (≈47–63%).** Even BSZZ — which blames *every* line modified in a fix — misses 837 oracle positives (ρ₁ = 0.359). Both procedures run `git blame`; they disagree because they blame *different lines*. BSZZ traces from all modified lines, the oracle from the subset three annotators verified as fixing the bug, and the two land on different commits.
+2. **Self-inflicted filtering (≈37–53%).** Commits BSZZ correctly identified, which the variant's own refinement then discarded. For the two most conservative variants this is the *larger* component: RSZZ discards **55.2%** and LSZZ **60.4%** of the oracle defects BSZZ had already found.
+
+**The refinements are the problem, not the blame step.** Each variant was designed to remove BSZZ's false positives, and each succeeds — ρ₀ falls from 26.3% to 6.7%. But over half of what the most aggressive filters remove is correct. This is a precision/recall trade made badly, and it is measurable precisely because both sides share a blame step.
+
+Note the variants are not strict subsets of BSZZ — 4.7% (RSZZ) to 11.9% (RASZZ) of their flags lie outside it — so they differ in mapping strategy too, not only in filtering.
 
 **Inter-variant agreement (Cohen's κ):** AGSZZ/MASZZ/RASZZ agree with each other at κ = 0.859–0.933, but with the oracle at only κ = 0.158–0.202. **SZZ variants share failure modes.** High inter-tool agreement in the literature was mistaken for accuracy.
 
