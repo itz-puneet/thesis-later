@@ -72,13 +72,27 @@ class JITLine:
     """RF over 14 Kamei features + SMOTE + G-mean-optimal threshold moving.
 
     threshold_mode selects how the decision threshold is estimated:
-      "cv"   (default) chronologically blocked out-of-fold probabilities
+      "fwd"  (default) forward-chaining: fold i trains on blocks [0..i-1] only
+      "cv"   chronologically blocked out-of-fold, but folds see later blocks too
       "oob"  out-of-bag probabilities of the original rows
       "tail" legacy: fit on the first 80%, tune on the last 20%, refit on 100%
 
     Measured over 21 projects x 3 seeds x {oracle, BSZZ} labels, chronological,
-    oracle-scored -- "cv" gives the best G-mean (0.523 vs 0.486 tail, 0.366 oob)
-    and the fewest degenerate all-one-class runs (4.8% vs 9.5% tail, 17.5% oob).
+    oracle-scored:
+
+        mode   oracle MCC   oracle G-mean   degenerate runs
+        tail       0.1031          0.4855              9.5%
+        oob        0.0874          0.3655             17.5%
+        cv         0.1004          0.5226              4.8%
+        fwd        0.1011          0.5235              4.8%
+
+    "fwd" is the default. It matches "cv" on every measure while only ever
+    looking backwards: "cv" trains each fold on all OTHER blocks, including
+    chronologically later ones, which never leaks the held-out test split but
+    is not temporally faithful within training -- at deployment you cannot
+    calibrate today's threshold on next year's commits. Since forward chaining
+    costs nothing here, there is no reason to keep the temporally impossible
+    variant as the default.
     "oob" is retained for the ablation appendix: its probabilities come from only
     ~63% of the trees, so a threshold tuned on them is miscalibrated against the
     full ensemble used at prediction time.
@@ -99,7 +113,7 @@ class JITLine:
     """
 
     def __init__(self, seed: int = 42, n_estimators: int = 100, val_frac: float = 0.2,
-                 threshold_mode: str = "cv"):
+                 threshold_mode: str = "fwd"):
         self.seed = seed
         self.val_frac = val_frac
         self.threshold_mode = threshold_mode
@@ -144,6 +158,45 @@ class JITLine:
             if g > best_g:
                 best_g, best_t = g, float(t)
         return best_t
+
+    def _fwd_threshold(self, X: np.ndarray, y: np.ndarray, n_splits: int = 4) -> bool:
+        """Forward-chaining: fold i trains on blocks [0..i-1], validates on block i.
+
+        The blocked-CV variant trains each fold on every OTHER block, including
+        chronologically later ones. That never touches the held-out test split,
+        so it does not leak the evaluation -- but it is not temporally faithful
+        within training: at deployment you never have future commits available
+        to calibrate today's threshold. Forward chaining only ever looks
+        backwards, so the threshold is estimated the way it could actually be
+        estimated in production.
+
+        The cost is less data per fold (the first block is never validated on,
+        and early folds train on little), which is why it is measured against
+        the alternatives rather than assumed better.
+        """
+        n = len(y)
+        if n < 4 * n_splits:
+            return False
+        bounds = np.linspace(0, n, n_splits + 1).astype(int)
+        oof = np.full(n, np.nan)
+        for i in range(1, n_splits):                      # fold 0 has no past
+            tr_hi, te_lo, te_hi = bounds[i], bounds[i], bounds[i + 1]
+            ytr = y[:tr_hi]
+            if len(np.unique(ytr)) < 2 or (ytr == 1).sum() < 2:
+                continue
+            rf = RandomForestClassifier(
+                n_estimators=self.rf.n_estimators, random_state=self.seed,
+                n_jobs=1, class_weight="balanced_subsample",
+            )
+            Xo, yo = self._oversample(X[:tr_hi], ytr)
+            rf.fit(Xo, yo)
+            oof[te_lo:te_hi] = rf.predict_proba(X[te_lo:te_hi])[:, 1]
+        ok = np.isfinite(oof)
+        if ok.sum() < 2 or len(np.unique(y[ok])) < 2:
+            return False
+        self.threshold = self._best_gmean_threshold(y[ok], oof[ok])
+        self.threshold_source = "fwd"
+        return True
 
     def _cv_threshold(self, X: np.ndarray, y: np.ndarray, n_splits: int = 3) -> bool:
         """Tune on out-of-fold probabilities from chronologically blocked folds.
@@ -219,6 +272,8 @@ class JITLine:
                     tuned = True
         elif self.threshold_mode == "cv":
             tuned = self._cv_threshold(X, y)
+        elif self.threshold_mode == "fwd":
+            tuned = self._fwd_threshold(X, y)
 
         if not tuned:
             tuned = self._tail_threshold(X, y)

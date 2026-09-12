@@ -2,7 +2,7 @@ name: Phase 2 Pipeline
 
 # Runs the full chain on a GitHub runner:
 #   Phase 1 label evaluation -> dataset rebuild -> fix_ts -> GATE
-#   -> Phase 2 grid -> latency imputation sensitivity -> figures
+#   -> Phase 2 grid -> imputation + factorial + estimator sensitivity -> figures
 #
 # The gate (check_label_consistency) sits BEFORE the expensive steps, so a
 # label-vintage mismatch costs two minutes instead of two hours. The runner
@@ -49,7 +49,7 @@ concurrency:
 jobs:
   pipeline:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 420
 
     steps:
       - name: Checkout repository
@@ -99,6 +99,18 @@ jobs:
 
       - name: Run latency imputation sensitivity
         run: python -m experiments.run_latency_imputation_sensitivity
+
+      # --- Identification and sensitivity analyses (supervisor review) ------
+
+      - name: Factorial isolation of the latency effect
+        run: |
+          FAST=""; if [ "${{ inputs.stage }}" = "smoke" ]; then FAST="--fast"; fi
+          python -m experiments.run_latency_factorial $FAST
+
+      - name: Prequential estimator sensitivity (fading factor x warm-up)
+        run: |
+          FAST=""; if [ "${{ inputs.stage }}" = "smoke" ]; then FAST="--fast"; fi
+          python -m experiments.run_prequential_sensitivity $FAST
 
       - name: Generate figures
         run: python scripts/make_figures.py
