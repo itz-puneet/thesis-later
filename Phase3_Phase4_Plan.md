@@ -1,6 +1,7 @@
 # Phase 3 & Phase 4 — Execution Plan
 
-**Status:** code installed and smoke-tested against `master`. No Phase 3 or Phase 4 experiment has been run yet.
+**Status:** Phase 3 is wired and smoke-tested end to end; the full grid has **not** been run yet. Phase 4 is installed but not wired.
+**Trigger:** `.github/workflows/phase3_experiment.yml` (`stage=smoke` | `full`).
 **Reading order:** `Phase1_Phase2_Master_Results.md` for what Phases 1–2 established, then this.
 
 | Installed | Location |
@@ -10,6 +11,7 @@
 | Phase 4 runner (ablation grid) | `experiments/run_phase4_na_orb.py` |
 | Phase 3/4 figure pipeline | `scripts/make_phase34_figures.py` |
 | Noise injection primitives (pre-existing) | `codebase/noise/injection.py` |
+| Phase 3 CI workflow | `.github/workflows/phase3_experiment.yml` |
 
 ---
 
@@ -47,18 +49,57 @@ Also from the review's nit list: `support_codebase/` no longer exists, and `scri
 
 **Exit criterion met:** `python -m experiments.check_label_consistency` passes.
 
-## Step 1 — Phase 3 fast pass (½ day)
+### Two further defects found when Phase 3 was actually wired up
+
+3. **The runner recorded only the terminal estimator.** `dose_response()` and
+   `repair_experiment()` wrote `mcc=r["mcc"]` and nothing else, even though
+   `prequential_latency()` has returned `mcc_avg`/`gmean_avg` since the Phase 2
+   remediation. Every dose curve, every slope and every repair test would have
+   been computed on the *terminal fading* value alone — the estimator whose
+   roughly-doubled variance produced the withdrawn BSZZ claim at the top of this
+   document. Phase 3 would have reproduced the exact error Phase 2 was corrected
+   for. Both estimators are now recorded and every artefact carries both.
+
+4. **The repair tests were a bare Wilcoxon statistic** — no effect size, no
+   confidence interval, no multiplicity correction. Phase 2's review required
+   paired effect sizes and Holm correction; `repair_stats()` now reports
+   matched-pairs rank-biserial, Hodges–Lehmann with a bootstrap CI, and Holm
+   both within estimator and globally, matching the Phase 2 standard.
+
+**Also corrected:** `.github/workflows/phase2_experiment.yml` set
+`timeout-minutes: 420`. GitHub-hosted runners hard-cap a job at 360 minutes, so
+that value was silently unreachable. Now 350.
+
+## Step 1 — Phase 3 fast pass — DONE
 
 ```bash
 python -m experiments.run_phase3_noise --fast
 python scripts/make_phase34_figures.py --phase 3
 ```
 
-**Exit:** dose curves render, repair bars render, no crashes. Skim shapes only — **do not interpret 3-seed/5-project numbers.**
+Ran in **36 s** on 5 projects × 3 seeds. Dose curves, repair bars and the paired
+statistics table all render. Smoke figures were deleted rather than committed, so
+5-project output can never be mistaken for a result.
 
-## Step 2 — Phase 3 full run (2–4 days compute — use the Actions runner)
+Two defects were fixed on the way through — see §Step 0.
 
-Full grid: 21 projects × 10 seeds × 4 profiles × 6 doses × 2 latency arms, plus 21 × 10 × 4 repair runs. Wire it into `.github/workflows/phase2_experiment.yml` the way Phase 2 is, and run it there rather than locally.
+## Step 2 — Phase 3 full run (**~20 minutes**, not 2–4 days)
+
+Full grid: 21 projects × 10 seeds × 4 profiles × 6 doses × 2 latency arms, plus
+21 × 10 × 4 repair runs.
+
+**The "2–4 days" estimate in the original plan was wrong.** Measured cost is
+**≈ 4 s per project-seed** (one ORB prequential pass over the median 1,086-commit
+project takes 0.07 s), which puts the whole grid around twenty minutes. No
+sharding, no per-project checkpointing and no matrix build are needed; the
+single-job workflow is sufficient.
+
+Trigger `.github/workflows/phase3_experiment.yml` with `stage=full`. It rebuilds
+the same data chain as Phase 2 and runs the **same label-consistency gate before
+any compute** — which matters more here than in Phase 2, because Phase 3 injects
+noise calibrated from `phase1_bias.json`. If that file and the dataset disagree,
+every dose on every curve is calibrated against labels the experiment is not
+using.
 
 **The three questions Phase 3 must answer:**
 
@@ -66,7 +107,7 @@ Full grid: 21 projects × 10 seeds × 4 profiles × 6 doses × 2 latency arms, p
 2. **Compression.** Are real-arm slopes flatter than uniform-arm slopes? This is the quantitative form of "latency masks label quality." Phase 2 supports the *premise* — 53% of defect labels arrive after the W=90d window — but note that Phase 2's attempt to size the latency effect was withdrawn as unidentified (see `Phase1_Phase2_Master_Results.md` §7). Phase 3's uniform-vs-real arms are a cleaner test of compression than anything Phase 2 produced, because the learner is held fixed by construction.
 3. **Repair verdict.** FN-restoration vs FP-removal on real BSZZ labels; `phase3_repair_stats.csv` carries the paired tests. If FN-repair > FP-repair, Phase 3 establishes FN-dominance through a controlled design — which Phase 2 could not.
 
-**Report both prequential estimators**, as Phase 2 now does. The runner records `mcc` and `mcc_avg`; treat `mcc_avg` as primary. This matters most here: dose-response slopes on the noisier terminal estimator will be harder to separate.
+**Report both prequential estimators**, as Phase 2 now does. The runner **now** records `mcc` and `mcc_avg` — it did not when this plan was written, see §Step 0 — and `mcc_avg` is primary. This matters most here: dose-response slopes on the noisier terminal estimator will be harder to separate.
 
 ## Step 3 — Supervisor Meeting 3 (before touching Phase 4)
 

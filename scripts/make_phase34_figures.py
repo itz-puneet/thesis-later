@@ -12,7 +12,10 @@ the "every figure has a generating script" invariant.
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import matplotlib
 matplotlib.use("Agg")
@@ -20,6 +23,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import wilcoxon
+
+from codebase.evaluation.metrics import paired_effect
+from experiments.run_phase2_impact import _holm
 
 _ROOT = Path(__file__).resolve().parent.parent
 FIGS = _ROOT / "reports" / "figures"; FIGS.mkdir(parents=True, exist_ok=True)
@@ -71,48 +77,93 @@ def fig_arm_compression(df: pd.DataFrame, metric: str = "mcc"):
     plt.close(fig)
 
 
-def fig_repair(rep: pd.DataFrame):
+def fig_repair(rep: pd.DataFrame, metric: str = "mcc_avg"):
     order = ["oracle", "BSZZ_fp_repaired", "BSZZ_fn_repaired", "BSZZ"]
     fig, ax = plt.subplots(figsize=(4.5, 3.2))
-    proj = rep.groupby(["condition", "project"])["mcc"].mean().reset_index()
-    means = proj.groupby("condition")["mcc"].mean().reindex(order)
-    errs = 1.96 * proj.groupby("condition")["mcc"].sem().reindex(order)
+    proj = rep.groupby(["condition", "project"])[metric].mean().reset_index()
+    means = proj.groupby("condition")[metric].mean().reindex(order)
+    errs = 1.96 * proj.groupby("condition")[metric].sem().reindex(order)
     ax.bar(range(len(order)), means.values, yerr=errs.values, capsize=3)
     ax.set_xticks(range(len(order)))
     ax.set_xticklabels(order, rotation=20, ha="right", fontsize=7)
-    ax.set_ylabel("MCC (oracle-scored)")
+    ax.set_ylabel(f"{metric} (oracle-scored)")
     ax.set_title("Repair experiment: which SZZ error hurts ORB more?")
-    fig.tight_layout(); fig.savefig(FIGS / "fig_p3_repair.png"); plt.close(fig)
+    fig.tight_layout(); fig.savefig(FIGS / f"fig_p3_repair_{metric}.png"); plt.close(fig)
+    return proj
 
-    # paired stats table
-    piv = proj.pivot(index="project", columns="condition", values="mcc").dropna()
+
+def repair_stats(rep: pd.DataFrame) -> pd.DataFrame:
+    """Paired tests for the repair experiment, under BOTH estimators.
+
+    Phase 2's review required paired effect sizes and a multiplicity
+    correction; the same standard applies here, so this reports
+    matched-pairs rank-biserial, Hodges-Lehmann with a bootstrap CI, and
+    Holm across the whole set rather than a bare Wilcoxon statistic.
+    """
     rows = []
-    for a, b in [("BSZZ_fp_repaired", "BSZZ"), ("BSZZ_fn_repaired", "BSZZ"),
-                 ("BSZZ_fn_repaired", "BSZZ_fp_repaired")]:
-        if a in piv and b in piv:
-            stat, p = wilcoxon(piv[a], piv[b])
-            rows.append(dict(A=a, B=b, mean_A=piv[a].mean(), mean_B=piv[b].mean(),
-                             mean_diff=piv[a].mean() - piv[b].mean(),
-                             wilcoxon=stat, p=p, n=len(piv)))
-    pd.DataFrame(rows).to_csv(P3 / "phase3_repair_stats.csv", index=False)
+    for metric in ["mcc_avg", "mcc"]:
+        proj = rep.groupby(["condition", "project"])[metric].mean().reset_index()
+        piv = proj.pivot(index="project", columns="condition",
+                         values=metric).dropna()
+        for a, b in [("BSZZ_fp_repaired", "BSZZ"), ("BSZZ_fn_repaired", "BSZZ"),
+                     ("BSZZ_fn_repaired", "BSZZ_fp_repaired"), ("oracle", "BSZZ")]:
+            if a not in piv or b not in piv:
+                continue
+            e = paired_effect(piv[a].to_numpy(), piv[b].to_numpy())
+            rows.append(dict(metric=metric, A=a, B=b, n=len(piv),
+                             mean_A=piv[a].mean(), mean_B=piv[b].mean(),
+                             hodges_lehmann=e["hodges_lehmann"],
+                             ci_low=e["ci_low"], ci_high=e["ci_high"],
+                             rank_biserial=e["rank_biserial"],
+                             n_favouring_A=int((piv[a] > piv[b]).sum()),
+                             p=e["p_value"]))
+    out = pd.DataFrame(rows)
+    if not out.empty:
+        # Holm within each estimator, and globally across all of them.
+        out["p_holm"] = np.nan
+        for m, g in out.groupby("metric"):
+            out.loc[g.index, "p_holm"] = _holm(g["p"].to_numpy())
+        out["p_holm_global"] = _holm(out["p"].to_numpy())
+    out.to_csv(P3 / "phase3_repair_stats.csv", index=False)
+    return out
 
 
 def phase3():
     dr = pd.read_csv(P3 / "phase3_dose_response.csv")
     rep = pd.read_csv(P3 / "phase3_repair.csv")
-    for metric in ["mcc", "gmean"]:
+    # mcc_avg (time-averaged) is primary; mcc (terminal fading) is the
+    # secondary. Phase 2 was corrected for reporting only the terminal value,
+    # so every Phase 3 artefact carries both.
+    for metric in ["mcc_avg", "gmean_avg", "mcc", "gmean"]:
+        if metric not in dr.columns:
+            continue
         for latency in dr.latency.unique():
             fig_dose_response(dr, metric, latency)
-    fig_arm_compression(dr)
-    fig_repair(rep)
-    # degradation-slope table: MCC lost per 10% dose, by profile x latency
+    for metric in ["mcc_avg", "mcc"]:
+        if metric in dr.columns:
+            fig_arm_compression(dr, metric)
+        if metric in rep.columns:
+            fig_repair(rep, metric)
+    stats = repair_stats(rep)
+
+    # degradation-slope table: metric lost per 10% dose, by profile x latency
     slopes = []
-    for (prof, lat), g in dr.groupby(["profile", "latency"]):
-        agg = g.groupby("dose")["mcc"].mean()
-        b = np.polyfit(agg.index, agg.values, 1)[0]
-        slopes.append(dict(profile=prof, latency=lat, mcc_per_10pct=round(b * 0.10, 4)))
+    for metric in ["mcc_avg", "mcc"]:
+        if metric not in dr.columns:
+            continue
+        for (prof, lat), g in dr.groupby(["profile", "latency"]):
+            agg = g.groupby("dose")[metric].mean()
+            b = np.polyfit(agg.index, agg.values, 1)[0]
+            slopes.append(dict(metric=metric, profile=prof, latency=lat,
+                               per_10pct_dose=round(b * 0.10, 4)))
     pd.DataFrame(slopes).to_csv(P3 / "phase3_slopes.csv", index=False)
-    print(f"Phase 3 figures -> {FIGS}, stats -> {P3}")
+
+    if not stats.empty:
+        print("\n=== Repair experiment, paired tests (primary estimator first) ===")
+        cols = ["metric", "A", "B", "hodges_lehmann", "ci_low", "ci_high",
+                "rank_biserial", "n_favouring_A", "p_holm", "p_holm_global"]
+        print(stats[cols].to_string(index=False))
+    print(f"\nPhase 3 figures -> {FIGS}, stats -> {P3}")
 
 
 # ---------------------------------------------------------------- Phase 4

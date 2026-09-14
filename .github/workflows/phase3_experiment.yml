@@ -1,19 +1,21 @@
-name: Phase 2 Pipeline
+name: Phase 3 Pipeline
 
-# Runs the full chain on a GitHub runner:
-#   Phase 1 label evaluation -> dataset rebuild -> fix_ts -> GATE
-#   -> Phase 2 grid -> imputation + factorial + estimator sensitivity -> figures
+# Noise dose-response, mechanism and repair experiments.
 #
-# The gate (check_label_consistency) sits BEFORE the expensive steps, so a
-# label-vintage mismatch costs two minutes instead of two hours. The runner
-# needs neither the 101 MB JIT-Fine zip nor the 830 MB of cloned repos: both
-# are replaced by the committed phase2_features.csv and fix_commit_dates.csv.
+# Rebuilds the same data chain as the Phase 2 workflow and runs the same
+# label-consistency gate before spending compute, so Phase 3 can never be
+# run against a different label vintage than the Phase 1 rates it injects.
+#
+# Cost: measured at ~4 s per project-seed, so the full grid (21 projects x
+# 10 seeds x 4 profiles x 6 doses x 2 latency arms, plus the repair runs) is
+# well under an hour. The "2-4 days" figure in Phase3_Phase4_Plan.md predates
+# the measurement and is wrong.
 
 on:
   workflow_dispatch:
     inputs:
       stage:
-        description: 'smoke (3 seeds, ~10 min) or full (10 seeds, ~2 h)'
+        description: 'smoke (3 seeds, 5 projects, uniform arm only) or full (10 seeds, 21 projects, both arms)'
         required: true
         default: 'smoke'
         type: choice
@@ -21,7 +23,7 @@ on:
           - 'smoke'
           - 'full'
       latency_mode:
-        description: 'Verification Latency Mode'
+        description: 'fix_ts reconstruction mode for the real arm'
         required: true
         default: 'real'
         type: choice
@@ -33,23 +35,19 @@ on:
         required: false
         default: true
         type: boolean
-      run_grid:
-        description: 'Run the Phase 2 experiment grid (uncheck to re-run only the imputation sensitivity + figures)'
-        required: false
-        default: true
-        type: boolean
 
 permissions:
   contents: write
 
 concurrency:
-  group: phase2-pipeline
+  group: phase3-pipeline
   cancel-in-progress: false
 
 jobs:
   pipeline:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    # GitHub-hosted runners hard-cap a job at 360 minutes; stay under it.
+    timeout-minutes: 180
 
     steps:
       - name: Checkout repository
@@ -83,37 +81,37 @@ jobs:
         run: python scripts/build_fix_ts.py --mode ${{ inputs.latency_mode }}
 
       # --- Gate: refuse to spend compute on inconsistent labels -----------
+      #
+      # Phase 3 injects noise calibrated from phase1_bias.json. If that file
+      # and the dataset disagree, the injected doses are calibrated against
+      # labels the experiment is not using, and every dose curve is wrong.
 
-      - name: GATE - Phase 1 / Phase 2 label consistency
+      - name: GATE - Phase 1 / Phase 3 label consistency
         run: python -m experiments.check_label_consistency
 
       # --- Experiments ----------------------------------------------------
 
-      - name: Run Phase 2 experiment grid
-        if: ${{ inputs.run_grid }}
+      - name: Run Phase 3 noise experiments
         run: |
           FAST_FLAG=""
           if [ "${{ inputs.stage }}" = "smoke" ]; then FAST_FLAG="--fast"; fi
-          python -m experiments.run_phase2_impact \
-            --latency_mode ${{ inputs.latency_mode }} $FAST_FLAG
+          python -m experiments.run_phase3_noise $FAST_FLAG
 
-      - name: Run latency imputation sensitivity
-        run: python -m experiments.run_latency_imputation_sensitivity
+      - name: Generate Phase 3 figures and paired statistics
+        run: python scripts/make_phase34_figures.py --phase 3
 
-      # --- Identification and sensitivity analyses (supervisor review) ------
-
-      - name: Factorial isolation of the latency effect
+      - name: Summarise the headline tables in the log
         run: |
-          FAST=""; if [ "${{ inputs.stage }}" = "smoke" ]; then FAST="--fast"; fi
-          python -m experiments.run_latency_factorial $FAST
-
-      - name: Prequential estimator sensitivity (fading factor x warm-up)
-        run: |
-          FAST=""; if [ "${{ inputs.stage }}" = "smoke" ]; then FAST="--fast"; fi
-          python -m experiments.run_prequential_sensitivity $FAST
-
-      - name: Generate figures
-        run: python scripts/make_figures.py
+          python - <<'PY'
+          import pandas as pd
+          from pathlib import Path
+          p3 = Path("results/phase3")
+          for name in ["phase3_slopes.csv", "phase3_repair_stats.csv"]:
+              f = p3 / name
+              if f.exists():
+                  print(f"\n===== {name} =====")
+                  print(pd.read_csv(f).to_string(index=False))
+          PY
 
       # --- Publish --------------------------------------------------------
 
@@ -122,19 +120,18 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          # --autostash below is deliberate: a successful 2h run once failed to
-          # push because a generated file outside the staged set left the tree
-          # dirty and `git pull --rebase` refuses to run against that.
-          git add data/processed/phase2_commits.csv \
+          git add results/phase3/ reports/figures/ \
+                  data/processed/phase2_commits.csv \
                   data/processed/phase2_commits.provenance.json \
-                  phase1_bias.json results/ reports/
+                  phase1_bias.json
           if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0
           fi
-          git commit -m "Phase 2 results (stage: ${{ inputs.stage }}, latency: ${{ inputs.latency_mode }})
+          git commit -m "Phase 3 results (stage: ${{ inputs.stage }}, latency: ${{ inputs.latency_mode }})
 
-          Rebuilt from current Phase 1 labels; label-consistency gate passed."
+          Rebuilt from current Phase 1 labels; label-consistency gate passed.
+          Both prequential estimators recorded (mcc_avg primary, mcc secondary)."
           git pull --rebase --autostash origin master
           git push origin master
 
@@ -142,11 +139,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: phase2-${{ inputs.stage }}-${{ inputs.latency_mode }}
+          name: phase3-${{ inputs.stage }}-${{ inputs.latency_mode }}
           path: |
-            results/phase1/*.csv
-            results/phase2/*.csv
-            reports/
+            results/phase3/*.csv
+            reports/figures/fig_p3_*.png
             phase1_bias.json
-            data/processed/phase2_commits.provenance.json
           if-no-files-found: warn

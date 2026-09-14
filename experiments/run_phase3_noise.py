@@ -107,6 +107,7 @@ def dose_response(df: pd.DataFrame, project: str, seeds: list[int],
                         orb, r = run_orb(d, "label_noisy", seed, "uniform")
                     rec = dict(project=project, seed=seed, profile=profile,
                                dose=dose, latency=arm,
+                               mcc_avg=r["mcc_avg"], gmean_avg=r["gmean_avg"],
                                mcc=r["mcc"], gmean=r["gmean"])
                     rows.append(rec)
                     ds = d.sort_values("author_ts").reset_index(drop=True)
@@ -133,6 +134,7 @@ def repair_experiment(df: pd.DataFrame, project: str, seeds: list[int]) -> list:
                 ftcol = "fix_ts_noisy"
             _, r = run_orb(d, "label_cond", seed, "real", fix_ts_col=ftcol)
             rows.append(dict(project=project, seed=seed, condition=name,
+                             mcc_avg=r["mcc_avg"], gmean_avg=r["gmean_avg"],
                              mcc=r["mcc"], gmean=r["gmean"]))
     return rows
 
@@ -159,8 +161,10 @@ def main(fast: bool):
     rep = pd.DataFrame(all_repair)
     rep.to_csv(OUT / "phase3_repair.csv", index=False)
 
-    print("\n=== Repair experiment (mean MCC / G-mean across projects & seeds) ===")
-    print(rep.groupby("condition")[["mcc", "gmean"]].mean().round(3))
+    print("\n=== Repair experiment (mean across projects & seeds) ===")
+    print("Primary estimator is mcc_avg (time-averaged); mcc is the terminal")
+    print("fading value, kept as the secondary. Never quote one without naming it.")
+    print(rep.groupby("condition")[["mcc_avg", "gmean_avg", "mcc", "gmean"]].mean().round(4))
     print(f"\nSaved to {OUT}/")
 
 
