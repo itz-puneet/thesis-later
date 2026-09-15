@@ -36,6 +36,13 @@ The review package these files arrived in was written against commit `05a8b3a` a
 
 **What this means for Phase 3.** FN-dominance is now a **hypothesis to test**, not a result to corroborate. That is a cleaner scientific position than the review implied — Phase 3 is a genuine test rather than a confirmation exercise. Do not pre-commit to the direction in your meeting; §Step 2 below states the question neutrally.
 
+> **Phase 3 has now run, and the hypothesis is refuted.** The controlled repair
+> experiment on real BSZZ labels finds that removing false positives recovers
+> **+0.0402 MCC** (17/21 projects, global Holm 0.0019) while restoring false
+> negatives recovers **nothing** (−0.0012, CI [−0.0093, +0.0080], 8/21). See
+> §Phase 3 results below. The review package's "FN-starvation" framing should
+> not appear anywhere in the thesis.
+
 ---
 
 ## Step 0 — Done
@@ -83,7 +90,7 @@ statistics table all render. Smoke figures were deleted rather than committed, s
 
 Two defects were fixed on the way through — see §Step 0.
 
-## Step 2 — Phase 3 full run (**~20 minutes**, not 2–4 days)
+## Step 2 — Phase 3 full run — DONE (17 minutes, not 2–4 days)
 
 Full grid: 21 projects × 10 seeds × 4 profiles × 6 doses × 2 latency arms, plus
 21 × 10 × 4 repair runs.
@@ -108,6 +115,84 @@ using.
 3. **Repair verdict.** FN-restoration vs FP-removal on real BSZZ labels; `phase3_repair_stats.csv` carries the paired tests. If FN-repair > FP-repair, Phase 3 establishes FN-dominance through a controlled design — which Phase 2 could not.
 
 **Report both prequential estimators**, as Phase 2 now does. The runner **now** records `mcc` and `mcc_avg` — it did not when this plan was written, see §Step 0 — and `mcc_avg` is primary. This matters most here: dose-response slopes on the noisier terminal estimator will be harder to separate.
+
+## Phase 3 results — run `34912399232`, commit `1efdbe8`
+
+Full grid: 21 projects x 10 seeds x 4 profiles x 6 doses x 2 latency arms
+(10,080 dose-response records) plus 21 x 10 x 4 repair runs. Wall clock **17
+minutes**. Label-consistency gate passed before compute.
+
+### Q3 — Repair verdict: FP-dominance, not FN-dominance
+
+Real BSZZ labels, paired at project level (n = 21), primary estimator `mcc_avg`:
+
+| Comparison | Hodges-Lehmann | 95% CI | rank-biserial | Projects | Holm (global) |
+|---|---|---|---|---|---|
+| **BSZZ with FPs removed vs BSZZ** | **+0.0402** | [+0.0217, +0.0520] | +0.844 | **17/21** | **0.0019** |
+| BSZZ with FNs restored vs BSZZ | −0.0012 | [−0.0093, +0.0080] | −0.091 | 8/21 | 1.000 |
+| **FP-repair vs FN-repair** | **+0.0413** | [+0.0180, +0.0575] | −0.732 | 17/21 | **0.0151** |
+| Oracle vs BSZZ | +0.0270 | [+0.0084, +0.0459] | +0.628 | 16/21 | 0.0608 |
+
+Removing false positives recovers performance; restoring false negatives
+recovers nothing, and that null has a tight interval — it is an informative
+null, not low power. FP-repaired BSZZ (0.0962) even outscores the oracle
+(0.0835): under verification latency, precision beats recall for ORB.
+
+**State the limitation with the result.** The repair conditions are not
+error-matched. BSZZ carries 6,565 false positives against 837 false negatives,
+so FP-repair touches roughly eight times more labels. The defensible claim is
+*"on real BSZZ labels, in the quantities these errors actually occur, FP
+removal is what recovers performance"* — not that one FP outweighs one FN.
+
+**Under the terminal estimator every repair comparison is null** (all Holm
+p = 1.000, all CIs spanning zero). This is why the runner had to be fixed to
+record both estimators before the run; on the terminal value alone Phase 3
+would have produced a chapter of nulls.
+
+### Q2 — Compression: not supported
+
+Real-arm and uniform-arm slopes are within noise of each other
+(fn_heavy −0.0363 vs −0.0370; fp_heavy −0.0204 vs −0.0197 per 10% dose). The
+"latency masks label quality" premise does **not** survive the cleanest test
+available, in which the learner is held fixed by construction. Report this as
+a negative result.
+
+### Q1 — Dose-response, with a design caveat that must be stated
+
+Non-degenerate fit, `mcc_avg`, per 10% dose:
+
+| Profile | real | uniform |
+|---|---|---|
+| fn_heavy | −0.0363 | −0.0370 |
+| mid | −0.0247 | −0.0225 |
+| symmetric | −0.0222 | −0.0177 |
+| fp_heavy | −0.0204 | −0.0197 |
+
+FN-heavy noise degrades ORB fastest at matched dose — which sits oddly beside
+the repair verdict, and the reason is the dose parameterisation, not a
+contradiction. **Dose is the expected flipped fraction over all commits**, so
+at matched dose the FN-heavy profile strips far more of the 8.5% minority
+class. `phase3_minority_survival.csv` measures it:
+
+| Profile | 0.05 | 0.10 | 0.15 | 0.20 | 0.25 | 0.30 |
+|---|---|---|---|---|---|---|
+| fn_heavy | 0.720 | 0.440 | 0.183 | 0.056 | 0.010 | **0.000** |
+| fp_heavy | 0.938 | 0.868 | 0.804 | 0.739 | 0.669 | 0.601 |
+
+At dose 0.30 the FN-heavy arm has **no positive labels left at all**. Slopes are
+therefore fitted only on cells retaining positives, and the full-range fit is
+kept beside them under `scope="all_doses"`. Cells at dose 0.20-0.25 still retain
+only 5.6% and 1.0% of positives, so a stricter re-fit is defensible; the
+survival table is committed precisely so anyone can redo it. The ordering is
+unchanged under every criterion tried.
+
+**The two results are reconciled by the denominator, and the reconciliation is
+the interesting part:** per *label flipped*, FN noise is more damaging, because
+positives are scarce; per *error actually present in real SZZ output*, FP noise
+dominates, because BSZZ produces eight times more of them. Both belong in the
+chapter.
+
+---
 
 ## Step 3 — Supervisor Meeting 3 (before touching Phase 4)
 
