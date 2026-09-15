@@ -146,17 +146,53 @@ def phase3():
             fig_repair(rep, metric)
     stats = repair_stats(rep)
 
-    # degradation-slope table: metric lost per 10% dose, by profile x latency
+    # Degradation-slope table: metric lost per 10% dose, by profile x latency.
+    #
+    # Dose is the expected flipped fraction over ALL commits, so at matched
+    # dose the FN-heavy profile strips a far larger share of the 8.5% minority
+    # class than the FP-heavy one. Past a saturation point it removes every
+    # positive label, and MCC then measures a stream with no learnable signal.
+    # Fitting a straight line through that region understates the slope and
+    # invites a comparison the design does not support, so slopes are fitted
+    # on the non-degenerate cells and the saturation point is reported beside
+    # them. The full-range fit is kept, flagged, for transparency.
+    if "n_pos_retained" in dr.columns:
+        ok = dr.groupby(["profile", "latency", "dose"])["n_pos_retained"].mean()
+        live = ok[ok > 0].reset_index()[["profile", "latency", "dose"]]
+        dr_live = dr.merge(live, on=["profile", "latency", "dose"])
+    else:
+        dr_live = dr
+
     slopes = []
     for metric in ["mcc_avg", "mcc"]:
         if metric not in dr.columns:
             continue
-        for (prof, lat), g in dr.groupby(["profile", "latency"]):
-            agg = g.groupby("dose")[metric].mean()
-            b = np.polyfit(agg.index, agg.values, 1)[0]
-            slopes.append(dict(metric=metric, profile=prof, latency=lat,
-                               per_10pct_dose=round(b * 0.10, 4)))
-    pd.DataFrame(slopes).to_csv(P3 / "phase3_slopes.csv", index=False)
+        for scope, frame in [("non_degenerate", dr_live), ("all_doses", dr)]:
+            for (prof, lat), g in frame.groupby(["profile", "latency"]):
+                agg = g.groupby("dose")[metric].mean()
+                if len(agg) < 2:
+                    continue
+                b = np.polyfit(agg.index, agg.values, 1)[0]
+                slopes.append(dict(metric=metric, scope=scope, profile=prof,
+                                   latency=lat, n_doses_fitted=len(agg),
+                                   max_dose_fitted=float(agg.index.max()),
+                                   per_10pct_dose=round(b * 0.10, 4)))
+    sl = pd.DataFrame(slopes)
+    sl.to_csv(P3 / "phase3_slopes.csv", index=False)
+
+    if "n_pos_retained" in dr.columns:
+        surv = (dr.groupby(["profile", "dose"])
+                  .apply(lambda g: g["n_pos_retained"].sum() / g["n_pos_true"].sum(),
+                         include_groups=False)
+                  .unstack().round(4))
+        surv.to_csv(P3 / "phase3_minority_survival.csv")
+        print("\n=== Share of true positive labels surviving injection ===")
+        print("(a column of zeros means that dose destroys the minority class)")
+        print(surv.to_string())
+        print("\n=== Degradation slopes, primary estimator, non-degenerate fit ===")
+        prim = sl[(sl.metric == "mcc_avg") & (sl.scope == "non_degenerate")]
+        print(prim.pivot(index="profile", columns="latency",
+                         values="per_10pct_dose").to_string())
 
     if not stats.empty:
         print("\n=== Repair experiment, paired tests (primary estimator first) ===")

@@ -1,0 +1,9 @@
+metric,profile,latency,per_10pct_dose
+mcc_avg,fn_heavy,uniform,-0.0277
+mcc_avg,fp_heavy,uniform,-0.0199
+mcc_avg,mid,uniform,-0.0233
+mcc_avg,symmetric,uniform,-0.0203
+mcc,fn_heavy,uniform,-0.0074
+mcc,fp_heavy,uniform,-0.0144
+mcc,mid,uniform,-0.0077
+mcc,symmetric,uniform,-0.0135

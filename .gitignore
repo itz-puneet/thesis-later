@@ -17,6 +17,12 @@ results/phase1_raw/*
 !results/phase2/
 results/phase2/*
 !results/phase2/*.csv
+!results/phase3/
+results/phase3/*
+!results/phase3/*.csv
+!results/phase4/
+results/phase4/*
+!results/phase4/*.csv
 !results/replication/
 results/replication/*
 !results/replication/*.csv

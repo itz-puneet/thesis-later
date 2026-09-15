@@ -105,8 +105,16 @@ def dose_response(df: pd.DataFrame, project: str, seeds: list[int],
                                          fix_ts_col="fix_ts_noisy")
                     else:
                         orb, r = run_orb(d, "label_noisy", seed, "uniform")
+                    # Record the surviving label composition. At matched
+                    # overall dose the FN-heavy profile strips a far larger
+                    # share of the minority class than the FP-heavy one, and
+                    # past a saturation point it removes ALL of it -- those
+                    # cells carry no learnable signal and must not be fitted.
                     rec = dict(project=project, seed=seed, profile=profile,
                                dose=dose, latency=arm,
+                               n_pos_true=int((y == 1).sum()),
+                               n_pos_noisy=int((noisy == 1).sum()),
+                               n_pos_retained=int(((y == 1) & (noisy == 1)).sum()),
                                mcc_avg=r["mcc_avg"], gmean_avg=r["gmean_avg"],
                                mcc=r["mcc"], gmean=r["gmean"])
                     rows.append(rec)
