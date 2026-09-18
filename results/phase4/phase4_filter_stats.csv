@@ -1,0 +1,17 @@
+model,condition,n_filtered,n_pos_seen,filter_rate,mean_lambda_pos,filter_active_from
+NA(fp_filter),AGSZZ,82.0238,279.8095,0.2519,22.3379,212.68
+NA(fp_filter),BSZZ,116.9476,383.7143,0.2997,13.362,131.6048
+NA(fp_filter),LSZZ,23.381,108.9048,0.1641,41.0135,394.2158
+NA(fp_filter),MASZZ,87.6571,293.0476,0.2798,19.2957,209.4238
+NA(fp_filter),RASZZ,75.4952,264.4286,0.2425,23.6755,213.134
+NA(fp_filter),RSZZ,39.281,143.5714,0.2259,30.43,338.66
+NA(fp_filter),injected_fn20,42.4952,132.981,0.2927,30.2806,401.1619
+NA(fp_filter),oracle,17.5429,75.2381,0.154,62.1751,542.8667
+NA(fp_filter/suppress),AGSZZ,81.5667,279.8095,0.247,26.1432,212.68
+NA(fp_filter/suppress),BSZZ,115.8286,383.7143,0.2959,17.3313,131.6048
+NA(fp_filter/suppress),LSZZ,23.1524,108.9048,0.1606,46.823,394.2158
+NA(fp_filter/suppress),MASZZ,86.0762,293.0476,0.2754,24.2748,209.4238
+NA(fp_filter/suppress),RASZZ,75.5857,264.4286,0.2413,27.9373,213.134
+NA(fp_filter/suppress),RSZZ,38.3,143.5714,0.2192,35.9455,338.66
+NA(fp_filter/suppress),injected_fn20,42.7381,132.981,0.2896,38.9102,401.1619
+NA(fp_filter/suppress),oracle,17.1429,75.2381,0.1505,69.2221,542.8667
