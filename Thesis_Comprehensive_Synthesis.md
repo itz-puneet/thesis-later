@@ -5,9 +5,10 @@
 | | |
 |---|---|
 | **Author** | Puneet Deshwani — M.Tech Thesis |
-| **Status** | Phases 1 and 2 complete and validated · Phases 3 and 4 designed and implemented, not yet executed |
+| **Status** | **All four phases executed and analysed.** Phase 4 is a pre-registered characterised negative; the write-up says so |
 | **Corpus** | 21 Apache Java projects · 27,319 commits · 2,332 labelled defect-introducing (8.54%) |
-| **Evidence base** | 16,380 evaluation records · 74 paired statistical tests · every number reproducible from committed CSVs |
+| **Evidence base** | 16,380 Phase 2 records · 10,080 Phase 3 dose-response records · 8,640 Phase 4 records · every number reproducible from committed CSVs |
+| **Pre-registration** | Phase 4 only, re-registered before its first run after Phase 3 reversed the hypothesis. Phases 1–3 are exploratory and labelled so |
 
 ---
 
@@ -291,7 +292,11 @@ The gap between them is the quantity nobody had isolated.
 
 ### 2.6 Execution and reproducibility
 
-**Scale.** 21 projects × 10 seeds × 7 label sources × models × regimes = **16,380 evaluation records**.
+**Scale.** Phase 2 is 21 projects × 10 seeds × 7 label sources × models × regimes = **16,380 evaluation records**. Phase 3 adds 10,080 dose-response records plus the repair and addendum conditions; Phase 4 adds 8,640. Every phase reruns the same data chain and the same integrity gate before spending compute.
+
+**The two later phases, in one line each.** *Phase 3* injects calibrated noise at controlled doses and separately performs a **repair experiment** — using the reference labels to surgically correct one SZZ error type at a time on real labels, so the two error types can be compared under a controlled intervention rather than observed. *Phase 4* tests whether a learner can approximate the winning repair **without** reference labels, under a pre-registration committed before its first run.
+
+**On pre-registration, precisely.** Phases 1–3 are exploratory: their hypotheses were formed during analysis and every result is labelled accordingly, with a conservative global multiplicity correction applied so that no claim depends on how the test families were drawn. Phase 4 alone is pre-registered. Its registration was rewritten once — after Phase 3 refuted the hypothesis the original was built on, and while Phase 4 still had zero results. Revising a registration at that moment is legitimate; revising it after seeing results is not, and the commit history timestamps which happened.
 
 **Where it ran.** The full grid runs on GitHub Actions (~3–5 hours). The local machine has 7.1 GB RAM and no swap, and a memory-heavy extraction step froze it once during development — after which the two bulky inputs (a 101 MB archive and 830 MB of cloned repositories) were replaced by two small committed derived files (4.2 MB and 0.37 MB), making the whole pipeline runnable on a CI runner from small inputs.
 
@@ -543,7 +548,14 @@ Mean MCC across 21 projects × 10 seeds. **Oracle-scored** = measured against th
 
 **The gap is model-dependent.** All six JITLine rows are significant within family; only BSZZ is for LApredict. Note the final row is *negative*: RSZZ's very low false-alarm rate leaves almost no systematic error structure for a low-capacity model to exploit.
 
-> **Mechanism — stated as interpretation, not demonstration.** BSZZ flags 8,060 commits, only 1,495 correctly. The gap is *compatible with* a high-capacity model fitting systematic structure in the heuristic's errors rather than in defects. It does not by itself establish that. Demonstrating it would require a direct test — whether SZZ's false positives are themselves predictable from the features above chance — **which has not been run.**
+> **Mechanism — now demonstrated, and weakly.** BSZZ flags 8,060 commits, only 1,495 correctly. The gap is *compatible with* a high-capacity model fitting systematic structure in the heuristic's errors rather than in defects, and earlier drafts said that was as far as the evidence went. **The direct test has since been run.** Restricting to the 8,060 BSZZ-flagged commits and asking whether its false positives are separable from its true positives using the same 14 features the models see:
+>
+> | | Mean AUC |
+> |---|---|
+> | Random Forest, chronological split per project | **0.599** |
+> | Same pipeline, training labels permuted (the null) | 0.514 |
+>
+> Paired across projects: **HL +0.088, CI [+0.041, +0.131], 17/21 projects, p = 0.0016.** SZZ's errors carry learnable structure, so a model *can* fit them — the mechanism is real. **But an AUC of 0.60 is weak separability**, and the claim should be stated at that strength: the structure exists and is learnable, not that SZZ's mistakes are easy to predict.
 
 ### 4.6 Result 3 — Under realistic streaming, label quality matters
 
@@ -651,6 +663,24 @@ The streaming metric has two free parameters: which trajectory summary, and what
 
 **The label-source conclusion does not depend on the summary statistic, the fading factor, or the warm-up rule.**
 
+#### Does it depend on the small projects?
+
+Every figure in this document is an *unweighted* mean over projects whose defect counts differ by a factor of eighteen. Eight of the 21 carry fewer than 25 defects in the chronological test half. Re-running the headline contrasts on subsets that exclude the smallest:
+
+| Claim | All 21 | ≥ 25 defects (n=13) | ≥ 50 defects (n=6) |
+|---|---|---|---|
+| k-fold inflation (JITLine/oracle) | +0.137 | **+0.136** | +0.122 |
+| Self-scoring gap (JITLine/BSZZ, k-fold) | +0.230 | **+0.232** | +0.216 |
+| Label source (ORB, oracle vs BSZZ) | +0.041 | **+0.043** | +0.038 |
+| FP-repair vs BSZZ (Phase 3) | +0.040 | **+0.040** | +0.035 |
+| FN-repair vs BSZZ (Phase 3) | −0.001 | +0.003 | +0.005 |
+
+Every Tier 1 and Tier 2 estimate is essentially unmoved, and all four survive Holm correction at the ≥ 25 floor. **The conclusions are not artefacts of the small projects.**
+
+> **How to read the ≥ 50 column.** Only six projects remain, and a signed-rank test on six pairs cannot return a p below 0.031 whatever the data — so nothing there can survive multiplicity correction *by construction*. That column shows the point estimates are stable; it is underpowered, not contradictory. Saying otherwise would be the multiple-comparisons error this thesis criticises elsewhere.
+
+**One claim does weaken.** The self-scoring gap under the *chronological* regime falls from +0.098 to +0.075 and loses significance at the ≥ 25 floor. That is not the headline — the headline is the k-fold contrast above — but it is the deployment-relevant regime, and it is reported here rather than left out.
+
 ### 4.9 Verification latency in detail
 
 ![Distribution of verification latency against the 90-day window](reports/figures/f6_latency.png)
@@ -745,17 +775,178 @@ These are not independent — fewer defects *causes* a weaker model — so they 
 
 ### 4.11 Project heterogeneity — an acknowledged limitation
 
-| Project | Commits | Defects | Rate | Defects in training half |
-|---|---|---|---|---|
-| commons-digester | 1,079 | 19 | 1.8% | **5** |
-| commons-validator | 598 | 36 | 6.0% | **11** |
-| commons-collections | 1,823 | 50 | 2.7% | 19 |
-| commons-scxml | 544 | 47 | 8.6% | 31 |
-| commons-math | 4,026 | 335 | 8.3% | 196 |
-| ant-ivy | 1,771 | 332 | 18.7% | 218 |
-| giraph | 844 | 163 | 19.3% | 110 |
+The complete table, all 21 projects, ordered by defect count. Bold marks the eight projects carrying fewer than 25 defects in the chronological *test* half — the cases where a per-project MCC is estimated from very few positives.
 
-All averages are **unweighted** across projects spanning 544–4,026 commits and 1.8–19.3% defect rates. **commons-digester trains on five defect examples and counts equally with commons-math's 196.** A robustness check excluding projects below a defect-count floor is outstanding work.
+| Project | Commits | Defects | Rate | Defects in test half |
+|---|---|---|---|---|
+| commons-digester | 1,079 | 19 | 1.8% | **14** |
+| commons-codec | 761 | 36 | 4.7% | **13** |
+| commons-validator | 598 | 36 | 6.0% | 25 |
+| commons-beanutils | 611 | 37 | 6.1% | **14** |
+| gora | 553 | 39 | 7.0% | **6** |
+| commons-scxml | 544 | 47 | 8.6% | **16** |
+| commons-collections | 1,823 | 50 | 2.7% | 31 |
+| commons-dbcp | 1,037 | 58 | 5.6% | **14** |
+| commons-bcel | 825 | 60 | 7.3% | 25 |
+| commons-io | 1,142 | 73 | 6.4% | **19** |
+| commons-jcs | 831 | 88 | 10.6% | 46 |
+| opennlp | 1,086 | 91 | 8.4% | 46 |
+| commons-vfs | 1,110 | 114 | 10.3% | **21** |
+| commons-net | 1,121 | 117 | 10.4% | 35 |
+| commons-lang | 2,969 | 146 | 4.9% | 60 |
+| commons-configuration | 1,838 | 155 | 8.4% | 29 |
+| parquet-mr | 1,120 | 158 | 14.1% | 86 |
+| giraph | 844 | 163 | 19.3% | 53 |
+| commons-compress | 1,630 | 178 | 10.9% | 60 |
+| ant-ivy | 1,771 | 332 | 18.8% | 114 |
+| commons-math | 4,026 | 335 | 8.3% | 139 |
+
+All averages are **unweighted**. Projects span 544–4,026 commits and 1.8–19.3% defect rates, and **commons-digester contributes 19 defects while commons-math contributes 335 — both counting equally toward every reported mean.**
+
+**This was flagged as outstanding work in earlier drafts. It has now been done** (§4.8): excluding projects below a 25-defect floor moves no headline estimate by more than 0.002 MCC, and all four Tier 1/Tier 2 claims still survive Holm correction. The heterogeneity is real and is a limitation of the design; it is not driving the results.
+
+### 4.12 Phase 3 — Which SZZ error actually costs the learner?
+
+Phases 1 and 2 established that noise is asymmetric and that it costs performance. Phase 3 asks *which half of the noise does the damage* — the false positives SZZ invents, or the true defects it misses. The design is a **repair experiment**: take real BSZZ labels, use the reference labels to surgically correct one error type at a time, and measure what each repair recovers. Because both repairs are applied to the same stream with the same learner, this is a controlled comparison rather than an observational one.
+
+#### The headline: repairing false positives recovers performance; repairing false negatives recovers nothing
+
+21 projects, 10 seeds, paired at project level, time-averaged prequential MCC.
+
+| Repair | Hodges–Lehmann | 95% CI | Projects | Holm (global) |
+|---|---|---|---|---|
+| **Remove BSZZ's 6,565 false positives** | **+0.040** | [+0.022, +0.052] | **17/21** | **0.0019** |
+| Restore BSZZ's 837 false negatives | −0.001 | [−0.009, +0.008] | 8/21 | 1.000 |
+| **The two head to head** | **+0.041** | [+0.018, +0.058] | 17/21 | **0.015** |
+
+![Repair experiment — what each surgical correction recovers](reports/figures/fig_p3_repair_mcc_avg.png)
+
+**Reading the figure.** Four bars, left to right: the reference labels, BSZZ with its false positives removed, BSZZ with its false negatives restored, and unrepaired BSZZ. Error bars are 95% intervals over projects. **The FP-repaired bar is the tallest — above even the reference labels — while the FN-repaired bar sits level with unrepaired BSZZ.** A bar that does not move is the result here, not a missing one.
+
+This **refutes the hypothesis the project started with.** The prior expectation — carried in the project's own planning documents — was *false-negative starvation*: that what hurts an online learner is the true defects a conservative labeller withholds. The controlled experiment says the opposite.
+
+#### Two controls that change what the result means
+
+**The error-matched control — and it matters.** BSZZ carries 6,565 false positives against 837 false negatives, an 8:1 imbalance. Repairing "all of each" is therefore not a fair comparison. Correcting the *same label mass* on both sides:
+
+| Contrast | HL | 95% CI | Projects | Holm |
+|---|---|---|---|---|
+| FP-repair (matched, ~40/project) vs BSZZ | +0.002 | [−0.005, +0.009] | 11/21 | 0.864 |
+| FP-repair (matched) vs FN-repair (all) | +0.005 | [−0.009, +0.018] | 14/21 | 0.864 |
+
+**Removing 837 false positives does nothing. Removing 6,565 recovers +0.040.** At equal corrected mass the two error types are statistically indistinguishable. The marginal-value curve reconciles the two results: FP-repair is roughly linear at **+0.147 MCC per 1,000 labels corrected**, so the ~40 per project that FN-repair could ever match predicts +0.006 — within noise of the +0.002 measured.
+
+> **The claim this supports, stated exactly.** *SZZ's false positives are what cost the learner, because there are eight times more of them.* **Not** *a false positive is individually more harmful than a false negative.* The second sentence is unsupported and does not appear in this thesis.
+
+**The delivery-ceiling control.** A null result for FN-repair has two possible explanations: the missing labels do not matter, or they cannot arrive in time to matter — more than half of all defect labels arrive after the 90-day decision window. Restoring the false negatives under three delivery regimes, each against its own anchor so the contrast isolates restoration from acceleration:
+
+| Delivery regime | HL | 95% CI | Projects |
+|---|---|---|---|
+| Realistic (reconstructed arrival times) | −0.001 | [−0.009, +0.008] | 8/21 |
+| Immediate (labels available at once) | +0.004 | [−0.003, +0.011] | 12/21 |
+| At the window boundary (t + 90 days) | −0.002 | [−0.007, +0.004] | 6/21 |
+
+Three regimes, three nulls. **Even delivered instantly, the missing labels recover nothing** — so this is a claim about their content, not their timing.
+
+**And the null is now affirmative.** A *TOST equivalence test* — two one-sided tests, which asks whether an effect is small enough to be called equivalent rather than merely failing to prove it is non-zero — with a margin declared in advance at ±0.02 MCC returns **p = 0.0008**. FN-restoration is *equivalent to no repair*, which is a stronger and more useful statement than "not significant".
+
+#### Dose-response, and a parameterisation trap worth reporting
+
+Injecting synthetic noise at controlled doses into clean labels, four profiles calibrated from the measured variants:
+
+| Profile | No latency | Fixed 90-day delay | Realistic delay |
+|---|---|---|---|
+| FN-heavy | **−0.055** | −0.037 | −0.036 |
+| Mid | −0.038 | −0.023 | −0.025 |
+| FP-heavy | −0.031 | −0.020 | −0.021 |
+| Symmetric | −0.029 | −0.018 | −0.022 |
+
+*(MCC lost per 10% of labels flipped.)*
+
+At matched dose FN-heavy noise degrades the learner fastest — which appears to contradict the repair verdict and does not. **Dose is defined as a fraction of *all* commits**, so at equal dose the FN-heavy profile strips far more of the 8.5% minority class. Measured: it retains 18% of true defect labels at dose 0.15 and **none at all** at dose 0.30.
+
+> **The stream is not empty at that point — it is poisoned.** At the highest dose the FN-heavy arm still carries ~204 positive labels, *every one of them false*, because the profile also flips negatives upward and the majority class is large enough to supply plenty. Slopes are therefore fitted only on cells that retain real defect labels, with the survival table published alongside.
+
+**The two findings are reconciled by the denominator, and that is the substantive point.** Per *label flipped*, false-negative noise is more damaging, because defect labels are scarce. Per *error actually present in real SZZ output*, false-positive noise dominates, because BSZZ produces eight times more of them.
+
+#### Latency masks label quality — a correction to an earlier claim
+
+![Dose slopes under three latency regimes](reports/figures/fig_p3_latency_arms.png)
+
+**Reading the figure.** Each line is a noise profile; the x-axis moves from no latency to realistic latency. Lines both flatten and converge as latency increases.
+
+An earlier draft reported that latency does *not* compress sensitivity to label quality. **That was wrong, and the error was in the design.** The comparison ran between a fixed-90-day-delay arm and a realistic-delay arm — *both heavily delayed*. It tested sensitivity to the arrival *schedule* and could not test masking at all. Against a true no-latency control, slopes are about **50% steeper** and the profiles separate about **40% more widely**. Mean MCC at the lowest dose is 0.100 without latency against 0.053 with it.
+
+**Verification latency both lowers the ceiling and flattens the response to label quality.** Under deployment conditions, better labels buy less than they would in a batch setting — which is itself a reason the field's batch-measured noise studies overstate what label cleaning can deliver.
+
+#### The mechanism: the boost compensates for scarcity, not for correctness
+
+![Boost rate against delivered positive supply](reports/figures/fig_p3_lambda_compensation.png)
+
+**Reading the figure.** Left: the online learner's oversampling rate against injected noise dose, one line per profile. Right: the same rate against how many defect labels the stream actually delivers. The right panel collapses onto a single curve.
+
+The learner sets its oversampling rate from the observed defect rate, so the rate it applies to defect-labelled arrivals is an almost perfect inverse of how many such labels arrive: **Spearman ρ = −1.000** across profiles at matched dose, −0.70 to −0.87 within each.
+
+> **ORB's boost compensates for defect-label *scarcity*, not for false negatives — it cannot tell the difference.** It amplifies whatever positive labels arrive, and amplifies them hardest exactly when they are rarest. That is why false-positive mass is what the learner cannot survive: **the mechanism that corrects class imbalance is the mechanism that magnifies wrong labels.**
+
+---
+
+### 4.13 Phase 4 — Can a learner defend itself? A pre-registered characterised negative
+
+Phase 3's repair used reference labels to remove exactly the wrong ones. Phase 4 asks whether a learner can approximate that **without** access to them — the deployable version of the same idea.
+
+#### The re-registration, and why it is in the thesis
+
+Phase 4's original registration made a false-negative *rescue* mechanism the headline, on the starvation hypothesis. Phase 3 refuted that hypothesis. Because Phase 4 had produced **zero results** at that point, the registration was rewritten and committed *before its first run* — which is the only moment at which revising a pre-registration is legitimate.
+
+The new primary is a train-time **false-positive filter**: a defect-labelled commit that the ensemble confidently contradicts is suppressed. Four tests were registered, plus a mechanism probe carrying a **predicted sign** and a named **risk**.
+
+#### The result: the gate passes, nothing else does
+
+18 reporting projects — three were held out for tuning and excluded from every number below.
+
+| Test | HL | 95% CI | Projects | p | **Holm** |
+|---|---|---|---|---|---|
+| **Non-degradation on clean labels** | −0.000 | [−0.009, +0.008] | 5/18 | 0.807 | **PASS** |
+| H1 — filter beats baseline on BSZZ | +0.017 | [+0.001, +0.033] | 12/18 | 0.054 | 0.215 ✗ |
+| H2a — on MASZZ | +0.011 | [−0.001, +0.024] | 13/18 | 0.074 | 0.221 ✗ |
+| H2b — on AGSZZ | +0.007 | [−0.008, +0.022] | 12/18 | 0.246 | 0.492 ✗ |
+| H3 — gain tracks each variant's false-positive count | ρ = 0.714 | — | 6 variants | 0.055 | ✗ |
+
+![Phase 4 ablation across models and label sources](reports/figures/fig_p4_ablation.png)
+
+**Every confirmatory test points the predicted way and not one survives correction.** The filter is *adoptable* — it does not damage clean labels, which is the bar that actually gates deployment — but it is **not demonstrated to work.** Four independent tests agreeing in direction is worth a sentence; it is not a substitute for a result, and this thesis does not treat it as one.
+
+**The hold-out protocol paid for itself.** On the three tuning projects the filter gained +0.045 on BSZZ. On the 18 reporting projects it gains **+0.017** — an optimism factor of **2.7×**. Had the hyperparameters been chosen on the reporting set, this chapter would have claimed an effect nearly three times its real size.
+
+#### The mechanism probe was refuted, 0 for 6
+
+The rescue mechanism — demoted from headline to probe — was registered with an explicit prediction that it would be **at or below zero** on every SZZ source. It is **positive on all six**, and significant on three: LSZZ +0.017 (p = 0.006), MASZZ +0.014 (p = 0.027), BSZZ +0.012 (p = 0.024).
+
+The registration committed in advance to revising the mechanism account if this happened. It happened.
+
+**The candidate explanation, and why it is not yet a claim.** Phase 3 restored the *reference-known* missing labels; rescue adds *model-confident* ones. These are different sets — rescue is closer to self-training than to label correction — so "restoring what SZZ missed does nothing" and "adding confidently-predicted defects helps" are not contradictory, *provided* the benefit comes from label supply rather than label accuracy. **That explanation was tested directly and did not hold** (ρ = +0.357, p = 0.385). It is recorded as an open question, not a finding.
+
+#### Why the oracle-assisted repair did not transfer
+
+| | Recovers |
+|---|---|
+| Phase 3 FP-repair, using reference labels to remove exactly the wrong ones | **+0.040** |
+| Phase 4 filter, approximating it without them | +0.017 (not significant) |
+
+**The gap is the cost of not knowing which labels are wrong.** At its tuned setting the filter suppresses 30% of defect labels on BSZZ — and still 15% on clean reference labels, where there is nothing to remove. A confidence threshold cannot distinguish *"this label is probably wrong"* from *"my model has not learned this pattern yet."*
+
+An earlier configuration made this vivid: a *fixed* confidence threshold suppressed 67–73% of defect labels on clean data and drove MCC to approximately zero. **The design lesson generalises beyond this model: an intervention on scarce labels must be bounded in size, not in confidence.**
+
+And the labels really are scarce. Under realistic latency a project delivers a mean of **75 defect labels across an entire stream**, with the learner's oversampling rate climbing to 62 to compensate. Any intervention that removes defect labels is working against that scarcity.
+
+#### An uncomfortable finding, reported rather than smoothed
+
+The prior confidence-damping arm — the one the re-registration demoted — **outperforms the new primary on six of eight conditions.** Because it was not the registered primary, every such contrast is exploratory; corrected across the 21 exploratory contrasts, only damping-beats-baseline on BSZZ survives global Holm (+0.033, CI [+0.019, +0.046], 15/18, p = 0.004).
+
+So the honest statement is narrow: **damping leads numerically and is established only on BSZZ.** And the re-registration, though correctly motivated and correctly timed, bet on the wrong arm. The commit history records that either way, so the thesis states it.
+
+---
 
 ---
 
@@ -775,6 +966,13 @@ All averages are **unweighted** across projects spanning 544–4,026 commits and
 | 8 | Latency effect | Every 2×2 interval contains zero | **Unresolved — reported as such** |
 | 9 | Deployable MCC under realistic conditions ≈ **0.097** | Time-averaged; 0.069 terminal | Observation |
 | 10 | Low-capacity models resist label noise | LApredict varies only 0.015 across all seven label sources | Observation |
+| 11 | **Repairing SZZ's false positives recovers +0.040 MCC; repairing its false negatives recovers nothing** | CI [+0.022, +0.052], 17/21, global Holm 0.0019 · FN-repair equivalent to no repair, TOST p = 0.0008 | **Solid** |
+| 12 | The FP advantage is a **volume** effect, not a per-label one | At matched corrected mass the two error types are indistinguishable (CI [−0.009, +0.018]) | **Solid** |
+| 13 | **Verification latency compresses sensitivity to label quality** | Slopes ~50% steeper and profiles ~40% better separated without latency | **Solid** |
+| 14 | The learner's oversampling rate is an inverse function of delivered defect-label supply | Spearman **ρ = −1.000** across profiles at matched dose | **Solid** |
+| 15 | SZZ's false positives carry **learnable structure** — the self-scoring mechanism | AUC 0.599 vs 0.514 permuted, HL +0.088, 17/21, p = 0.0016. **Weak separability; stated as such** | **Demonstrated, weak** |
+| 16 | A train-time filter approximating the FP repair **does not replicate it** | Adoptable (non-degradation passes) but H1/H2/H3 all fail after Holm | **Pre-registered negative** |
+| 17 | The rescue mechanism probe was **refuted** — it helps, having been predicted not to | Positive on 6/6 sources, significant on 3 | **Refuted prediction** |
 
 ### 5.2 The ultimate takeaway
 
@@ -786,6 +984,12 @@ Concretely, all on one corpus under one protocol:
 - Random cross-validation inflates it by a further **+0.137 MCC**, and *only* for models with capacity to memorise
 - Under realistic streaming with genuine verification latency, deployable performance is about **0.097 MCC**
 - Controlling for tangled commits is worth **+0.041 MCC** [CI +0.022, +0.052]
+
+**And a second takeaway, from Phases 3 and 4, which the first three phases could not have produced:**
+
+> **What an online learner cannot survive is the *volume* of false positives SZZ invents — and knowing that is not enough to fix it.**
+
+The controlled repair shows that removing SZZ's false positives recovers +0.040 MCC while restoring its missing defects recovers nothing. But the repair uses reference labels to identify exactly which labels are wrong. A learner that must guess recovers +0.017 and does not survive correction, because a confidence threshold cannot separate *"this label is wrong"* from *"I have not learned this yet"* — and under verification latency, defect labels are scarce enough (75 per project per stream) that guessing wrong is expensive. **The gap between +0.040 and +0.017 is the price of not knowing, and it is the most honest single number in Phase 4.**
 
 ### 5.3 How this advances the field
 
@@ -817,23 +1021,48 @@ Concretely, all on one corpus under one protocol:
 
 **Statistical power.** With 21 projects, effects smaller than roughly 0.04 MCC are not resolvable. The latency effect falls in that range and is reported as unresolved.
 
-**Project heterogeneity.** Projects span 544–4,026 commits and 1.8%–19.3% defect rates, and are weighted equally. One project trains on five defect examples.
+**Project heterogeneity — measured, and it does not drive the results.** Projects span 544–4,026 commits and 19–335 defects, weighted equally. Eight of 21 carry fewer than 25 defects in the chronological test half. Excluding the smallest moves no headline estimate by more than 0.002 MCC and all four Tier 1/Tier 2 claims still survive correction (§4.8). The heterogeneity remains a design limitation; it is no longer an unexamined one.
+
+**Phase 3's repair conditions are not error-matched, and the matched control changes the claim.** BSZZ carries 6,565 false positives against 837 false negatives. At equal corrected mass the two error types are indistinguishable, so the supported claim is about error *volume*, not per-label severity (§4.12).
+
+**Phase 3's dose parameterisation is not class-balanced.** Dose is a fraction of all commits, so at equal dose the FN-heavy profile strips far more of the 8.5% minority class — and at the highest dose leaves a stream of defect labels that are *all false*. Slopes are fitted only on cells retaining real defect labels, and the survival table is published.
+
+**Phase 4's three held-out projects are excluded from its results but not from Phases 1–3.** The tuning set was chosen after those phases were analysed. Nothing in Phase 4's reported numbers depends on them, but the held-out set was not randomly assigned.
+
+**One prediction in this document was wrong and is corrected rather than removed.** An earlier draft reported that latency does not compress sensitivity to label quality. That comparison ran between two delayed arms and could not test the question; against a true no-latency control the conclusion reverses (§4.12). The superseded claim is retained in the project's history deliberately.
 
 **Single benchmark family.** All 21 projects are Apache Java repositories from one dataset lineage.
 
 ### 5.6 Current status and what remains
 
-**Complete and validated:** Phases 1 and 2 — the full label-quality characterisation and the downstream impact measurement, with all corrections applied and every number reproducible from committed data.
+**All four phases are executed, analysed and reproducible.** Phase 1 characterises the label noise; Phase 2 measures what it costs under honest evaluation; Phase 3 isolates which half of the noise does the damage and why; Phase 4 tests, under pre-registration, whether a learner can defend itself against it.
 
-**Implemented, not yet executed:** Phase 3 (noise dose-response and mechanism diagnosis) and Phase 4 (Noise-Aware ORB — an online learner that modulates its oversampling by per-instance label confidence and provisionally rescues likely-delayed defect labels). Both runners are written, smoke-tested against the current codebase, and awaiting compute.
+**Three analyses flagged as outstanding in earlier drafts are now closed:**
 
-One finding already constrains Phase 3's scope. Defects introduced by pure deletion are absent from the corpus by construction, and — more fundamentally — because the reference labels are themselves blame output, no false negative measured against them can be attributed to blame's structural inability to trace a defect. Phase 3 can therefore study false-negative noise arising from **over-filtering** and from **seed-line divergence**, which §4.1 shows are the two mechanisms actually operating, but not from blame-unreachability. **That limit should be declared before the experiment runs rather than discovered afterwards.**
+| Was outstanding | Now |
+|---|---|
+| Whether SZZ's false positives are predictable from the features — the self-scoring *mechanism* | Run. AUC 0.599 vs 0.514 permuted, 17/21 projects, p = 0.0016. Demonstrated, and weak (§4.5) |
+| Whether unweighted project means drive the conclusions | Run. No headline estimate moves by more than 0.002 MCC at a 25-defect floor (§4.8) |
+| The per-project characteristics table | Published in full, all 21 projects (§4.11) |
+
+**What genuinely remains:**
+
+1. **The thesis prose itself.** Chapters 4–7 can be drafted directly from committed CSVs; Chapters 1–3, 8 and 9 remain to be written.
+2. **The reference labels' arrival times are still SZZ-derived** (§5.5). Either locate a native fix-to-inducing linkage in the source dataset or carry the disclosure into the methods chapter and threats section. This is the central construct-validity threat and is not closable by computation on this corpus.
+3. **An external-validity arm.** A developer-informed oracle — one where the *developer* named the defect-introducing commit, with no `git blame` in the chain — would test whether the measured noise really is the lower bound this thesis argues it is. It cannot replace this corpus, since it contains no clean commits and so cannot train a model, but it can validate Phase 1 against a non-blame reference.
+4. **Two open questions Phase 4 generated rather than answered:** why adding model-confident defect labels helps when restoring genuinely missing ones does not, and whether confidence damping — which leads numerically but is established only on one label source — holds up under its own pre-registration.
+
+One scope limit, declared before Phase 3 ran and worth restating: because the reference labels are themselves blame output, no false negative measured against them can be attributed to blame's structural inability to trace a defect. Phase 3 therefore studied false-negative noise arising from over-filtering and seed-line divergence — the two mechanisms §4.1 shows are actually operating — and made no claim about blame-unreachability.
 
 ### 5.7 Closing
 
 The thesis began by asking how much SZZ label noise costs a defect prediction model. The answer turned out to be less interesting than a question it exposed along the way: **how much of what the field reports is measurement artifact rather than capability?**
 
 On this corpus, most of it. The literature's 0.41 becomes 0.10 once the model is scored against something other than the heuristic that trained it, and evaluated in an order that time permits. That gap — roughly four-fifths of the reported signal — is the thesis's central contribution, and it is now quantified, bounded by confidence intervals, corrected for multiple comparisons, robust across every analytical choice tested, and reproducible from a single commit hash.
+
+Phases 3 and 4 then asked the obvious follow-up — *so fix it* — and returned a more useful answer than a working method would have been. The damage is done by the sheer volume of false positives SZZ invents, not by the defects it misses; the missing defects are provably worth nothing to recover. But a learner cannot act on that knowledge, because it cannot tell a wrong label from an unlearned pattern, and verification latency leaves it too few defect labels to risk discarding any. **The oracle-assisted repair recovers +0.040 MCC; the deployable approximation recovers +0.017 and does not survive correction.**
+
+That is a negative result, pre-registered as such, and it is reported here at full strength rather than reframed. It is also the most informative thing in the thesis after the measurement critique itself: it says the problem is not that nobody has built the right defence, but that the information required to build one is not available to a learner at training time. **Improving the labels is worth more than improving the learner — and that conclusion is what the whole four-phase argument was for.**
 
 ---
 
@@ -861,3 +1090,37 @@ python scripts/make_figures.py
 | `results/phase1/phase1_quality_corrected.csv` | Phase 1 label-quality table |
 | `phase1_bias.json` | ρ₀ / ρ₁ per variant, the Phase 3 noise parameters |
 | `reports/figures/` | The nine figures reproduced above |
+
+**Phases 3 and 4:**
+
+```bash
+# Phase 3: dose-response, mechanism, repair
+python -m experiments.run_phase3_noise
+# Phase 3 addendum: error-matched repair, delivery ceilings,
+# the true no-latency arm, and the TOST on the FN null
+python -m experiments.run_phase3_addendum
+python scripts/make_phase34_figures.py --phase 3
+
+# Phase 4: held-out tuning, then the pre-registered grid
+python -m experiments.run_phase4_tuning      # 3 held-out projects only
+python -m experiments.run_phase4_na_orb      # 18 reporting projects
+python scripts/make_phase34_figures.py --phase 4
+
+# The three closing analyses: project characteristics, positive-count
+# sensitivity, and the false-positive predictability test
+python -m experiments.run_robustness_checks
+```
+
+| File | Contents |
+|---|---|
+| `results/phase3/phase3_repair_stats.csv` | The repair verdict, both estimators, Holm-corrected |
+| `results/phase3/phase3_addendum_stats.csv` | Error-matched and delivery-ceiling contrasts |
+| `results/phase3/phase3_tost.csv` | The equivalence test on the false-negative null |
+| `results/phase3/phase3_minority_survival.csv` | Defect labels surviving each injected dose |
+| `results/phase3/phase3_lambda_compensation.csv` | Boost rate against delivered defect-label supply |
+| `results/phase4/phase4_headline_tests.csv` | The pre-registered tests |
+| `results/phase4/phase4_h3_volume.csv` | Gain against each variant's false-positive count |
+| `results/phase4/phase4_frozen_config.json` | Tuned hyperparameters and the held-out project names |
+| `results/appendix/project_characteristics.csv` | All 21 projects: commits, defects, rates, split sizes |
+| `results/appendix/headline_sensitivity.csv` | Every headline claim at each positive-count floor |
+| `results/appendix/fp_predictability.csv` | The self-scoring mechanism test, with its permutation null |
