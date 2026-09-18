@@ -182,20 +182,33 @@ class FPFilterORB(ORB):
       strict comparison against a threshold of zero can never fire -- on
       opennlp/BSZZ it filtered 0 of 75 positive arrivals.
 
-        mode="fixed"     (default) filter when p1 < tau. One interpretable
-                         hyperparameter: the ensemble's majority says clean.
-        mode="quantile"  the review's rule, retained for comparison, with a
-                         non-strict comparison so the saturated-at-zero case
-                         still catches the confidently-contradicted positives.
+        mode="quantile"  (default) the review's rule, repaired: the comparison
+                         is non-strict, so the saturated-at-zero case still
+                         catches the confidently-contradicted positives. It
+                         filters a BOUNDED fraction (about q) by construction,
+                         which is what makes it safe on clean labels.
+        mode="fixed"     filter when p1 < tau. Retained for comparison, and
+                         NOT recommended -- see below.
 
-      Which rule to use is a Step C tuning decision on held-out projects, not
-      a result. The defaults (fixed, tau=0.25) come from smoke runs on
-      commons-scxml, opennlp and commons-math only -- which is why those three
-      are declared HELD OUT in run_phase4_na_orb.HELD_OUT_PROJECTS and excluded
-      from every reported Phase 4 number. tau=0.5 was measured to be
-      catastrophic on both held-out projects tried (filter rate 96-97%, MCC
-      driven negative); tau=0.25 roughly doubled ORB's mcc_avg on both. Neither
-      observation may be quoted as a result.
+      WHY FIXED IS NOT THE DEFAULT. A fixed threshold filters however many
+      positives the model happens to be unconfident about, with no bound and
+      no reference to how many false positives the source actually contains.
+      On the ORACLE arm, where every positive label is correct and there is
+      nothing to remove, tau=0.15-0.25 suppressed 67-73% of positives and drove
+      mcc_avg from 0.096 to approximately 0.000 -- a total non-degradation
+      failure. The quantile rule suppresses about q by construction, so on
+      clean labels it costs little: at q=0.05-0.20 the oracle arm IMPROVED
+      (+0.010 to +0.013) while BSZZ gained +0.023 to +0.036.
+
+      The lesson generalises: a confidence threshold cannot distinguish "this
+      label is probably wrong" from "my model has not learned this pattern
+      yet", so the intervention must be bounded in size rather than in
+      confidence.
+
+      All of these observations come from commons-scxml, opennlp and
+      commons-math only -- which is why those three are declared HELD OUT in
+      run_phase4_na_orb.HELD_OUT_PROJECTS and excluded from every reported
+      Phase 4 number. None of them may be quoted as a result.
 
     THE REGISTERED RISK -- lambda self-antagonism.
       ORB sets its oversampling rate from the observed positive rate:
@@ -235,7 +248,7 @@ class FPFilterORB(ORB):
     accepts_sample_id = True
 
     def __init__(self, *args,
-                 mode: str = "fixed",
+                 mode: str = "quantile",
                  tau: float = 0.25,
                  q: float = 0.10,
                  eps: float = 0.0,

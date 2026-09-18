@@ -1,0 +1,119 @@
+name: Phase 4 Tuning (held-out projects only)
+
+# Noise dose-response, mechanism and repair experiments.
+#
+# Rebuilds the same data chain as the Phase 2 workflow and runs the same
+# label-consistency gate before spending compute, so Phase 3 can never be
+# run against a different label vintage than the Phase 1 rates it injects.
+#
+# Cost: measured at ~4 s per project-seed, so the full grid (21 projects x
+# 10 seeds x 4 profiles x 6 doses x 2 latency arms, plus the repair runs) is
+# well under an hour. The "2-4 days" figure in Phase3_Phase4_Plan.md predates
+# the measurement and is wrong.
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: 'smoke (3 seeds, 5 projects, uniform arm only) or full (10 seeds, 21 projects, both arms)'
+        required: true
+        default: 'smoke'
+        type: choice
+        options:
+          - 'smoke'
+          - 'full'
+      latency_mode:
+        description: 'fix_ts reconstruction mode for the real arm'
+        required: true
+        default: 'real'
+        type: choice
+        options:
+          - 'real'
+          - 'uniform'
+      push_results:
+        description: 'Commit results back to master (full stage only)'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: phase4-tuning
+  cancel-in-progress: false
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    # GitHub-hosted runners hard-cap a job at 360 minutes; stay under it.
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: requirements-ci.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-ci.txt
+          pip list
+
+      # --- Rebuild the data chain from committed inputs -------------------
+
+      - name: Phase 1 - evaluate SZZ labels against the oracle
+        run: python -m experiments.evaluate_confusion_matrix
+
+      - name: Rebuild Phase 2 dataset from current Phase 1 labels
+        run: |
+          python -c "from codebase.data.loader import build_unified_dataset; build_unified_dataset()"
+
+      - name: Reconstruct verification latency (fix_ts)
+        run: python scripts/build_fix_ts.py --mode ${{ inputs.latency_mode }}
+
+      # --- Gate: refuse to spend compute on inconsistent labels -----------
+      #
+      # Phase 3 injects noise calibrated from phase1_bias.json. If that file
+      # and the dataset disagree, the injected doses are calibrated against
+      # labels the experiment is not using, and every dose curve is wrong.
+
+      - name: GATE - Phase 1 / Phase 3 label consistency
+        run: python -m experiments.check_label_consistency
+
+      # --- Tuning (held-out projects only; nothing here is reportable) ---
+
+      - name: Sweep FPFilterORB on the three held-out projects
+        run: |
+          FAST_FLAG=""
+          if [ "${{ inputs.stage }}" = "smoke" ]; then FAST_FLAG="--fast"; fi
+          python -m experiments.run_phase4_tuning $FAST_FLAG
+
+      - name: Commit and push the frozen config
+        if: ${{ inputs.stage == 'full' && inputs.push_results }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add results/phase4/
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Phase 4 Step C tuning sweep (held-out projects only)
+
+          Held out: commons-scxml, opennlp, commons-math. Not reportable."
+          git pull --rebase --autostash origin master
+          git push origin master
+
+      - name: Upload tuning artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase4-tuning-${{ inputs.stage }}
+          path: results/phase4/*
+          if-no-files-found: warn
