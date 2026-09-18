@@ -371,6 +371,62 @@ Sweep only on `commons-scxml`, `opennlp`, `commons-math`:
 Acceptance bar is the ND gate, not H1: a filter that wins on BSZZ and degrades
 the oracle arm is not adoptable.
 
+### Step C results — run `35317549121`, frozen in `codebase/config.py`
+
+42 configurations on the registered arm; **24 passed the ND gate, and every
+one of them uses the quantile rule.** All fixed-threshold configurations
+failed, several catastrophically.
+
+```python
+FP_FILTER_CONFIG = {"mode": "quantile", "q": 0.30, "eps": 0.1,
+                    "min_pos_for_threshold": 30, "rate_update": "observed"}
+NA_ORB_HELD_OUT_PROJECTS = ("commons-scxml", "opennlp", "commons-math")
+```
+
+Held-out gains — **tuning-set numbers, never quotable as findings**: BSZZ
++0.0451, MASZZ +0.0232, LSZZ +0.0131, oracle +0.0072, filter rate on BSZZ 0.24.
+`q = 0.30` is an interior optimum, not a grid edge: extending to 0.40 and 0.50
+lowered the BSZZ gain to 0.0402 and 0.0288.
+
+**Why every fixed-threshold configuration failed — put this in Chapter 7.**
+On the oracle arm, where every positive is correct and there is nothing to
+remove, `tau = 0.35` suppressed 57% of positives and cost **−0.0989** MCC. A
+fixed confidence threshold filters however many positives the model happens to
+be unsure about, with no reference to how many false positives the source
+contains. It cannot distinguish *"this label is probably wrong"* from *"my
+model has not learned this pattern yet"*. The quantile rule removes about `q`
+by construction, so its worst case is bounded. **The intervention has to be
+bounded in size, not in confidence** — which is a design lesson beyond this
+model.
+
+**The filter is only partly adaptive**, and this is the honest limitation.
+At the frozen setting it filters 24% of positives on BSZZ (81% of whose flags
+are false) against 12% on the oracle (0% false) — twice as often where the
+noise is, but still discarding roughly one correct label in eight when there
+is nothing to find. That residual cost is what the ND gate measures, and why
+the gate rather than H1 is the acceptance bar.
+
+### R1 — the registered prediction FAILED
+
+`mean(observed − suppress) = −0.0020`, favouring `observed` in only **54 of 168**
+configuration-condition cells. The prediction was that suppressing positives
+would lower `rate1`, raise λ for the survivors, and cost performance. λ does
+rise — that mechanism is real and was measured at Spearman ρ = −1.000 — but the
+*sign of its effect* is the opposite of predicted.
+
+The coherent reading, offered as exploratory rather than established: once the
+filter has removed the suspected false positives, amplifying the survivors
+harder is **correct**, because the surviving positives are more trustworthy
+than the stream average. Filtering and boosting compose rather than conflict.
+Phase 3's account said the boost amplifies whatever arrives; the filter changes
+what arrives, and the boost then does the right thing with it.
+
+The frozen config still takes `observed`, exactly as the selection rule
+declared in advance. Not tuning the R1 arm is what keeps it a test. The
+difference is small (−0.0020) and close to null in either direction, so the
+defensible claim is that **the prediction is not supported**, not that
+`suppress` is better.
+
 Freeze one config. Record the sweep in the decision log.
 
 **Exit:** frozen hyperparameters committed to `codebase/config.py` as `NA_ORB_CONFIG`, with the held-out project names listed beside them.

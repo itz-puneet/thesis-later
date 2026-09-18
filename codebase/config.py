@@ -43,10 +43,42 @@ ORB_CONFIG = dict(
     target_defect_rate=None,         # None -> use running observed rate
 )
 
-# Phase 4: Noise-Aware ORB defaults
-NA_ORB_CONFIG = dict(
+# Phase 4: NoiseAwareORB (damp/rescue) defaults. Unreferenced since the Phase 4
+# re-registration demoted rescue to a mechanism probe; kept for that arm.
+NA_ORB_DAMP_CONFIG = dict(
     confidence_window=500,   # sliding window for running class-confidence thresholds
     min_confidence=0.05,     # floor so no instance is fully silenced
     use_loss_correction=True,
     use_agreement_check=False,
 )
+
+
+# ---------------------------------------------------------------------------
+# Phase 4: frozen FPFilterORB configuration (Step C, run 35317549121)
+#
+# Tuned ONLY on the three held-out projects below, which are excluded from
+# every reported Phase 4 number. 42 configurations were evaluated on the
+# registered arm; 24 passed the non-degradation gate. Selection rule, declared
+# before the sweep: ND gate first (oracle within -0.02 of ORB), then maximum
+# gain on BSZZ, then the more conservative filter.
+#
+# Held-out gains for this configuration: BSZZ +0.0451, MASZZ +0.0232,
+# LSZZ +0.0131, oracle +0.0072, filter rate on BSZZ 0.24. None of these are
+# results -- they are tuning-set numbers and must never be quoted as findings.
+#
+# q = 0.3 is an interior optimum, not a grid edge: extending the sweep to
+# q = 0.4 and 0.5 lowered the BSZZ gain to 0.0402 and 0.0288.
+#
+# rate_update is NOT tuned. It is the R1 registered arm and is frozen at
+# "observed" regardless of which level scored better, because optimising it
+# would convert a registered prediction into a fit.
+# ---------------------------------------------------------------------------
+NA_ORB_HELD_OUT_PROJECTS = ("commons-scxml", "opennlp", "commons-math")
+
+FP_FILTER_CONFIG = {
+    "mode": "quantile",
+    "q": 0.30,
+    "eps": 0.1,
+    "min_pos_for_threshold": 30,
+    "rate_update": "observed",
+}

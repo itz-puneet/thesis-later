@@ -1,0 +1,19 @@
+{
+  "selected_config": "quantile/q=0.3|eps=0.1|minpos=30|observed",
+  "rule": "quantile/q=0.3",
+  "eps": 0.1,
+  "min_pos_for_threshold": 30,
+  "rate_update": "observed",
+  "gain_on_BSZZ": 0.0451,
+  "gain_on_oracle_ND": 0.0072,
+  "nd_margin": 0.02,
+  "filter_rate_on_BSZZ": 0.2399,
+  "n_eligible_configs": 24,
+  "n_configs_evaluated": 42,
+  "held_out_projects": [
+    "commons-scxml",
+    "opennlp",
+    "commons-math"
+  ],
+  "selection_rule": "ND gate (oracle within -0.02 of ORB) THEN max gain on BSZZ THEN lower filter rate; rate_update fixed to 'observed' as the R1 arm rather than tuned"
+}
