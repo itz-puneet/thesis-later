@@ -63,11 +63,14 @@ HELD-OUT PROJECTS
 
 MODEL SET
   OOB, ORB                              baselines
-  NA(fp_filter)                         primary
-  NA(fp_filter/suppress)                R1 arm
+  NA(fp_filter)                         primary, at the Step C frozen config
+  NA(fp_filter/suppress)                R1 arm (frozen config, switch flipped)
   NA(damp)                              prior FP-side defence, for comparison
   NA(rescue)                            MP probe only
-  NA(fp_filter+damp)                    composition
+
+  NA(fp_filter+damp) appeared in the first draft of this registration but was
+  never implemented -- the placeholder returned a duplicate FPFilterORB. It is
+  dropped before any Phase 4 run rather than shipped as a fake arm.
 
 Grid:
   label sources : oracle + all 6 SZZ variants + injected 20% fn_heavy noise
@@ -93,7 +96,8 @@ import pandas as pd
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(BASE_DIR))
 
-from codebase.config import ORB_CONFIG, RANDOM_SEEDS, SZZ_VARIANTS
+from codebase.config import (ORB_CONFIG, RANDOM_SEEDS, SZZ_VARIANTS,
+                             FP_FILTER_CONFIG)
 from codebase.data.loader import load_or_build_dataset, get_all_projects, get_project_dataset
 from codebase.evaluation.regimes import prequential_latency
 from codebase.evaluation.metrics import paired_effect
@@ -132,16 +136,29 @@ def conditions(df: pd.DataFrame, seed: int, profiles: dict) -> list[tuple]:
 
 
 def ablation_grid_v2(seed: int, orb_config: dict) -> dict:
-    """Re-registered model set. See the module docstring for why."""
+    """Re-registered model set, at the Step C frozen hyperparameters.
+
+    NA(fp_filter+damp) was listed in the v2 registration but never
+    implemented -- the placeholder returned a second FPFilterORB, which would
+    have shipped a duplicate of the primary under a different name and made
+    the ablation look richer than it is. It is dropped here rather than run,
+    while Phase 4 still has no results, so the registration is amended before
+    rather than after seeing an outcome. Composing the two defences is future
+    work, not a Phase 4 arm.
+
+    NA(fp_filter/suppress) is the R1 arm and carries the frozen config with
+    only rate_update changed, so the contrast isolates that one switch.
+    """
     base = dict(orb_config)
+    frozen = dict(FP_FILTER_CONFIG)
+    suppressed = {**frozen, "rate_update": "suppress"}
     return {
         "OOB": OOB(n_estimators=base.get("n_estimators", 20), seed=seed),
         "ORB": ORB(seed=seed, **base),
-        "NA(fp_filter)": FPFilterORB(seed=seed, **base),
-        "NA(fp_filter/suppress)": FPFilterORB(seed=seed, rate_update="suppress", **base),
+        "NA(fp_filter)": FPFilterORB(seed=seed, **frozen, **base),
+        "NA(fp_filter/suppress)": FPFilterORB(seed=seed, **suppressed, **base),
         "NA(damp)": NoiseAwareORB(seed=seed, use_damp=True, use_rescue=False, **base),
         "NA(rescue)": NoiseAwareORB(seed=seed, use_damp=False, use_rescue=True, **base),
-        "NA(fp_filter+damp)": FPFilterORB(seed=seed, **base),  # damp composed in v3
     }
 
 
