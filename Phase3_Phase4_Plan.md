@@ -319,13 +319,57 @@ Bring exactly five artifacts:
 
 **Exit:** sign-off on the Phase 4 protocol *before* running it. That is what makes "pre-registered" true.
 
-## Step 4 — Phase 4 tuning, on held-out projects only (2–3 days)
+## Step 3b — Phase 4 RE-REGISTERED (v2), commit pending
 
-Pick 3 projects spanning sizes (smallest, median, largest by positive count), **exclude them from all reporting**, and sweep only on them:
+Done before any Phase 4 run, so nothing is chosen with knowledge of a result.
+The full rationale is the module docstring of `experiments/run_phase4_na_orb.py`.
 
-- `warmup` — {30, 50, or 5% of arrivals}. Confirmed necessary: on commons-scxml (544 commits) the rescue path fires **zero** times with `warmup=30`, because fewer than 30 class-1 labels ever deliver under real latency. A fraction-of-arrivals rule is the obvious fix.
-- `rescue_margin` {1.1, 1.25, 1.5}; `rescue_weight` {0.3, 0.5}
-- `min_confidence` {0.05, 0.2} — the damp path hurt clean labels in smoke tests. In the install smoke test `NA(damp)` scored **below** plain ORB on commons-scxml (+0.1414 vs +0.1911), so a higher floor or a damp-warmup is the first thing to try.
+| | v1 (retired unrun) | v2 |
+|---|---|---|
+| Headline | NA(damp+rescue) | **NA(fp_filter)** |
+| H2 source | LSZZ (FN-heavy) | **MASZZ, AGSZZ** (mid-FP) |
+| Rescue | headline component | **demoted to a registered probe**, predicted ≤ 0 |
+| New | — | **H3**: gain rank-correlates with the variant's FP count |
+| New | — | **R1**: λ self-antagonism, with `rate_update` as the arm |
+| Estimator | `mcc` (terminal) | **`mcc_avg`**, both recorded |
+| Stats | `wilcoxon_with_cliffs` (unpaired δ) | `paired_effect` + Holm |
+
+**H3 is the sharpest test in Phase 4.** Because Phase 3 showed the effect is
+volume-driven, the benefit of filtering should track how many false positives
+the label source actually contains — a predicted *ordering* over six variants
+with counts fixed in advance (BSZZ 6565, MASZZ 5030, AGSZZ 4786, RASZZ 4531,
+RSZZ 2316, LSZZ 1665), which is far harder to satisfy by chance than a binary
+"filter beats ORB".
+
+**Held-out projects: `commons-scxml`, `opennlp`, `commons-math`** — excluded
+from every reported number, because the `fp_filter` defaults were chosen by
+looking at them.
+
+**Two implementation findings already recorded in the model docstring.** The
+review's running-quantile decision rule is degenerate on this corpus: the
+ensemble's members agree almost completely, p1 is bimodal at 0 and 1, and the
+10th percentile of a trailing window is 0.0000 in nearly every segment, so a
+strict comparison never fires — 0 of 75 positive arrivals on opennlp/BSZZ. A
+fixed threshold is the default instead, with the quantile retained for
+comparison. And `tau = 0.5` is catastrophic on both held-out projects tried
+(filter rate 96–97%, MCC driven negative); `tau = 0.25` roughly doubled ORB's
+`mcc_avg` on both. Neither observation may be quoted as a result.
+
+## Step 4 — Phase 4 tuning, on the three held-out projects only (2–3 days)
+
+Sweep only on `commons-scxml`, `opennlp`, `commons-math`:
+
+- `mode` {fixed, quantile} and `tau` {0.15, 0.25, 0.35} — the dominant knob.
+- `eps` {0, 0.1} — whether a suspected FP is discarded or residually weighted.
+- `min_pos_for_threshold` {20, 30, 50} — warm-up counted in *positive labels*,
+  which is the scarce currency: under real latency some projects deliver fewer
+  than 30 positives in an entire stream, and the filter is correctly inert
+  below that.
+- `rate_update` {observed, suppress} — this is R1, not a hyperparameter. Record
+  it; do not optimise it.
+
+Acceptance bar is the ND gate, not H1: a filter that wins on BSZZ and degrades
+the oracle arm is not adoptable.
 
 Freeze one config. Record the sweep in the decision log.
 

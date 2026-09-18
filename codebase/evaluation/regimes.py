@@ -153,6 +153,11 @@ def prequential_latency(
         raise ValueError(f"unknown latency_mode: {latency_mode}")
 
     tracker = PrequentialTracker(fading)
+    # Models that set accepts_sample_id (FPFilterORB) are told which row each
+    # training example came from, so a filtering decision can be joined back
+    # against the oracle label afterwards and the filter's precision measured
+    # rather than assumed.
+    pass_id = getattr(online_model, "accepts_sample_id", False)
     pending: list[tuple[float, int, int, int]] = []  # (arrival_ts, tiebreak, idx, label)
     tie = 0  # heapq tiebreaker: preserves push order at equal timestamps,
              # guaranteeing tentative-clean is consumed before its correction
@@ -161,7 +166,10 @@ def prequential_latency(
         now = t[i]
         while pending and pending[0][0] <= now:
             _, _, j, lab = heapq.heappop(pending)
-            online_model.learn_one(X[j], lab)
+            if pass_id:
+                online_model.learn_one(X[j], lab, sample_id=int(j))
+            else:
+                online_model.learn_one(X[j], lab)
 
         pred = online_model.predict_one(X[i])
         tracker.update(int(y_eval[i]), int(pred), ts=now)

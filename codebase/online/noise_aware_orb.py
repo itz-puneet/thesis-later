@@ -154,3 +154,166 @@ def ablation_grid(seed: int, orb_config: dict,
                                             noise_rates=noise_rates,
                                             use_loss_correction=True, **base),
     }
+
+
+class FPFilterORB(ORB):
+    """ORB + train-time false-positive suppression. Phase 4 primary model.
+
+    Phase 3 established that what costs an online learner performance on SZZ
+    labels is the VOLUME of false positives, not any per-label severity: at
+    matched corrected mass FP-repair and FN-repair are indistinguishable
+    (HL +0.0050, CI [-0.0093, +0.0176]), while removing all 6,565 of BSZZ's
+    false positives recovers +0.0402. Restoring false negatives is equivalent
+    to no repair at all (TOST p = 0.0008, margin +-0.02), under realistic,
+    immediate and at-window delivery alike. So the train-time analogue worth
+    building suppresses suspected false positives and leaves the negative
+    stream untouched.
+
+    A positive-labelled arrival the ensemble confidently contradicts is
+    treated as a suspected SZZ false positive: trained at weight `eps` (0
+    discards it) and excluded from the boost.
+
+    TWO DECISION RULES, and why the default is not the quantile.
+      The review specified a running q-quantile of recently delivered
+      positives, on the reasoning that it needs no calibration. Measured on
+      this corpus that rule is degenerate: the ensemble's members agree almost
+      completely, so p1 is bimodal at 0 and 1 and the 10th percentile of a
+      trailing window is 0.0000 in nearly every segment of every stream. A
+      strict comparison against a threshold of zero can never fire -- on
+      opennlp/BSZZ it filtered 0 of 75 positive arrivals.
+
+        mode="fixed"     (default) filter when p1 < tau. One interpretable
+                         hyperparameter: the ensemble's majority says clean.
+        mode="quantile"  the review's rule, retained for comparison, with a
+                         non-strict comparison so the saturated-at-zero case
+                         still catches the confidently-contradicted positives.
+
+      Which rule to use is a Step C tuning decision on held-out projects, not
+      a result. The defaults (fixed, tau=0.25) come from smoke runs on
+      commons-scxml, opennlp and commons-math only -- which is why those three
+      are declared HELD OUT in run_phase4_na_orb.HELD_OUT_PROJECTS and excluded
+      from every reported Phase 4 number. tau=0.5 was measured to be
+      catastrophic on both held-out projects tried (filter rate 96-97%, MCC
+      driven negative); tau=0.25 roughly doubled ORB's mcc_avg on both. Neither
+      observation may be quoted as a result.
+
+    THE REGISTERED RISK -- lambda self-antagonism.
+      ORB sets its oversampling rate from the observed positive rate:
+      `_lambda(1) = (1 - rate1) / rate1`. Phase 3 measured the consequence
+      directly: the boost rate applied to positive arrivals is a near-perfect
+      inverse of how many positives the stream delivers (Spearman rho = -1.000
+      across profiles at matched dose). Every positive this filter suppresses
+      therefore RAISES lambda for the positives that survive it -- the filter
+      works against the mechanism it is bolted onto. `rate_update` controls
+      whether it does:
+
+        "observed"  (default) rate1 is updated as if the positive label had
+                    been accepted, so suppressing a label expresses distrust
+                    of THAT label without telling the ensemble the positive
+                    class is rarer than it is. lambda is left alone.
+        "suppress"  the arrival is skipped entirely, so rate1 drifts down and
+                    lambda rises. This is what a naive implementation does.
+
+      Registered prediction: "suppress" underperforms "observed", and the gap
+      widens with filter rate. If that is wrong, the Phase 3 mechanism account
+      needs revision.
+
+    A second registered risk is self-reinforcement: a suppressed positive is
+    never learned, so its probability stays low and it is suppressed again.
+    `fp_trace` records every decision so the filter's realised rate and (joined
+    against oracle labels by the runner) its precision are measurable rather
+    than assumed.
+
+    Warm-up is counted in POSITIVE labels, not arrivals. Positives are what is
+    scarce -- under real latency some projects deliver fewer than 30 of them in
+    an entire stream -- and a quantile over an empty window is undefined. Below
+    `min_pos_for_threshold` collected probabilities the filter is inert and the
+    model is plain ORB, which is the safe direction. `filter_active_from`
+    records when it engaged, or None if it never did.
+    """
+
+    accepts_sample_id = True
+
+    def __init__(self, *args,
+                 mode: str = "fixed",
+                 tau: float = 0.25,
+                 q: float = 0.10,
+                 eps: float = 0.0,
+                 min_pos_for_threshold: int = 30,
+                 window: int = 500,
+                 rate_update: str = "observed",
+                 **kwargs):
+        super().__init__(*args, **kwargs)
+        if rate_update not in ("observed", "suppress"):
+            raise ValueError("rate_update must be 'observed' or 'suppress'")
+        if mode not in ("fixed", "quantile"):
+            raise ValueError("mode must be 'fixed' or 'quantile'")
+        self.mode = mode
+        self.tau = tau
+        self.q = q
+        self.eps = eps
+        self.min_pos_for_threshold = min_pos_for_threshold
+        self.rate_update = rate_update
+        self.p1_pos: deque[float] = deque(maxlen=window)
+        self.n_seen = 0
+        self.n_pos_seen = 0
+        self.n_filtered = 0
+        self.filter_active_from: int | None = None
+        self.fp_trace: list[dict] = []
+
+    def _threshold(self) -> float | None:
+        if self.mode == "fixed":
+            return self.tau
+        if len(self.p1_pos) < self.min_pos_for_threshold:
+            return None
+        return float(np.quantile(np.asarray(self.p1_pos, dtype=float), self.q))
+
+    def _suspect(self, p1: float, thr: float | None) -> bool:
+        if thr is None:
+            return False
+        # Non-strict in quantile mode: p1 saturates at exactly 0.0 on this
+        # corpus, and those are precisely the contradicted positives.
+        return p1 < thr if self.mode == "fixed" else p1 <= thr
+
+    def learn_one(self, x: np.ndarray, y: int, weight: float = 1.0,
+                  sample_id: int | None = None):
+        self.n_seen += 1
+        if y != 1:
+            super().learn_one(x, y, weight)
+            return
+
+        self.n_pos_seen += 1
+        p1 = self.predict_proba_one(x)
+        thr = self._threshold()
+        suspected = self._suspect(p1, thr)
+        self.p1_pos.append(float(p1))
+
+        if suspected:
+            if self.filter_active_from is None:
+                self.filter_active_from = self.n_seen
+            self.n_filtered += 1
+            self.fp_trace.append(dict(sample_id=sample_id, n_seen=self.n_seen,
+                                      p1=float(p1), thr=float(thr), filtered=True))
+            if self.rate_update == "observed":
+                # Distrust this label without telling the ensemble that
+                # positives are rarer than they are -- see the class docstring.
+                self.rate1 = self.decay * self.rate1 + (1.0 - self.decay) * 1.0
+            if self.eps > 0:
+                ks = self.rng.poisson(self.eps, size=self.n_estimators)
+                self._update_members(x, 1, ks, weight)
+            return
+
+        self.fp_trace.append(dict(sample_id=sample_id, n_seen=self.n_seen,
+                                  p1=float(p1),
+                                  thr=None if thr is None else float(thr),
+                                  filtered=False))
+        super().learn_one(x, y, weight)
+
+    def filter_stats(self) -> dict:
+        return dict(n_seen=self.n_seen, n_pos_seen=self.n_pos_seen,
+                    n_filtered=self.n_filtered,
+                    filter_rate=self.n_filtered / max(self.n_pos_seen, 1),
+                    filter_active_from=self.filter_active_from,
+                    mean_lambda_pos=float(np.mean(
+                        [t["lam"] for t in self.trace if t["y"] == 1])) if any(
+                        t["y"] == 1 for t in self.trace) else float("nan"))
