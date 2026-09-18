@@ -1,0 +1,2 @@
+test,margin,n,mean_diff,p_lower,p_upper,p_tost,equivalent_at_05
+TOST_fn_repair_vs_BSZZ,0.02,21,0.000666555712002407,0.0003037452697753906,0.0008001327514648438,0.0008001327514648438,True
