@@ -58,6 +58,11 @@ Per-variant quality is reported as precision, recall, F1, MCC and Cohen's κ, to
 
 Two observations dominate.
 
+![Phase 1 noise profile — precision and recall per variant, and the false-alarm against miss trade-off](../reports/figures/f1_phase1_noise.png)
+
+**Figure 4.1 — Reading the figure.** *Left:* each variant's precision (how much of what it flags is right) beside its recall (how much of what exists it catches). The dashed line marks the 27.2% precision ceiling no variant exceeds. *Right:* each variant plotted by false-alarm rate ρ₀ against miss rate ρ₁. **The points do not cluster — they spread along a diagonal**, which is the visual signature of a trade-off rather than of random error.
+
+
 **A precision ceiling at 27.2%.** No variant exceeds it. Between 72.8% and 81.5% of every commit any variant flags as defect-introducing is not one, judged against the reference. The two decades of refinement separating B-SZZ from RA-SZZ have not produced a variant whose positive predictions are more often right than wrong.
 
 **Noise is asymmetric, and the asymmetry differs by variant.** B-SZZ is false-positive-heavy: it flags 8,060 commits to capture 1,495 real ones, achieving the highest recall (0.641) at a false-alarm rate of 26.3%. L-SZZ and R-SZZ are the mirror image: false-alarm rates of 6.7% and 9.3%, but they miss 73.3% and 70.0% of real defect-introducing commits respectively. The annotation-graph family sits between.

@@ -121,6 +121,11 @@ Second, MA-SZZ's apparently harmful negative MCC (−0.0030) exists only under t
 
 **A number that reads as 0.41 under the field's standard protocol is 0.10 under a defensible one.**
 
+![The inflation ladder — from the literature's configuration to a defensible one](../reports/figures/f2_inflation_ladder.png)
+
+**Figure 5.1 — Reading the figure.** Each bar is the same prediction task measured under progressively more honest conditions, left to right. The grey bar is what the field's protocol reports; the rightmost bar is what survives realistic evaluation. **The height difference between the first and last bar is this thesis in one picture.**
+
+
 The ladder must be read as **descriptive, not causal**. Step 3 changes the learner, the regime and the evaluation window simultaneously. §5.3 explains why an earlier attempt to decompose it was withdrawn.
 
 ### 5.2.3 Result 1 — Temporal leakage inflates, in proportion to model capacity
@@ -158,6 +163,12 @@ Thirty-six comparisons: for each (model, label source, regime), the same predict
 
 **+0.2303 MCC is the largest effect in this thesis.** It is also the effect with the clearest methodological reading: a random forest trained on B-SZZ labels appears roughly two and a half times better at finding defects than it is, because it is being graded by the heuristic that taught it.
 
+
+
+![Self-scoring gap by variant and model](../reports/figures/f3_self_deception.png)
+
+**Figure 5.2 — Reading the figure.** Each bar is how far a model's apparent score *drops* when it stops being graded against the heuristic that trained it and is graded against the reference instead. Red is JITLine (high capacity), blue LApredict (low capacity). **The red bars are consistently much taller** — the gap is a capacity phenomenon.
+
 **The gap is model-dependent, and the pattern is diagnostic.** Under JITLine it is large and significant for every one of the six variants. Under LApredict it is significant only for B-SZZ, and for R-SZZ it is *negative*. A single-feature logistic regression cannot memorise a heuristic's idiosyncrasies; a high-capacity forest can. **The self-scoring gap is a capacity phenomenon, which is exactly what one would predict if the mechanism is a model fitting the error structure of its labels.**
 
 **The mechanism, tested directly.** That reading was, until recently, an interpretation the gap was *consistent with* rather than one it established. We therefore tested it: restricting to the 8,060 B-SZZ-flagged commits and asking whether a model can separate B-SZZ's false positives from its true positives using the same 14 features.
@@ -186,13 +197,24 @@ Under the prequential regime with real verification latency, ORB trained on refe
 
 All six intervals exclude zero; **five of six survive global Holm correction.**
 
+![Label source comparison under both prequential estimators](../reports/figures/f4_label_source.png)
+
+**Figure 5.3 — Reading the figure.** Green bars are the primary time-averaged estimator; grey the secondary terminal estimator. The reference labels are leftmost and tallest under both. Note that MA-SZZ dips below zero under the grey bars only — an artefact of the noisier statistic, not a model that actively harms.
+
+
 **The B-SZZ comparison is the most informative row.** Because the reference and B-SZZ share the same blame step and differ only in which lines seed it (§4.1.1), this contrast is a near-controlled ablation of tangled commits. Its value is **+0.041 MCC, CI [+0.022, +0.052]** — a defensible estimate of what knowing which lines in a fix actually fix the bug is worth to a deployed online learner.
 
 **The gap does not track recall.** The correlation between a variant's oracle-versus-variant gap and its recall is −0.18. L-SZZ (recall 0.267) and B-SZZ (recall 0.641) have almost identical gaps. Whatever drives the penalty, it is not simply how many defects the labeller finds — a point Chapter 6 returns to and resolves.
 
 **Estimator dependence, reported rather than buried.** Two summaries of the prequential MCC trajectory are available: a *terminal* value computed from a fading confusion matrix (effective window ≈ 100 commits), and the *time-averaged* mean of the trajectory. They agree on every comparison in this thesis except one: under the terminal estimator the B-SZZ row alone loses significance. The time-averaged estimator is treated as primary on a measured basis — roughly half the project-level variance (0.051 against 0.092) — and **not** by appeal to a standard. MCC is not a decomposable loss, so the prequential-with-fading construction does not extend to it directly; both summaries are ad-hoc, and this thesis says so rather than claiming canonical status for either.
 
+![Why the two estimators differ — variance and per-project comparison](../reports/figures/f7_estimators.png)
+
+**Figure 5.4 — Reading the figure.** *Left:* the spread of project-level scores under each estimator — the terminal distribution is visibly wider, which is the measured basis for preferring the time-averaged value. *Right:* each project plotted under both; points above the diagonal are projects where the time-averaged value is higher.
+
 ---
+
+## 5.3 An honest negative---
 
 ## 5.3 An honest negative: the batch-to-stream contrast could not be isolated
 
@@ -210,7 +232,54 @@ A full 2×2 factorial — learner (frozen / adaptive) crossed with labels (immed
 
 **Every contrast, including the interaction, has a confidence interval spanning zero.** With 21 paired projects, effects below roughly 0.04 MCC are not resolvable, and these fall in that range.
 
+![The confounded ladder step, and the 2×2 built to separate it](../reports/figures/f5_decomposition.png)
+
+**Figure 5.5 — Reading the figure.** *Left:* the descriptive ladder with the problematic step marked — learner, regime and evaluation window all change there at once. *Right:* the 2×2 that separates them, brighter meaning higher MCC. The cells are close enough that no contrast resolves.
+
+
 The honest conclusion is that **21 projects cannot resolve the decomposition**, and it is reported as unresolved. Chapter 6 returns to the latency question with a design that holds the learner fixed by construction, and there the question does become answerable.
+
+---
+
+## 5.3b An exploratory finding: the JITLine anomaly
+
+One result in the Phase 2 matrix runs against the chapter's argument and is reported because it does.
+
+Under chronological evaluation, **B-SZZ-trained JITLine (0.1324) beats reference-trained JITLine (0.1016)**, winning in **15 of 21 projects**. Training on demonstrably noisier labels produces a better model.
+
+![Per-project B-SZZ-minus-reference gap for JITLine](../reports/figures/f8_jitline_anomaly.png)
+
+**Figure 5.6 — Reading the figure.** One bar per project. Bars to the right are projects where training on *noisy* B-SZZ labels beat training on the reference labels; bars to the left are the reverse.
+
+**The phenomenon is real, not seed noise.** 97.7% of the between-project variance is genuine rather than seed variation; 16 of 21 projects show a gap more than two standard errors from zero; and it survives all four threshold-selection protocols tested.
+
+**But no project characteristic predicts where it happens.**
+
+![What predicts the anomaly — nothing does](../reports/figures/f9_anomaly_predictors.png)
+
+**Figure 5.7 — Reading the figure.** *Left:* the gap against how many defect examples a project supplies for training — if minority starvation were the mechanism, the points would slope clearly downward. *Right:* the gap against how many extra positive labels B-SZZ supplies. `opennlp` is annotated on both panels because it sits on the wrong side of the 1× line.
+
+| Predictor | Spearman ρ with gap | *p* |
+|---|---|---|
+| Training-half defect examples | −0.336 | 0.14 |
+| Total defect examples | −0.216 | 0.35 |
+| Label-arrival coverage | −0.175 | 0.45 |
+| Number of commits | −0.149 | 0.52 |
+| B-SZZ precision | −0.135 | 0.56 |
+| B-SZZ recall | −0.108 | 0.64 |
+| Enrichment (B-SZZ rate ÷ reference rate) | +0.066 | 0.78 |
+| Reference defect rate | −0.056 | 0.81 |
+| B-SZZ flag rate | −0.029 | 0.90 |
+
+**Not one reaches even uncorrected significance**, across 18 tests where roughly one would be expected to by chance.
+
+Two mechanisms point the right way without reaching significance. *Minority enrichment*: projects with few training defects gain +0.0479 against +0.0015 for positive-rich projects (Mann–Whitney *p* = 0.245). *Headroom*: B-SZZ helps most where the reference-trained model is already weak (reference MCC 0.093 in B-SZZ-win projects against 0.119 elsewhere, *p* = 0.137). These are not independent — fewer defects *causes* a weaker model — so they are one hypothesis rather than two.
+
+> **A counter-example the enrichment story cannot absorb.** `opennlp` is the second-largest B-SZZ win (+0.162 ± 0.010), yet B-SZZ flags a *lower* rate there than the reference — 6.91% against 8.38%, an enrichment of 0.82×. There is no extra minority mass to explain the gain.
+
+**It is a batch phenomenon only.** Under streaming, the reference beats B-SZZ in 18 of 21 projects; the anomaly does not carry over, which is consistent with Chapter 6's account of what an online learner is actually sensitive to.
+
+**How this is stated in the thesis:** the phenomenon is robust and worth reporting; the *mechanism* is not established, and no mechanism is claimed.
 
 ---
 

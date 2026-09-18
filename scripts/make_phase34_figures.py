@@ -284,46 +284,88 @@ def phase3():
 
 # ---------------------------------------------------------------- Phase 4
 def phase4():
-    res = pd.read_csv(P4 / "phase4_results.csv")
-    proj = res.groupby(["condition", "model", "project"])["mcc"].mean().reset_index()
+    """Phase 4 figures.
 
-    # main figure: grouped bars, models x key conditions
-    conds = [c for c in ["oracle", "BSZZ", "LSZZ", "injected_fn20"]
-             if c in res.condition.unique()]
-    models = ["OOB", "ORB", "NA(damp)", "NA(rescue)", "NA(damp+rescue)",
-              "NA(damp+rescue+lc)"]
-    fig, ax = plt.subplots(figsize=(7, 3.4))
-    width = 0.8 / len(models)
+    Three defects in the previous version are fixed here. The model list was
+    hardcoded to the RETIRED v1 ablation set, so the re-registered primary
+    NA(fp_filter) was silently omitted while two models that no longer exist
+    drew empty legend entries. The metric was the terminal estimator rather
+    than mcc_avg. And held-out projects were not excluded, mixing the tuning
+    set into a results figure. Models are now taken from the data, mcc_avg is
+    primary, and held-out rows are dropped first.
+    """
+    res = pd.read_csv(P4 / "phase4_results.csv")
+    if "held_out" in res.columns:
+        res = res[~res.held_out]
+    metric = "mcc_avg" if "mcc_avg" in res.columns else "mcc"
+    proj = res.groupby(["condition", "model", "project"])[metric].mean().reset_index()
+
+    order = ["OOB", "ORB", "NA(damp)", "NA(rescue)",
+             "NA(fp_filter)", "NA(fp_filter/suppress)"]
+    models = [m for m in order if m in set(proj.model)]
+    models += [m for m in sorted(set(proj.model)) if m not in models]
+
+    conds = [c for c in ["oracle", "BSZZ", "MASZZ", "AGSZZ", "LSZZ",
+                         "injected_fn20"] if c in set(res.condition)]
+
+    fig, ax = plt.subplots(figsize=(8.4, 3.6))
+    width = 0.8 / max(len(models), 1)
     for i, m in enumerate(models):
         vals, errs = [], []
         for c in conds:
-            g = proj[(proj.model == m) & (proj.condition == c)]["mcc"]
-            vals.append(g.mean()); errs.append(1.96 * g.sem())
+            g = proj[(proj.model == m) & (proj.condition == c)][metric]
+            vals.append(g.mean())
+            errs.append(1.96 * g.sem() if len(g) > 1 else 0.0)
         ax.bar(np.arange(len(conds)) + i * width, vals, width,
                yerr=errs, capsize=2, label=m)
     ax.set_xticks(np.arange(len(conds)) + 0.4 - width / 2)
-    ax.set_xticklabels(conds); ax.set_ylabel("MCC (oracle-scored)")
-    ax.set_title("Phase 4 ablation across label conditions")
+    ax.set_xticklabels(conds)
+    ax.set_ylabel(f"{metric} (oracle-scored)")
+    ax.set_title(f"Phase 4 ablation — {proj.project.nunique()} reporting projects "
+                 f"(3 held out)")
     ax.legend(fontsize=6, ncol=3)
+    ax.axhline(0, color="k", lw=0.6)
     fig.tight_layout(); fig.savefig(FIGS / "fig_p4_ablation.png"); plt.close(fig)
 
-    # per-condition NA(damp+rescue) vs ORB scatter (project-paired)
+    # Project-paired scatter for the registered primary against its baseline.
     piv = proj.pivot_table(index=["condition", "project"], columns="model",
-                           values="mcc").reset_index()
-    if {"NA(damp+rescue)", "ORB"} <= set(piv.columns):
-        fig, ax = plt.subplots(figsize=(3.6, 3.6))
-        for c, g in piv.groupby("condition"):
-            ax.scatter(g["ORB"], g["NA(damp+rescue)"], s=12, label=c, alpha=0.7)
+                           values=metric).reset_index()
+    if {"NA(fp_filter)", "ORB"} <= set(piv.columns):
+        fig, ax = plt.subplots(figsize=(3.9, 3.9))
+        for c, g in piv[piv.condition.isin(conds)].groupby("condition"):
+            ax.scatter(g["ORB"], g["NA(fp_filter)"], s=14, label=c, alpha=0.75)
         lims = [min(ax.get_xlim()[0], ax.get_ylim()[0]),
                 max(ax.get_xlim()[1], ax.get_ylim()[1])]
         ax.plot(lims, lims, "k--", lw=0.8)
-        ax.set_xlabel("ORB MCC"); ax.set_ylabel("NA(damp+rescue) MCC")
-        ax.set_title("Project-paired comparison"); ax.legend(fontsize=6)
+        ax.set_xlabel(f"ORB {metric}"); ax.set_ylabel(f"NA(fp_filter) {metric}")
+        ax.set_title("Project-paired: points above the line favour the filter")
+        ax.legend(fontsize=6)
         fig.tight_layout(); fig.savefig(FIGS / "fig_p4_paired_scatter.png")
         plt.close(fig)
 
-    print(f"Phase 4 figures -> {FIGS}; headline tests already in "
-          f"{P4}/phase4_headline_tests.csv")
+    # H3: does the benefit track each variant's false-positive count?
+    f = P4 / "phase4_h3_volume.csv"
+    if f.exists():
+        h3 = pd.read_csv(f)
+        fig, ax = plt.subplots(figsize=(4.6, 3.4))
+        ax.scatter(h3["n_false_positives"], h3["mean_gain"], s=42, zorder=3)
+        for r in h3.itertuples():
+            ax.annotate(r.variant, (r.n_false_positives, r.mean_gain),
+                        textcoords="offset points", xytext=(5, 4), fontsize=7)
+        if len(h3) > 2:
+            b = np.polyfit(h3["n_false_positives"], h3["mean_gain"], 1)
+            xs = np.linspace(h3["n_false_positives"].min(),
+                             h3["n_false_positives"].max(), 10)
+            ax.plot(xs, np.polyval(b, xs), "k--", lw=0.9)
+        ax.axhline(0, color="grey", lw=0.6)
+        ax.set_xlabel("false positives in the label source (Phase 1)")
+        ax.set_ylabel(f"NA(fp_filter) − ORB  ({metric})")
+        rho = h3["spearman_rho"].iloc[0] if "spearman_rho" in h3.columns else float("nan")
+        ax.set_title(f"H3: benefit against false-positive volume (ρ = {rho:.3f})")
+        fig.tight_layout(); fig.savefig(FIGS / "fig_p4_h3_volume.png"); plt.close(fig)
+
+    print(f"Phase 4 figures -> {FIGS}  (metric: {metric}, "
+          f"{proj.project.nunique()} reporting projects, models: {len(models)})")
 
 
 if __name__ == "__main__":

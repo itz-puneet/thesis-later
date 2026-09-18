@@ -77,6 +77,12 @@ The pipeline was restructured so that two bulky inputs — a 101 MB archive and 
 
 Reconstructing when a defect label would actually have become known requires the author date of each bug-fixing commit. These were extracted once from the cloned repositories and committed as a small table. For each variant, a commit's arrival time is the date of the fix that blamed it; the union across variants supplies the reference condition's arrival times.
 
+
+
+![Distribution of verification latency against the 90-day decision window](../reports/figures/f6_latency.png)
+
+**Figure 3.1 — Reading the figure.** How long after a commit its defect label actually becomes available. The red line marks the 90-day decision window; the orange dashed line the median, at 113 days. **Over half the distribution lies to the right of the red line.** Those labels arrive too late to be used inside the window, and are first delivered to the learner as *wrong clean labels*.
+
 **This is the study's central construct-validity threat and is declared here rather than in a footnote.** The published reference labels carry no native fix-to-inducing linkage, so the reference condition is blame-derived in *construction* and **SZZ-derived in *timing***. A coverage sensitivity analysis (67.8% → 100% linkage) bounds part of the exposure; it does not address the timing itself. Every streaming result in Chapters 5–7 inherits this threat.
 
 ---

@@ -134,7 +134,20 @@ Eighteen reporting projects.
 | H2b — on AG-SZZ | +0.0072 | [−0.0075, +0.0221] | 12/18 | 0.246 | 0.492 ✗ |
 | H3 — benefit tracks false-positive count | ρ = 0.714 | — | 6 variants | 0.055 | ✗ |
 
-**The gate passes; nothing else does.** Every confirmatory test points in the predicted direction and not one survives correction.
+**The gate passes; nothing else does.**
+
+![Phase 4 ablation across models and label conditions](../reports/figures/fig_p4_ablation.png)
+
+**Figure 7.1 — Reading the figure.** Six models across six label conditions, 18 reporting projects, error bars 95% intervals. Every noise-aware variant sits above the ORB baseline on every SZZ source, and the intervals overlap heavily — which is the visual form of "consistent in direction, not significant after correction". Note that `NA(damp)` (green), the arm the re-registration demoted, is the tallest bar on B-SZZ, MA-SZZ and AG-SZZ.
+
+![H3 — benefit against each source's false-positive count](../reports/figures/fig_p4_h3_volume.png)
+
+**Figure 7.2 — Reading the figure.** Each point is one SZZ variant, positioned by how many false positives Chapter 4 measured in it and by the filter's mean gain over the baseline. The dashed line is the fitted trend. **The ordering is broadly as predicted** — the gain rises with false-positive volume — but with six variants and one inversion (RA-SZZ), ρ = 0.714 does not reach significance.
+
+![Project-paired comparison of the filter against the baseline](../reports/figures/fig_p4_paired_scatter.png)
+
+**Figure 7.3 — Reading the figure.** One point per project per condition; points above the dashed diagonal are projects where the filter beat the baseline. The cloud sits slightly above the line and straddles it — a majority of projects improve, not enough of them to establish the effect.
+ Every confirmatory test points in the predicted direction and not one survives correction.
 
 The honest reading is narrow. The filter is **adoptable** — it does not damage clean labels, which is the property that gates deployment — but it is **not demonstrated to work**. Four independent tests agreeing in direction is worth a sentence; it is not a result, and this thesis does not treat it as one. H1's interval barely excludes zero and its raw *p* of 0.054 would not have survived even without correction.
 

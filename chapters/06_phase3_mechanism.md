@@ -76,6 +76,10 @@ ORB's internals are traced at every learning step: the Poisson rate λ applied t
 
 **Removing false positives recovers performance. Restoring false negatives recovers nothing** — and the interval on that null is tight, so it is an informative null rather than an underpowered one.
 
+![Repair experiment — what each surgical correction recovers](../reports/figures/fig_p3_repair_mcc_avg.png)
+
+**Figure 6.1 — Reading the figure.** Four bars, left to right: the reference labels, B-SZZ with its false positives removed, B-SZZ with its false negatives restored, and unrepaired B-SZZ. Error bars are 95% intervals over projects. **The FP-repaired bar is the tallest — above even the reference labels — while the FN-repaired bar sits level with unrepaired B-SZZ.** A bar that does not move is the result here, not a missing one.
+
 A striking detail: FP-repaired B-SZZ reaches a mean of 0.0962 against the reference labels' own 0.0835. **A precision-repaired heuristic outscores the reference itself** (+0.0127, 14/21, *p* = 0.089). For an online learner under verification latency, label precision is worth more than label completeness. This is an oracle-assisted upper bound, not an achievable labeller, and is framed as such.
 
 ### 6.2.2 The error-matched control changes what the result means
@@ -120,6 +124,11 @@ Three regimes, three nulls. **Even delivered instantly, the missing labels recov
 
 At matched dose, false-negative-heavy noise degrades the learner fastest — which appears to contradict §6.2.1 and does not.
 
+![ORB dose-response by noise profile](../reports/figures/fig_p3_dose_mcc_avg_uniform.png)
+
+**Figure 6.2 — Reading the figure.** Each line is one noise profile as the injected dose rises; shaded bands are 95% intervals. The FN-heavy line (blue) falls fastest and crosses zero — but see the caution below, which is the reason its steepness cannot be read as severity.
+
+
 **Dose is a fraction of all commits.** At equal dose the FN-heavy profile strips far more of the 8.5% minority class. Measured retention of genuine defect labels:
 
 | Profile | 0.05 | 0.10 | 0.15 | 0.20 | 0.25 | 0.30 |
@@ -137,13 +146,22 @@ An earlier version of this work concluded that latency does **not** compress sen
 
 Against a true no-latency control the picture reverses. Slopes are approximately **50% steeper** without latency, and the separation between the FN-heavy and FP-heavy profiles widens from −0.0158 (real) and −0.0174 (uniform) to **−0.0240** (none) — roughly 40% better separated. Mean MCC at the lowest dose is 0.0995 without latency against 0.0525 with it.
 
+![Dose slopes under three latency regimes](../reports/figures/fig_p3_latency_arms.png)
+
+**Figure 6.3 — Reading the figure.** Each line is a noise profile; the x-axis moves from no latency, through a fixed 90-day delay, to realistic delay. The lines both flatten and converge as latency increases — flattening is the compression, converging is the loss of discrimination between label sources.
+
 **Verification latency both lowers the ceiling and flattens the response to label quality.** Under deployment conditions, better labels buy less than they would in a batch setting — which is an independent reason to expect batch-measured noise studies to overstate what label cleaning can deliver.
 
 ### 6.2.6 The mechanism: the boost compensates for scarcity, not for correctness
 
 ORB handles class imbalance by oversampling: each arriving example is presented to each ensemble member *k* ~ Poisson(λ) times, with λ for the minority class set from the running observed class rate as λ₁ = (1 − r₁)/r₁, and further amplified when the model's recent predictions are biased against the minority class.
 
-The instrumentation makes the consequence measurable. The mean λ applied to defect-labelled arrivals is an almost perfect inverse function of how many such labels the stream delivers:
+The instrumentation makes the consequence measurable.
+
+![Boost rate against delivered defect-label supply](../reports/figures/fig_p3_lambda_compensation.png)
+
+**Figure 6.4 — Reading the figure.** *Left:* the learner's oversampling rate against injected noise dose, one line per profile — the profiles separate, so λ is not a function of dose alone. *Right:* the same rate against how many defect labels the stream actually delivers. **The right panel collapses onto a single curve**, which is the finding: λ is a function of label supply and of nothing else.
+ The mean λ applied to defect-labelled arrivals is an almost perfect inverse function of how many such labels the stream delivers:
 
 - **Spearman ρ = −1.000** across profiles at matched dose
 - ρ = −0.70 to −0.87 within each profile
