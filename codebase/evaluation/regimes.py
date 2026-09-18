@@ -113,6 +113,17 @@ def prequential_latency(
       * defect-labeled, fix_ts >  t_i+W: y=0 at t_i+W  THEN  y=1 at fix_ts
       * defect-labeled, fix_ts unknown:  y=0 at t_i+W only (label never arrives
         -- honest: without a linked fix, the pipeline would never learn it)
+
+    latency_mode="uniform" delays EVERY label by exactly W. It is a fixed-delay
+    control, not a no-latency control: it removes schedule variation, not delay.
+
+    latency_mode="none" is the true no-latency control -- every label, positive
+    and negative alike, is delivered immediately after the commit is scored, so
+    the run is plain test-then-train. This is the arm required to test whether
+    latency *masks* label quality; the uniform arm can only test sensitivity to
+    the arrival schedule. Setting fix_ts on positives alone does NOT produce it:
+    negative labels are 91.5% of this corpus and are delayed unconditionally
+    below unless this mode is used.
     """
     eval_label_col = eval_label_col or label_col
     d = df.sort_values("author_ts").reset_index(drop=True)
@@ -136,7 +147,7 @@ def prequential_latency(
                 f"latency_mode='uniform' explicitly (and report it as fixed-delay)."
             )
         fix_ts = d[col].to_numpy(dtype=float)
-    elif latency_mode == "uniform":
+    elif latency_mode in ("uniform", "none"):
         fix_ts = np.full(n, np.nan)
     else:
         raise ValueError(f"unknown latency_mode: {latency_mode}")
@@ -155,7 +166,13 @@ def prequential_latency(
         pred = online_model.predict_one(X[i])
         tracker.update(int(y_eval[i]), int(pred), ts=now)
 
-        if y_train[i] == 1 and latency_mode == "real" and np.isfinite(fix_ts[i]):
+        if latency_mode == "none":
+            # No verification latency at all: the label for commit i is
+            # available the moment it has been scored. Pushing at `now` means
+            # it is consumed by the drain at the top of the next iteration,
+            # which is exactly test-then-train.
+            heapq.heappush(pending, (now, (tie := tie + 1), i, int(y_train[i])))
+        elif y_train[i] == 1 and latency_mode == "real" and np.isfinite(fix_ts[i]):
             if fix_ts[i] <= now + W:
                 heapq.heappush(pending, (fix_ts[i], (tie := tie + 1), i, 1))
             else:

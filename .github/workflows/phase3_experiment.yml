@@ -97,6 +97,12 @@ jobs:
           if [ "${{ inputs.stage }}" = "smoke" ]; then FAST_FLAG="--fast"; fi
           python -m experiments.run_phase3_noise $FAST_FLAG
 
+      - name: Run Phase 3 addendum (error-matched repair, ceilings, no-latency arm)
+        run: |
+          FAST_FLAG=""
+          if [ "${{ inputs.stage }}" = "smoke" ]; then FAST_FLAG="--fast"; fi
+          python -m experiments.run_phase3_addendum $FAST_FLAG
+
       - name: Generate Phase 3 figures and paired statistics
         run: python scripts/make_phase34_figures.py --phase 3
 
@@ -106,7 +112,9 @@ jobs:
           import pandas as pd
           from pathlib import Path
           p3 = Path("results/phase3")
-          for name in ["phase3_slopes.csv", "phase3_repair_stats.csv"]:
+          for name in ["phase3_slopes.csv", "phase3_repair_stats.csv",
+                       "phase3_addendum_stats.csv", "phase3_marginal_value.csv",
+                       "phase3_tost.csv"]:
               f = p3 / name
               if f.exists():
                   print(f"\n===== {name} =====")
