@@ -449,6 +449,106 @@ python scripts/make_phase34_figures.py --phase 4
 | ✓/✗ | ✓/✗ | **drop** | Adoptability fails — raise `min_confidence`/warmup, rerun the oracle arm only; if it persists, the damp path goes to Backup A (filtering) |
 | ✗ | ✗ | flat | Characterised negative: confidence signals too weak under latency. Phases 1–3 stand alone; Ch. 7 becomes "when and why label-confidence fails in streams" |
 
+## Phase 4 results — run `35320110525`, commit `f70884a`
+
+18 reporting projects (commons-scxml, opennlp and commons-math held out),
+6 models x 8 label conditions x 10 seeds, at the Step C frozen configuration.
+
+### The pre-registered verdict: ND passes, everything else does not
+
+| Test | HL | 95% CI | Projects | p | **Holm** |
+|---|---|---|---|---|---|
+| **ND** oracle, non-degradation | −0.0001 | [−0.0091, +0.0081] | 5/18 | 0.807 | **PASS** |
+| H1 fp_filter > ORB on BSZZ | +0.0166 | [+0.0009, +0.0328] | 12/18 | 0.054 | 0.215 ✗ |
+| H2a on MASZZ | +0.0110 | [−0.0005, +0.0235] | 13/18 | 0.074 | 0.221 ✗ |
+| H2b on AGSZZ | +0.0072 | [−0.0075, +0.0221] | 12/18 | 0.246 | 0.492 ✗ |
+| H3 gain ~ FP count | ρ = 0.714 | — | 6 variants | 0.055 | ✗ |
+
+**This is the plan's "characterised negative" branch.** Every confirmatory test
+points the predicted way and not one reaches significance after correction. The
+filter is *adoptable* — it does not damage clean labels, which is the bar that
+actually gates deployment — but it is **not demonstrated to work**. Write it
+that way; the direction-consistency across four independent tests is worth a
+sentence, and it is not a substitute for a result.
+
+**Held-out optimism, measured.** The tuning set gave BSZZ +0.0451; the
+reporting projects give **+0.0167** — an optimism factor of 2.7x. This is the
+cleanest possible justification for having held three projects out, and it
+belongs in the methodology chapter as evidence the protocol worked.
+
+### MP probe: the registered prediction is REFUTED, 0/6
+
+Rescue was predicted to be ≤ 0 on every SZZ source. It is **positive on all
+six**, and significant on three:
+
+| Source | NA(rescue) − ORB | 95% CI | Projects | p |
+|---|---|---|---|---|
+| LSZZ | **+0.0166** | [+0.0057, +0.0289] | 13/18 | 0.006 |
+| MASZZ | **+0.0142** | [+0.0013, +0.0266] | 12/18 | 0.027 |
+| BSZZ | **+0.0116** | [+0.0033, +0.0262] | 13/18 | 0.024 |
+| AGSZZ | +0.0117 | [−0.0007, +0.0270] | 13/18 | 0.090 |
+| RSZZ | +0.0068 | [−0.0033, +0.0202] | 12/18 | 0.246 |
+| RASZZ | +0.0002 | [−0.0164, +0.0213] | 8/18 | 1.000 |
+
+The registration said plainly: *if rescue helps, the mechanism account needs
+revision.* It helps. **The revision is owed and must be written.**
+
+**The candidate reconciliation, and why it is not yet a claim.** Phase 3's
+FN-repair restored the *oracle-known* missing positives. Rescue adds
+*model-confident* positives, which are a different set: it is closer to
+self-training on high-confidence commits than to label correction. So "restoring
+the labels SZZ missed does nothing" and "adding confidently-predicted positives
+helps" are not in contradiction — but they are only reconciled if the benefit
+comes from positive *supply* rather than positive *accuracy*.
+
+**That explanation was tested and did not hold.** Spearman between a
+condition's delivered positive supply and the filter-minus-rescue advantage is
+**ρ = +0.357, p = 0.385** over 8 conditions. The supply account is a hypothesis
+for Phase 5, not a finding. Say so.
+
+### Exploratory: NA(damp) leads, but mostly not significantly
+
+NA(damp) is numerically best on 6 of 8 conditions, including BSZZ (0.0874 vs
+ORB 0.0551) and oracle (0.1082). It was **not** the registered primary, so
+every one of these contrasts is exploratory.
+
+Corrected across the 21 exploratory contrasts, **NA(damp) > ORB survives global
+Holm on 1 of 7 sources** — BSZZ, HL +0.0329, CI [+0.0194, +0.0456], 15/18,
+p_holm 0.0040. No NA(damp)-vs-NA(fp_filter) contrast survives. The honest
+statement is that damp leads numerically and is established only on BSZZ.
+
+**The uncomfortable part, stated plainly.** The v2 registration moved the
+headline to fp_filter on the strength of Phase 3's repair result, and the
+pre-existing damp arm from the retired v1 outperforms it on every source. The
+re-registration was correctly motivated and correctly timed; it still bet on
+the wrong arm. Chapter 7 should say that, because the commit history shows it
+either way and the reasoning was sound at the time.
+
+### Why the oracle-assisted repair did not transfer
+
+Phase 3's FP-repair used oracle knowledge to remove exactly the wrong labels
+and recovered +0.0402. The train-time heuristic that approximates it recovers
++0.0167 and does not survive correction. The gap is the cost of not knowing
+which positives are wrong: at the frozen setting the filter removes 30% of
+positives on BSZZ, and it cannot tell a false positive from a commit the model
+has not learned yet. `phase4_filter_stats.csv` shows it filtering 15% even on
+the oracle arm, where there is nothing to remove.
+
+**Positive labels are desperately scarce under latency** — a mean of **75 per
+project** on the oracle arm across an entire stream. Any intervention that
+removes positives is working against that scarcity, and ORB's boost rate rises
+to compensate: mean λ reaches **62** on the oracle arm against 13 on BSZZ.
+
+### R1: null, in both directions
+
+observed − suppress: BSZZ HL −0.0016, CI [−0.0075, +0.0045], p = 0.61; oracle
+HL +0.0002, p = 0.51. The registered prediction is not supported, and neither
+is its converse. λ does rise when positives are suppressed — that coupling is
+real and measured — but it has no detectable effect on performance at this
+filter rate. Report as a clean null.
+
+---
+
 ## Step 6 — Meeting 4 + write-up (2–3 weeks)
 
 Ablation table, paired scatter, recovery framing against Phase 3's dose curves, limitations (fix_ts coverage confound + imputation bound, single benchmark family, LC cap, and **the estimator-dependence of the Phase 2 BSZZ comparison**). Then Ch. 6–7 straight from the CSVs.
