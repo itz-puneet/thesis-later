@@ -42,6 +42,11 @@ The review package these files arrived in was written against commit `05a8b3a` a
 > negatives recovers **nothing** (−0.0012, CI [−0.0093, +0.0080], 8/21). See
 > §Phase 3 results below. The review package's "FN-starvation" framing should
 > not appear anywhere in the thesis.
+>
+> **The addendum then qualified this — read §Phase 3 addendum before quoting the
+> number.** At *matched label mass* the FP advantage disappears, so this is a
+> claim about how many errors SZZ makes, not about which error is worse per
+> label.
 
 ---
 
@@ -149,13 +154,14 @@ p = 1.000, all CIs spanning zero). This is why the runner had to be fixed to
 record both estimators before the run; on the terminal value alone Phase 3
 would have produced a chapter of nulls.
 
-### Q2 — Compression: not supported
+### Q2 — Compression: WITHDRAWN as stated; the addendum reverses it
 
-Real-arm and uniform-arm slopes are within noise of each other
-(fn_heavy −0.0363 vs −0.0370; fp_heavy −0.0204 vs −0.0197 per 10% dose). The
-"latency masks label quality" premise does **not** survive the cleanest test
-available, in which the learner is held fixed by construction. Report this as
-a negative result.
+The original conclusion read: *"real-arm and uniform-arm slopes are within noise
+of each other, so the latency-masking premise does not survive."* **That was
+wrong, and the error was in the design, not the arithmetic.** The `uniform` arm
+delays *every* label by the full 90-day window; it removes schedule variation,
+not delay. Comparing it against the `real` arm tests sensitivity to the arrival
+*schedule* and cannot test masking at all. See §Phase 3 addendum, Q2.
 
 ### Q1 — Dose-response, with a design caveat that must be stated
 
@@ -191,6 +197,114 @@ the interesting part:** per *label flipped*, FN noise is more damaging, because
 positives are scarce; per *error actually present in real SZZ output*, FP noise
 dominates, because BSZZ produces eight times more of them. Both belong in the
 chapter.
+
+---
+
+## Phase 3 addendum — run `35306571919`, commit `3d1a6f1`
+
+Four causal conditions from the supervisor's `Deep_Review_Phase3.md`, plus a
+pre-declared equivalence test. **Two of the three headline Phase 3 conclusions
+are changed by it.** Implementation notes and the four corrections made to the
+shipped script are in the module docstring of `experiments/run_phase3_addendum.py`.
+
+### A. Error-matched repair — the FP advantage is a MASS effect
+
+BSZZ carries 6,565 false positives against 837 false negatives. Correcting the
+same label mass on both sides:
+
+| Contrast | HL | 95% CI | Projects | Holm (family) |
+|---|---|---|---|---|
+| FP-repair (matched, ~40/project) vs BSZZ | +0.0024 | [−0.0045, +0.0089] | 11/21 | 0.864 |
+| FP-repair (matched) vs FN-repair (all) | +0.0050 | [−0.0093, +0.0176] | 14/21 | 0.864 |
+| *(reference)* FP-repair (all 6,565) vs BSZZ | +0.0402 | [+0.0217, +0.0520] | 17/21 | 0.0010 |
+
+**Removing 837 false positives does nothing. Removing 6,565 recovers +0.04.**
+At equal corrected mass the two error types are statistically indistinguishable.
+
+The marginal-value curves agree: FP-repair is roughly linear at
+**+0.147 MCC per 1,000 labels corrected**, so the ~40 FPs per project that
+FN-repair could ever match predicts ≈ +0.006 — within noise of the +0.0024
+measured. Nothing is inconsistent; the effect is simply proportional to volume.
+
+**What survives and what does not.** "SZZ's false positives are what cost the
+learner performance, because there are eight times more of them" — supported.
+"A false positive is individually more harmful than a false negative" — **not
+supported**, and it must not be written. The supervisor's §1.1 was right that a
+flag is not a control.
+
+### C. Delivery ceiling — the FN null is about content, not scheduling
+
+Each ceiling condition against its own anchor, so the contrast isolates the
+restoration rather than the acceleration:
+
+| Contrast | HL | 95% CI | Projects |
+|---|---|---|---|
+| FN-repair immediate vs BSZZ immediate | +0.0037 | [−0.0032, +0.0106] | 12/21 |
+| FN-repair at t+W vs BSZZ at t+W | −0.0016 | [−0.0073, +0.0043] | 6/21 |
+| BSZZ immediate vs BSZZ realistic | +0.0140 | [−0.0006, +0.0334] | 14/21 |
+
+**Even delivered instantly, restoring the false negatives recovers nothing.**
+Three independent delivery regimes, three nulls. §1.2's alternative explanation
+— that the labels cannot arrive in time to matter — is ruled out. The claim is
+about the content of those labels, not their schedule.
+
+### TOST — the null is now evidence of absence
+
+Pre-declared margin ±0.02 MCC (half the measured FP-repair effect), Wilcoxon
+TOST on the original FN-repair contrast: **p = 0.0008, n = 21, equivalent.**
+FN-restoration is statistically *equivalent to no repair*. This is the
+affirmative form the conclusion needs, and it is what §1.4 asked for.
+
+### D. No-latency arm — latency DOES compress, by roughly a third
+
+`regimes.py` gained a real `latency_mode="none"` that delivers every label
+immediately after scoring. Dose slopes, `mcc_avg` per 10% dose, non-degenerate
+cells:
+
+| Profile | **none** | uniform | real |
+|---|---|---|---|
+| fn_heavy | **−0.0553** | −0.0370 | −0.0363 |
+| mid | **−0.0384** | −0.0225 | −0.0247 |
+| fp_heavy | **−0.0313** | −0.0196 | −0.0205 |
+| symmetric | **−0.0286** | −0.0177 | −0.0222 |
+| *fn_heavy − fp_heavy separation* | **−0.0240** | −0.0174 | −0.0158 |
+
+Slopes are ~50% steeper without latency and the profiles separate ~40% more
+widely. Mean `mcc_avg` at the lowest dose is 0.0995 with no latency against
+0.0596 uniform and 0.0525 real. **Verification latency both lowers the ceiling
+and flattens the response to label quality** — the masking premise holds. The
+supervisor registered this prediction in §1.3 and it was confirmed.
+
+### The mechanism figure
+
+`fig_p3_lambda_compensation.png`, with `phase3_lambda_compensation.csv`.
+ORB's Poisson boost rate to positive-labelled arrivals is a near-perfect
+inverse of how many positives the stream still delivers: **Spearman ρ = −1.000**
+across profiles at matched dose, −0.70 to −0.87 within each.
+
+State it as scarcity, not as FN compensation:
+
+> **ORB's boost compensates for positive-label scarcity, not for false
+> negatives — it cannot tell the difference.** It amplifies whatever positives
+> arrive, and amplifies them hardest exactly when they are rarest. That is why
+> false-positive mass is what the learner cannot survive: the mechanism that
+> corrects imbalance is the mechanism that magnifies wrong positives.
+
+One correction to the earlier write-up of the dose grid. At `fn_heavy` dose 0.30
+the stream does **not** run out of positive labels — it carries ~204 of them,
+**every one false**, because the LSZZ profile's ρ₀ = 0.067 also flips negatives
+upward and the majority class is large enough to supply plenty. The learner in
+that regime is poisoned, not starved, and it receives the *highest* boost rate
+in the entire grid. `n_pos_retained` (true positives kept) is what goes to zero;
+`n_pos_noisy` rises.
+
+### Risk this creates for Phase 4
+
+Because λ is a strict inverse of delivered positive supply, **`fp_filter` fights
+its own mechanism**: every positive it suppresses lowers the delivered positive
+rate, which raises λ for the survivors. With filtered positives never learned,
+their p₁ stays low and they are filtered again. Register this as a named risk
+with an instrumented prediction before the grid runs, not after.
 
 ---
 

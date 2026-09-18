@@ -22,7 +22,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.stats import wilcoxon
+from scipy.stats import spearmanr, wilcoxon
 
 from codebase.evaluation.metrics import paired_effect
 from experiments.run_phase2_impact import _holm
@@ -128,6 +128,84 @@ def repair_stats(rep: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def fig_lambda_compensation():
+    """ORB's boost rate against the number of positive labels actually delivered.
+
+    This is the mechanism figure. lambda is the Poisson rate ORB applies to
+    positive-labelled arrivals; across profiles at matched dose it is a near
+    perfect inverse of how many positives the stream still carries
+    (Spearman rho = -1.000). The boost compensates for positive-label
+    SCARCITY, and cannot distinguish a scarce-but-correct stream from a
+    scarce-and-wrong one -- which is why false positives are amplified
+    hardest exactly where they do most damage.
+    """
+    f = P3 / "phase3_mechanism.csv"
+    if not f.exists():
+        return
+    m = pd.read_csv(f)
+    if "n_pos_noisy" not in m.columns or "mean_lam_pos_labels" not in m.columns:
+        return
+    u = m[m.latency == "uniform"]
+    agg = (u.groupby(["profile", "dose"])
+             .agg(pos=("n_pos_noisy", "mean"),
+                  lam=("mean_lam_pos_labels", "mean"),
+                  retained=("n_pos_retained", "mean")).reset_index())
+
+    fig, axes = plt.subplots(1, 2, figsize=(9, 3.4))
+    for prof, g in agg.groupby("profile"):
+        g = g.sort_values("dose")
+        axes[0].plot(g["dose"], g["lam"], marker="o", label=prof)
+        axes[1].plot(g["pos"], g["lam"], marker="o", label=prof)
+    axes[0].set_xlabel("injected noise dose")
+    axes[0].set_ylabel(r"mean $\lambda$ to positive-labelled arrivals")
+    axes[0].set_title("Boost rate by dose")
+    axes[1].set_xlabel("positive labels delivered (mean per project)")
+    axes[1].set_title(r"Boost rate is an inverse function of positive supply")
+    axes[1].legend(fontsize=7)
+    fig.suptitle("ORB's boost compensates for scarcity, not for correctness", y=1.03)
+    fig.tight_layout()
+    fig.savefig(FIGS / "fig_p3_lambda_compensation.png", bbox_inches="tight")
+    plt.close(fig)
+
+    r, _ = spearmanr(agg["pos"], agg["lam"])
+    agg["spearman_rho_pos_vs_lambda"] = round(float(r), 4)
+    agg.round(4).to_csv(P3 / "phase3_lambda_compensation.csv", index=False)
+
+
+def fig_latency_arms():
+    """Dose slopes under all three latency regimes, including the true control."""
+    nl = P3 / "phase3_dose_nolatency.csv"
+    dr = P3 / "phase3_dose_response.csv"
+    if not (nl.exists() and dr.exists()):
+        return
+    a, b = pd.read_csv(nl), pd.read_csv(dr)
+    frames = [("none", a)] + [(k, b[b.latency == k]) for k in ["uniform", "real"]]
+    rows = {}
+    for lab, d in frames:
+        if d.empty or "n_pos_retained" not in d.columns:
+            continue
+        ok = d.groupby(["profile", "dose"])["n_pos_retained"].mean()
+        live = ok[ok > 0].reset_index()[["profile", "dose"]]
+        for prof, g in d.merge(live, on=["profile", "dose"]).groupby("profile"):
+            ag = g.groupby("dose")["mcc_avg"].mean()
+            rows[(prof, lab)] = float(np.polyfit(ag.index, ag.values, 1)[0] * 0.10)
+    if not rows:
+        return
+    t = pd.Series(rows).unstack()
+    t = t[[c for c in ["none", "uniform", "real"] if c in t.columns]]
+    fig, ax = plt.subplots(figsize=(5.2, 3.2))
+    t.T.plot(marker="o", ax=ax)
+    ax.set_ylabel("MCC lost per 10% dose"); ax.set_xlabel("latency regime")
+    ax.set_title("Latency compresses label-noise sensitivity")
+    ax.legend(fontsize=7)
+    fig.tight_layout()
+    fig.savefig(FIGS / "fig_p3_latency_arms.png", bbox_inches="tight")
+    plt.close(fig)
+    t.round(4).to_csv(P3 / "phase3_latency_arm_slopes.csv")
+    print("\n=== Dose slopes by latency regime (mcc_avg per 10% dose) ===")
+    print(t.round(4).to_string())
+
+
 def phase3():
     dr = pd.read_csv(P3 / "phase3_dose_response.csv")
     rep = pd.read_csv(P3 / "phase3_repair.csv")
@@ -145,6 +223,8 @@ def phase3():
         if metric in rep.columns:
             fig_repair(rep, metric)
     stats = repair_stats(rep)
+    fig_lambda_compensation()
+    fig_latency_arms()
 
     # Degradation-slope table: metric lost per 10% dose, by profile x latency.
     #
