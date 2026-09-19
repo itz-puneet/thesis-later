@@ -1,12 +1,12 @@
 # Chapter 3 — Research Design
 
-This chapter states the design of the study as a whole: how the four phases fit together, what data they run on, how the SZZ variants were produced, what is measured and with what statistical protocol, and which validity threats were anticipated in advance rather than discovered afterwards.
+This chapter states the design of the study as a whole: how the five phases fit together, what data they run on, how the SZZ variants were produced, what is measured and with what statistical protocol, and which validity threats were anticipated in advance rather than discovered afterwards.
 
 The design has one organising commitment. **Every claim is a paired comparison at the project level, and every reported number is regenerable from committed inputs by a named script.** The remainder of this chapter is largely an elaboration of what that commitment required.
 
 ---
 
-## 3.1 The four-phase pipeline
+## 3.1 The phase pipeline
 
 Each phase consumes the previous phase's output, and the dependencies are data dependencies rather than narrative ones.
 
@@ -34,8 +34,9 @@ Each phase consumes the previous phase's output, and the dependencies are data d
 - **Phase 2** trains models on each label source and evaluates them under four regimes of increasing realism, against two scoring conventions. Output: the inflation ladder and the label-source penalty.
 - **Phase 3** uses Phase 1's flip rates to inject calibrated noise into clean labels, and separately repairs real SZZ labels one error type at a time. Output: which error type costs the learner, and the mechanism.
 - **Phase 4** builds and pre-registers a method targeting whatever Phase 3 identifies.
+- **Phase 5** registers the alternative that Phase 4's exploratory analysis surfaced, and tests it on the noise-injection grid — data generated *after* the registration was committed, so the hypothesis is not tested on the sample that produced it.
 
-**The dependency from Phase 3 to Phase 4 is genuine and was exercised.** Phase 4's original design targeted false negatives. Phase 3 showed that error costs nothing, and Phase 4's registration was rewritten before its first run. Had the phases been planned in parallel rather than in sequence, that correction could not have happened.
+**The dependencies between phases are genuine and were exercised twice.** Phase 4's original design targeted false negatives; Phase 3 showed that error costs nothing, and Phase 4's registration was rewritten before its first run. Phase 5 exists because Phase 4's exploratory analysis surfaced a better-performing arm that could not legitimately be promoted on the data that surfaced it. Had the phases been planned in parallel rather than in sequence, neither correction could have happened.
 
 ---
 
@@ -148,7 +149,7 @@ The global column exists because the families were defined *during* analysis, no
 
 **Phases 1–3 are exploratory.** Their hypotheses were formed during analysis and every result is labelled accordingly; the global multiplicity correction is the sensitivity analysis that makes them defensible without a pre-registration.
 
-**Phase 4 alone is pre-registered**, with hypotheses, primary model, acceptance bar and correction committed to version control before its first run. Its registration was revised once, after Phase 3 refuted the hypothesis it was built on and while Phase 4 still had zero results — the only point at which revision is legitimate. Chapter 7 §7.1 gives the full account.
+**Phases 4 and 5 are pre-registered**, with hypotheses, primary model, acceptance bar and correction committed to version control before each first run. Phase 4's registration was revised once, after Phase 3 refuted the hypothesis it was built on and while Phase 4 still had zero results — the only point at which revision is legitimate. Phase 5's registration is separate, and was deliberately aimed at data that did not exist when it was written. Chapter 7 §7.1 and §7.5 give the full accounts.
 
 ---
 
@@ -178,6 +179,7 @@ Every number in Chapters 4–7 is regenerable from committed inputs by a named s
 | 5 | `experiments/run_phase2_impact.py` | regime × label-source matrix, 74 tests |
 | 6 | `experiments/run_phase3_noise.py`, `run_phase3_addendum.py` | dose curves, repair statistics, λ traces |
 | 7 | `experiments/run_phase4_tuning.py`, `run_phase4_na_orb.py` | frozen configuration, registered tests |
+| 7 | `experiments/run_phase5_damping.py` | Phase 5 registration and its five registered tests |
 | Appendix | `experiments/run_robustness_checks.py` | project table, floor sensitivity, mechanism test |
 
 Runtime dependencies are pinned to the exact versions every result was computed with, so a runner reproduces the local environment rather than approximating it. The label-consistency gate runs before every experiment in CI.

@@ -1,0 +1,38 @@
+/* Print stylesheet for the assembled thesis and the synthesis document.
+   Kept in the repository rather than a scratch directory so the PDF build is
+   reproducible: an earlier build silently produced a one-page PDF when a
+   scratch copy of this file had been cleaned up between sessions. */
+@page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+html { font-size: 10.5pt; }
+body {
+  font-family: "Charter", "Georgia", "Times New Roman", serif;
+  line-height: 1.5; color: #14171c; max-width: none; margin: 0;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+h1, h2, h3, h4 { font-family: "Helvetica Neue", Arial, sans-serif; line-height: 1.25; color: #0c1b33; }
+h1 { font-size: 1.9rem; margin: 0 0 .3em; border-bottom: 3px solid #0c1b33; padding-bottom: .25em; }
+h2 { font-size: 1.35rem; margin: 1.6em 0 .5em; border-bottom: 1px solid #c5cdd8; padding-bottom: .2em;
+     page-break-after: avoid; break-after: avoid; }
+h3 { font-size: 1.08rem; margin: 1.3em 0 .4em; color: #1d3557; page-break-after: avoid; break-after: avoid; }
+h4 { font-size: .98rem; margin: 1.1em 0 .35em; color: #38495e; page-break-after: avoid; break-after: avoid; }
+p { margin: .5em 0; orphans: 3; widows: 3; }
+table { border-collapse: collapse; width: 100%; margin: .9em 0; font-size: .86rem;
+        page-break-inside: avoid; break-inside: avoid; }
+th, td { border: 1px solid #ccd4de; padding: 5px 8px; text-align: left; vertical-align: top; }
+th { background: #eef2f7; font-family: "Helvetica Neue", Arial, sans-serif; font-weight: 600; font-size: .82rem; }
+tbody tr:nth-child(even) { background: #fafbfd; }
+blockquote { margin: .9em 0; padding: .6em 1em; background: #f4f7fb;
+             border-left: 4px solid #2a5d8f; page-break-inside: avoid; break-inside: avoid; }
+blockquote p { margin: .3em 0; }
+code { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: .84em;
+       background: #eef1f5; padding: 1px 4px; border-radius: 3px; }
+pre { background: #f6f8fa; border: 1px solid #dde3ea; border-radius: 4px; padding: .7em .9em;
+      overflow-x: auto; font-size: .8rem; page-break-inside: avoid; break-inside: avoid; }
+pre code { background: none; padding: 0; }
+img { max-width: 100%; height: auto; display: block; margin: .8em auto;
+      page-break-inside: avoid; break-inside: avoid; }
+hr { border: none; border-top: 1px solid #d6dde6; margin: 1.6em 0; }
+a { color: #1d4e89; text-decoration: none; }
+strong { color: #0c1b33; }
+ul, ol { margin: .5em 0; padding-left: 1.4em; }
+li { margin: .22em 0; }

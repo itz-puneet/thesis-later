@@ -1,6 +1,6 @@
 # Chapter 8 — Discussion
 
-The four phases were designed to answer four questions in sequence. In the event, two of them returned answers the design did not anticipate, and one returned a negative. This chapter reads the four results as a single argument, states what follows for researchers and for practitioners, and gives the full treatment of validity threats.
+Five phases were designed to answer four questions in sequence. In the event, two returned answers the design did not anticipate, one returned a negative, and the last overturned the explanation for its own positive result. This chapter reads them as a single argument, states what follows for researchers and for practitioners, and gives the full treatment of validity threats.
 
 ---
 
@@ -14,7 +14,7 @@ The four phases were designed to answer four questions in sequence. In the event
 
 **RQ3 — Through what mechanism does noise degrade an online learner?** Through amplification rather than starvation. Repairing B-SZZ's false positives recovers **+0.040 MCC**; restoring its false negatives is *equivalent to no repair* (TOST *p* = 0.0008) under realistic, immediate and at-window delivery alike. The mechanism is measurable: ORB's oversampling rate is a near-perfect inverse of delivered defect-label supply (**ρ = −1.000**). The boost compensates for label *scarcity* and cannot distinguish a scarce-but-correct stream from a scarce-and-wrong one.
 
-**RQ4 — Can a learner recover that loss without the reference?** Not demonstrably. The pre-registered non-degradation gate passes, so the intervention is adoptable; every confirmatory test points the predicted way and **none survives correction**. The oracle-assisted repair recovers +0.040; the deployable approximation recovers +0.017 and is not significant.
+**RQ4 — Can a learner recover that loss without the reference?** Not by identifying wrong labels. Phase 4's filter is adoptable — the non-degradation gate passes — but every confirmatory test points the predicted way and **none survives correction**; the oracle-assisted repair recovers +0.040 against the approximation's +0.017. Phase 5 then registered the damping alternative on new data and confirmed it beats both baseline and filter, **but a control showed the entire benefit is the absence of oversampling-rate boosting rather than any defence**: plain online bagging matches every noise-aware variant and beats the boosted learner in **18 of 18 projects** under false-positive-heavy noise. So the answer is *no* to identifying wrong labels and *yes* to something cheaper — stop amplifying them.
 
 ### 8.1.2 The noise pipeline, read end to end
 
@@ -26,7 +26,7 @@ The four results compose into one account of how a number becomes untrustworthy.
 
 **Stage 3 — Deployment removes the protections.** Under streaming with verification latency, the learner's imbalance machinery amplifies whatever defect labels arrive. Most of the surviving labels are false positives, and they are amplified hardest exactly when defect labels are scarcest — which, given that 53% arrive after the decision window, is always.
 
-**Stage 4 — Knowing this is not sufficient to fix it.** Identifying *which kind* of error hurts does not confer the ability to identify *which instances* are that error. A confidence signal cannot separate "this label is wrong" from "I have not learned this pattern yet", and under an 8.5% positive rate the second case is common.
+**Stage 4 — Knowing this is not sufficient to fix it, but it is sufficient to avoid it.** Identifying *which kind* of error hurts does not confer the ability to identify *which instances* are that error. A confidence signal cannot separate "this label is wrong" from "I have not learned this pattern yet", and under an 8.5% positive rate the second case is common. What *is* available is the amplifier itself: the learner cannot find the wrong labels, but it can decline to magnify them. **Imbalance correction and label noise interact, and the standard remedy for the first makes the second worse** — which is the one actionable result the five phases produce.
 
 **The unifying quantity is deliverable precision.** What an online learner needs is not correct labels in the abstract but correct labels that *arrive* — and among those that arrive, false positives are the error it cannot defend against, because its own imbalance mechanism amplifies them. Every result in this thesis is a corollary of that sentence, including the retirement of the starvation hypothesis it began with.
 
@@ -70,7 +70,9 @@ The low ceiling is itself a finding. A field reporting 0.41 and delivering 0.10 
 
 **If you must use SZZ, prefer the permissive variant and accept the false positives** — B-SZZ carries the smallest penalty of the six under streaming, and the aggressive filters discard more correct answers than incorrect ones. This runs against the direction of variant development and is stated because the data support it.
 
-**Do not deploy a confidence-based label filter on the strength of this work.** Chapter 7 tested one, it passed the non-degradation gate, and it did not demonstrably help. A fixed-threshold variant was actively harmful on clean labels.
+**Switch off prediction-bias boosting when your labels come from SZZ.** This is the clearest practical result in the thesis: plain online bagging beat the boosted variant in 18 of 18 projects under false-positive-heavy noise, matched every noise-aware method tested, and costs nothing to implement. The boost is designed for clean imbalanced streams, and SZZ-labelled streams are not clean.
+
+**Do not deploy a confidence-based label filter or damper on the strength of this work.** Chapter 7 tested both. Each passed the non-degradation gate; neither improved on simply removing the boost.
 
 ---
 
@@ -90,7 +92,9 @@ The low ceiling is itself a finding. A field reporting 0.41 and delivering 0.10 
 
 **Phase 3's dose parameterisation is not class-balanced.** Dose is a fraction of all commits, so the FN-heavy profile strips far more of the minority class at equal dose, and at the highest dose leaves a stream whose defect labels are *all false*. Slopes are fitted only on cells retaining genuine defect labels.
 
-**One published conclusion was wrong and is corrected rather than removed.** An earlier version reported that latency does not compress sensitivity to label quality. That comparison ran between two uniformly delayed arms and could not test the question; against a true no-latency control the conclusion reverses.
+**Two published conclusions were wrong and are corrected rather than removed.** An earlier version reported that latency does not compress sensitivity to label quality; that comparison ran between two uniformly delayed arms and could not test the question, and against a true no-latency control it reverses. Separately, Phase 4's exploratory analysis was read as evidence that confidence damping works; Phase 5's control shows the benefit is attributable to removing the boost, with damping adding nothing over plain online bagging in any noise profile.
+
+**Phase 5's registration contained a mis-specified test.** The non-degradation gate was registered as an equivalence (TOST) test, which returns "not equivalent" because damping is *better* than the baseline by more than the margin. Non-inferiority is the correct test for that gate. The direction is unambiguous either way; the error is reported because it was registered.
 
 **The latency decomposition is unresolved, not null.** A full 2×2 was built after the original decomposition was found to be unidentified. Every contrast, including the interaction, has an interval spanning zero.
 

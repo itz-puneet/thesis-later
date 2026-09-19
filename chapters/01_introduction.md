@@ -40,7 +40,7 @@ Cabral and Minku (2019) characterised this setting, showing that the class imbal
 
 > Just-in-time defect prediction is evaluated almost exclusively against labels produced by SZZ, using protocols that ignore both commit order and verification latency. The field therefore has **no measurement of what SZZ-induced label noise costs a model under realistic deployment conditions**, and no way to distinguish a model's ability to find defects from its ability to reproduce the heuristic that labelled them.
 
-Four things must be separated to make progress: the noise in the labels; the inflation contributed by the evaluation protocol; the *mechanism* by which noise damages an online learner; and whether a learner can defend itself. This thesis addresses them in that order, as four phases.
+Four things must be separated to make progress: the noise in the labels; the inflation contributed by the evaluation protocol; the *mechanism* by which noise damages an online learner; and whether a learner can defend itself. This thesis addresses them in that order, across five phases — the fifth being a pre-registered follow-up that revises the fourth's answer.
 
 ## 1.5 Research gap
 
@@ -62,7 +62,7 @@ Three lines of work approach this territory without closing it.
 
 **RQ3.** Through what mechanism does label noise degrade an online learner — specifically, how does ORB's oversampling response behave under symmetric versus SZZ-calibrated asymmetric noise as the dose increases? *(Chapter 6)*
 
-**RQ4.** Can an online learner recover performance lost to SZZ-origin noise without access to clean labels, and without sacrificing performance when the labels are clean? *(Chapter 7)*
+**RQ4.** Can an online learner recover performance lost to SZZ-origin noise without access to clean labels, and without sacrificing performance when the labels are clean? *(Chapter 7, Phases 4 and 5)*
 
 ## 1.7 Contributions
 
@@ -74,18 +74,20 @@ Three lines of work approach this territory without closing it.
 
 **A pre-registered negative result with a diagnosis.** A train-time false-positive filter is adoptable but not demonstrably effective, and the gap between the oracle-assisted repair and its deployable approximation quantifies the price of not knowing which labels are wrong.
 
+**An actionable finding the noise-aware designs did not supply.** A second pre-registration, tested on data generated after it was committed, confirms that confidence damping beats both the baseline and the filter — and a control shows that the entire benefit is the *absence of oversampling-rate boosting* rather than the presence of any defence. Plain online bagging beats the boosted learner in **18 of 18 projects** under false-positive-heavy noise. Under SZZ-derived labels the cheapest effective intervention is to stop amplifying them.
+
 **A reproducible pipeline with an integrity gate.** The full study runs on a continuous-integration runner from two small committed files, behind an assertion that recomputes the training data's confusion matrix and refuses to spend compute if it disagrees with the reported noise rates.
 
 ## 1.8 Thesis organisation
 
 **Chapter 2** surveys JIT-SDP, SZZ and its variants, evaluation methodology, online learning under latency, and learning with noisy labels, and positions this work against each.
 
-**Chapter 3** states the research design: the four-phase pipeline, the corpus and its reference labels, the SZZ toolchain, the metrics and statistical protocol, and the validity framework — stated in advance rather than assembled afterwards.
+**Chapter 3** states the research design: the phase pipeline, the corpus and its reference labels, the SZZ toolchain, the metrics and statistical protocol, and the validity framework — stated in advance rather than assembled afterwards.
 
-**Chapters 4 to 7** report the four phases, one research question each.
+**Chapters 4 to 7** report the five phases against four research questions; Chapter 7 carries Phases 4 and 5, which address RQ4 jointly.
 
 **Chapter 8** synthesises the four results into a single account and gives the full treatment of validity threats.
 
 **Chapter 9** concludes.
 
-**A note on how the results chapters are written.** Several findings in this thesis contradict claims made earlier in the same project — the starvation hypothesis Phase 4 was designed around, a decomposition of the latency effect, a conclusion about whether latency masks label quality. In each case the superseded claim is **stated, together with the design error that produced it**, rather than removed. The corrections are part of the evidence: they show which conclusions survived contact with a control and which did not.
+**A note on how the results chapters are written.** Several findings in this thesis contradict claims made earlier in the same project — the starvation hypothesis Phase 4 was designed around, a decomposition of the latency effect, a conclusion about whether latency masks label quality, and a mechanism attributed to confidence damping that its own registered test refuted. In each case the superseded claim is **stated, together with the design error or control that overturned it**, rather than removed. The corrections are part of the evidence: they show which conclusions survived contact with a control and which did not.

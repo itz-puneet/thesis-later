@@ -16,9 +16,11 @@ This thesis separates four quantities across 21 Apache Java projects and 27,319 
 
 **Mechanism.** A controlled repair experiment shows that removing SZZ's false positives recovers **+0.040 MCC** while restoring its false negatives is statistically *equivalent to no repair*. An error-matched control establishes this as an effect of error **volume**, not per-label severity. The mechanism is measured: the online learner's oversampling rate is a near-perfect inverse of delivered defect-label supply (ρ = −1.000), so the machinery that corrects class imbalance is the machinery that amplifies wrong labels.
 
-**Mitigation.** A pre-registered train-time false-positive filter passes its non-degradation gate but no confirmatory test survives correction. The gap between the oracle-assisted repair (+0.040) and its deployable approximation (+0.017) quantifies the price of not knowing which labels are wrong: a confidence signal cannot separate a wrong label from an unlearned pattern.
+**Mitigation.** Two pre-registered experiments. A train-time false-positive filter passes its non-degradation gate but no confirmatory test survives correction; the gap between the oracle-assisted repair (+0.040) and its deployable approximation (+0.017) is the price of not knowing which labels are wrong, since a confidence signal cannot separate a wrong label from an unlearned pattern. A second registration then confirms that confidence damping beats both baseline and filter — and a control shows the entire benefit is the **absence of oversampling-rate boosting** rather than any defence: plain online bagging matches every noise-aware variant tested and beats the boosted learner in **18 of 18 projects** under false-positive-heavy noise.
 
-On this evidence, **improving the labels is worth more than improving the learner.**
+This is independent confirmation, by intervention, of the amplification mechanism established by measurement, and it yields the thesis's one actionable recommendation. **Imbalance correction and label noise interact, and the standard remedy for the first makes the second worse:** under SZZ-derived labels, do not boost the oversampling rate on prediction bias.
+
+Improving the labels remains worth more than improving the learner — but the cheapest effective intervention is neither.
 
 ---
 
@@ -46,6 +48,6 @@ On this evidence, **improving the labels is worth more than improving the learne
 
 ## A note on corrections
 
-Several findings in this thesis contradict claims made earlier in the same project: the false-negative starvation hypothesis Phase 4 was originally designed around, a decomposition of the verification-latency effect, and a conclusion about whether latency masks label quality. In each case the superseded claim is stated together with the design error that produced it, rather than removed.
+Several findings in this thesis contradict claims made earlier in the same project: the false-negative starvation hypothesis Phase 4 was originally designed around, a decomposition of the verification-latency effect, a conclusion about whether latency masks label quality, and the mechanism attributed to confidence damping — refuted by its own registered test. In each case the superseded claim is stated together with the design error or the control that overturned it, rather than removed.
 
 This is deliberate. The corrections are part of the evidence — they record which conclusions survived contact with a control and which did not, and in three of the four cases the control that overturned the claim had been built for a different purpose. A caveat is not a control, and most of the substantive revisions in this work exist because that distinction was eventually enforced.
