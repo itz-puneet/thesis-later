@@ -549,6 +549,98 @@ filter rate. Report as a clean null.
 
 ---
 
+## Phase 5 — pre-registered damping test, run `35452244070`
+
+Registration committed in `8482778` with **no results in the commit**; the
+workflow and the run follow it. 34,560 records: 18 reporting projects × 10
+seeds × 4 profiles × 6 doses × 2 latency arms × 4 models.
+
+### The registered scorecard
+
+| Test | Prediction | Result | Verdict |
+|---|---|---|---|
+| **H1** damp > ORB (fp_heavy) | positive | **+0.0168** [+0.0092, +0.0272], 15/18, Holm **0.0021** | ✅ **passes** |
+| **H4** damp > filter (fp_heavy) | positive | **+0.0081** [+0.0022, +0.0141], 15/18, Holm **0.018** | ✅ **passes** |
+| **ND** no degradation | no drop | **+0.0193** [+0.0092, +0.0299], Holm 0.0039 | ✅ **passes** (see note) |
+| **H3** fn_heavy advantage > fp_heavy | positive | **−0.0217** [−0.0341, −0.0118], **2/18**, Holm **0.0021** | ❌ **refuted, opposite direction** |
+| **H2** advantage grows with dose | ρ > 0 | ρ = **−0.486**, *p* = 0.84 | ❌ **fails** |
+
+Two pass, two fail, and **the two that fail are the ones that were about the
+mechanism.**
+
+**A defect in my own registration, recorded rather than quietly fixed.** The ND
+gate was registered as a TOST for *equivalence* at ±0.02. It returns
+"not equivalent" — because damping is **better** than ORB by more than the
+margin, not worse. The gate's intent (no degradation) is met decisively; the
+registered statistic was the wrong one, and the right test for a
+non-degradation gate is **non-inferiority**, a one-sided test against −margin.
+The direction is unambiguous either way, so nothing is salvaged by the
+substitution; the mis-specification is reported because it was registered.
+
+### H3's refutation is the informative part
+
+The prediction was that damping should shine under `fn_heavy` at doses ≥ 0.20,
+where Chapter 6 measured that the stream retains no genuine defect labels while
+still carrying ~204 positive labels, **all of them false**. If damping
+suppresses wrong positives, that is where it should help most.
+
+It helps **least** there — significantly so, with only 2 of 18 projects moving
+the predicted way. Two candidate explanations, neither tested:
+
+1. **No discriminative signal.** Confidence damping needs a *mixture* of correct
+   and incorrect positives to separate. When every positive is wrong there is no
+   reference class for "what a trustworthy positive looks like".
+2. **A lower ceiling.** All models score ≈ 0.02 under `fn_heavy` against ≈ 0.05
+   under `fp_heavy`, leaving less room for any advantage. The relative gap
+   (1.19× against 1.57×) suggests this is contributory rather than sufficient.
+
+### The exploratory control that explains H1 away
+
+ORB = OOB + prediction-bias boost. NA(damp) = ORB + confidence damping. Adding
+plain OOB to the grid separates the two:
+
+| Profile | NA(damp) − ORB | **OOB − ORB** | **NA(damp) − OOB** |
+|---|---|---|---|
+| fp_heavy | +0.0168 (Holm 0.0047) | **+0.0172 (18/18, Holm 0.0001)** | +0.0019 (9/18, Holm 1.00) |
+| symmetric | +0.0181 (Holm 0.0014) | **+0.0199 (17/18, Holm 0.0002)** | +0.0005 (8/18, Holm 1.00) |
+| mid | +0.0139 (Holm 0.0023) | **+0.0139 (15/18, Holm 0.0026)** | +0.0020 (10/18, Holm 1.00) |
+| fn_heavy | +0.0028 (n.s.) | +0.0075 (15/18, Holm 0.109) | −0.0050 (6/18, Holm 1.00) |
+
+> **Damping adds nothing over simply not boosting.** Against plain OOB it is a
+> coin flip in every profile — 8 to 10 wins out of 18, every interval spanning
+> zero, every corrected *p* at 1.000. The entire H1 effect is reproduced by
+> removing ORB's boost and adding no noise-awareness at all.
+
+**H1 passes and is explained away by the control.** This is what a
+pre-registration is for: the registered test confirmed the effect and the
+registered mechanism test refuted the explanation, and an exploratory control
+identified the actual cause.
+
+### What this establishes
+
+**ORB's prediction-bias boost is what costs performance under label noise** —
+18 of 18 projects on `fp_heavy`, the strongest single result in Phases 4–5.
+This is independent confirmation of Chapter 6's amplification account, arrived
+at by intervention rather than by measuring λ.
+
+It is consistent with, though not established by, the clean-label comparison:
+on reference labels in Phase 4, OOB − ORB was +0.0050 (*p* = 0.47, not
+significant), against +0.0172 under injected FP-heavy noise here. **The boost
+appears roughly neutral on correct labels and harmful on incorrect ones**,
+which is what the amplification account predicts. The interaction was not
+formally tested and should not be claimed.
+
+### What to write
+
+The deployable recommendation from Phases 4 and 5 is **not** a noise-aware
+learner. It is: *under SZZ-derived labels, do not boost the oversampling rate
+on prediction bias.* Plain OOB matches every noise-aware variant tested and
+beats ORB in 18 of 18 projects on the FP-heavy profile. Both confidence-based
+defences — filtering in Phase 4 and damping here — were adoptable and neither
+improved on removing the boost.
+
+---
+
 ## Step 6 — Meeting 4 + write-up (2–3 weeks)
 
 Ablation table, paired scatter, recovery framing against Phase 3's dose curves, limitations (fix_ts coverage confound + imputation bound, single benchmark family, LC cap, and **the estimator-dependence of the Phase 2 BSZZ comparison**). Then Ch. 6–7 straight from the CSVs.
