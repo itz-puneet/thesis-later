@@ -24,6 +24,10 @@ results/phase3/*
 results/phase4/*
 !results/phase4/*.csv
 !results/phase4/*.json
+!results/phase5/
+results/phase5/*
+!results/phase5/*.csv
+!results/phase5/*.json
 !results/replication/
 results/replication/*
 !results/replication/*.csv
