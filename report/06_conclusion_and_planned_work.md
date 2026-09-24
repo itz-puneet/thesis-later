@@ -55,7 +55,7 @@ That makes amplification a plausible route by which SZZ noise damages an online 
 
 ### 6.2.3 Whether the latency effect can be isolated
 
-§5.3 withdraws a decomposition of the batch-to-streaming drop because the contrast was not identified, and reports the replacement 2×2 as unresolved — every contrast, including the interaction, has an interval spanning zero at *n* = 21.
+§5.3 shows that the batch-to-streaming drop cannot be decomposed by comparing label sources, because the contrast is not identified, and that the 2×2 which *is* identified returns no resolvable effect at *n* = 21 — every contrast, including the interaction, has an interval spanning zero.
 
 The obstacle is that switching label sources changes the learner's training signal and its evaluation window together. A design that **holds the learner fixed by construction** — injecting controlled noise into a single label source rather than switching between sources — removes that confound. It also requires a true no-latency control: an arm in which *every* label, positive and negative, arrives immediately. A fixed-delay arm is not a no-latency arm, since it delays the 91.5% majority class as heavily as the minority.
 

@@ -1,6 +1,8 @@
 ## Abstract
 
-Just-in-time software defect prediction (JIT-SDP) labels almost universally descend from the SZZ algorithm, which infers defect-introducing commits by blaming the lines a bug fix modifies. That inference fails whenever bug-fixing commits are tangled, and the field has no measurement of what the resulting noise costs a model under realistic deployment conditions — in part because models are conventionally evaluated against the same SZZ labels that trained them.
+**Most of the reported performance of just-in-time software defect prediction is an artefact of how it is measured.** On the corpus studied here, a result that reads as 0.41 MCC under the field's standard protocol is 0.10 under a defensible one — and the single largest component of that gap is circular scoring: evaluating models against the same heuristic labels that trained them.
+
+That is possible because JIT-SDP labels almost universally descend from the SZZ algorithm, which infers defect-introducing commits by blaming the lines a bug fix modifies. The inference fails whenever bug-fixing commits are tangled, and because no independent ground truth is available, models are conventionally scored against the very labels whose errors they may have learned.
 
 **This report covers the first two phases of that measurement**, across 21 Apache Java projects and 27,319 commits, holding out an independently constructed reference label set so that a model trained on SZZ can be scored against something other than SZZ.
 
@@ -27,9 +29,3 @@ A result reading **0.41 MCC** under the field's standard configuration is **0.10
 | **ρ₀ / ρ₁** | Class-conditional false-alarm rate / miss rate |
 | **λ** | Poisson oversampling rate in online bagging |
 | **W** | Verification-latency decision window (90 days) |
-
-## A note on corrections
-
-One finding in this report contradicts a claim made earlier in the same project: a decomposition of the verification-latency effect, withdrawn after the contrast was found not to be identified. The superseded claim is stated together with the design error that produced it, rather than removed (§5.3).
-
-This is deliberate. The correction is part of the evidence — it records which conclusions survived contact with a control and which did not, and the control that overturned it had been built for a different purpose.

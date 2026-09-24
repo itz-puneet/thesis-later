@@ -45,9 +45,16 @@ for p in sorted(pathlib.Path(OUT).glob("0[1-9]*.tex")):
     p.write_text(clean(p.read_text()))
 
 src = pathlib.Path(f"{SRC}/00_front_matter.md").read_text()
-for name, start, end in [("00_abstract","## Abstract","## Abbreviations"),
-                         ("00_abbreviations","## Abbreviations","## A note on corrections")]:
-    md = src[src.index(start):src.index(end)].replace(start,"").strip().rstrip("-").strip()
+# Split the front matter on its section headings. The trailing section is
+# optional, so an absent end marker means "to the end of the file" rather
+# than an error -- the two trees do not carry identical front matter.
+for name, start, end in [("00_abstract", "## Abstract", "## Abbreviations"),
+                         ("00_abbreviations", "## Abbreviations", None)]:
+    if start not in src:
+        continue
+    a = src.index(start)
+    b = src.index(end) if (end and end in src) else len(src)
+    md = src[a:b].replace(start, "").strip().rstrip("-").strip()
     out = subprocess.run(["pandoc","-f","markdown","-t","latex"],
                          input=md, text=True, capture_output=True).stdout
     pathlib.Path(f"{OUT}/{name}.tex").write_text(clean(out))

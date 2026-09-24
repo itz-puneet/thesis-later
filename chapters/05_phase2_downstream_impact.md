@@ -214,8 +214,6 @@ All six intervals exclude zero; **five of six survive global Holm correction.**
 
 ---
 
-## 5.3 An honest negative---
-
 ## 5.3 An honest negative: the batch-to-stream contrast could not be isolated
 
 An earlier version of this work reported that verification latency accounts for roughly 9% of the drop from batch to streaming performance. **That claim has been withdrawn, and the withdrawal is reported here rather than removed.**

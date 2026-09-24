@@ -126,7 +126,7 @@ Second, MA-SZZ's apparently harmful negative MCC (−0.0030) exists only under t
 **Figure 5.1 — Reading the figure.** Each bar is the same prediction task measured under progressively more honest conditions, left to right. The grey bar is what the field's protocol reports; the rightmost bar is what survives realistic evaluation. **The height difference between the first and last bar is this report in one picture.**
 
 
-The ladder must be read as **descriptive, not causal**. Step 3 changes the learner, the regime and the evaluation window simultaneously. §5.3 explains why an earlier attempt to decompose it was withdrawn.
+The ladder must be read as **descriptive, not causal**. Step 3 changes the learner, the regime and the evaluation window simultaneously, so the steps cannot be attributed to any one of them. §5.3 takes that apart.
 
 ### 5.2.3 Result 1 — Temporal leakage inflates, in proportion to model capacity
 
@@ -214,15 +214,15 @@ All six intervals exclude zero; **five of six survive global Holm correction.**
 
 ---
 
-## 5.3 An honest negative---
+## 5.3 Sizing the latency effect: an unidentified contrast, and the design that replaced it
 
-## 5.3 An honest negative: the batch-to-stream contrast could not be isolated
+The inflation ladder invites an obvious follow-up question. Step 3 costs very little — 0.1016 to 0.0970 — so how much of the drop from batch to streaming performance is attributable to verification latency specifically?
 
-An earlier version of this work reported that verification latency accounts for roughly 9% of the drop from batch to streaming performance. **That claim has been withdrawn, and the withdrawal is reported here rather than removed.**
+**Read directly off the ladder, the answer would be about 9%. That reading is not valid, and the reason is worth setting out**, because the same trap is available to anyone comparing a batch result against a streaming one.
 
-The comparison was not identified. It changed three things at once: the learner (forest → online ensemble), the label timing (immediate → delayed), and the evaluation window (a held-out second half → the whole stream). Any of the three could produce the observed difference.
+The contrast is **not identified**. Moving between those two rows changes three things at once: the learner (forest → online ensemble), the label timing (immediate → delayed), and the evaluation window (a held-out second half → the whole stream). Any one of the three could produce the observed difference, and no arithmetic on those two numbers can separate them.
 
-A full 2×2 factorial — learner (frozen / adaptive) crossed with labels (immediate / delayed) — was built to isolate the effects:
+A 2×2 factorial that **does** isolate them — learner (frozen / adaptive) crossed with labels (immediate / delayed) — gives:
 
 | Contrast | Estimate | Interval |
 |---|---|---|
@@ -237,7 +237,9 @@ A full 2×2 factorial — learner (frozen / adaptive) crossed with labels (immed
 **Figure 5.5 — Reading the figure.** *Left:* the descriptive ladder with the problematic step marked — learner, regime and evaluation window all change there at once. *Right:* the 2×2 that separates them, brighter meaning higher MCC. The cells are close enough that no contrast resolves.
 
 
-The honest conclusion is that **21 projects cannot resolve the decomposition**, and it is reported as unresolved. A design that holds the learner fixed by construction — injecting controlled noise rather than switching label sources — would make the question answerable, and that is how Phase 3 approaches it.
+So the conclusion is that **21 paired projects cannot resolve this decomposition**, and it is reported as unresolved rather than as a null — the effect may well be real and simply smaller than this design can detect.
+
+**What this establishes for the work that follows.** A factorial on the label source is the wrong instrument: it buys identification at the cost of power, because every cell is a different learner on a different stream. The alternative is to **hold the learner fixed by construction** and vary only the noise, injecting controlled label errors into a single source rather than switching between sources. That design also needs a true no-latency control — an arm in which *every* label, positive and negative, arrives immediately — because a fixed-delay arm is not one: it delays the 91.5% majority class as heavily as the minority, so comparing two delayed arms tests sensitivity to the arrival *schedule* rather than to delay itself. §6.2.3 carries this forward.
 
 ---
 

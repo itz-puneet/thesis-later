@@ -118,7 +118,7 @@ Under streaming evaluation the metric is a trajectory, not a scalar, and summari
 - **Terminal fading** — a confusion matrix with exponential forgetting (fading 0.99, effective window ≈ 100 commits), read at end of stream.
 - **Time-averaged** — the mean of the MCC trajectory over the stream.
 
-**Neither is canonical, and this report does not claim otherwise.** MCC is not a decomposable loss, so the prequential-with-fading construction does not extend to it directly; of the two, the terminal value is the closer analogue. The time-averaged value is treated as **primary on a measured basis** — roughly half the project-level variance (0.051 against 0.092) — not by appeal to a standard. An earlier version of this work described it as "the standard estimator", which was wrong and is corrected.
+**Neither is canonical, and this report does not claim otherwise.** MCC is not a decomposable loss, so the prequential-with-fading construction does not extend to it directly; of the two, the terminal value is the closer analogue. The time-averaged value is treated as **primary on a measured basis** — roughly half the project-level variance (0.051 against 0.092) — not by appeal to a standard. Calling either one "the standard estimator" would be incorrect, and this report does not.
 
 Both are reported for every streaming result. They agree on every comparison in this report except one, which is named where it occurs.
 
