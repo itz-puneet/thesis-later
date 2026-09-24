@@ -73,6 +73,12 @@
 \definecolor{shadecolor}{HTML}{F1F5FA}
 \renewenvironment{quote}{\begin{snugshade}\small}{\end{snugshade}}
 
+% natbib must be loaded before hyperref. numbers+sort&compress gives
+% numeric citations that collapse runs, e.g. [3-5]; plainnat ships with
+% natbib itself, so nothing extra has to be installed.
+\usepackage[numbers,sort&compress]{natbib}
+\bibliographystyle{plainnat}
+
 \usepackage[hidelinks,breaklinks=true]{hyperref}
 \hypersetup{
   pdftitle={SZZ-Induced Label Noise in JIT Defect Prediction -- Interim Report, Phases 1 and 2},
@@ -145,7 +151,8 @@ this report has shown they will need.
 \input{tex_report/05_phase2_downstream_impact}
 \input{tex_report/06_conclusion_and_planned_work}
 
-% \bibliographystyle{IEEEtran}
-% \bibliography{references}
+\cleardoublepage
+\addcontentsline{toc}{chapter}{References}
+\bibliography{references}
 
 \end{document}

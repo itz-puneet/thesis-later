@@ -11,7 +11,7 @@ cd "$(dirname "$0")/.."
 if [ "${1:-}" = "report" ]; then SRC=report; OUT=tex_report; else SRC=chapters; OUT=tex; fi
 mkdir -p "$OUT"
 for f in "$SRC"/0[1-9]_*.md; do
-  pandoc "$f" -f markdown -t latex --top-level-division=chapter \
+  pandoc "$f" -f markdown -t latex --top-level-division=chapter --natbib \
     -o "$OUT/$(basename "$f" .md).tex"
 done
 export SRC OUT

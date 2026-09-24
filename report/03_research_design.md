@@ -57,7 +57,7 @@ Projects were not selected by us. The corpus is JIT-Defects4J as published, adop
 
 ### 3.2.2 The reference labels
 
-`label_oracle` derives from JIT-Defects4J (Ni et al., ESEC/FSE 2022), an extension of LLTC4J (Herbold et al.). Its provenance was traced through the repository and confirmed against the source paper rather than assumed:
+`label_oracle` derives from JIT-Defects4J [@ni2022jitdefects4j], an extension of LLTC4J [@herbold2022tangling]. Its provenance was traced through the repository and confirmed against the source paper rather than assumed:
 
 | Step | Evidence |
 |---|---|
@@ -91,7 +91,7 @@ Reconstructing when a defect label would actually have become known requires the
 
 ## 3.3 SZZ variant implementations
 
-Six variants were produced with **PySZZ v2** (Rosa et al., JSS 2023), the reference implementation released with the developer-informed-oracle study. Using the authors' own implementation rather than a reimplementation removes one source of unexplained variation, at the cost of inheriting whatever its defaults encode — a trade recorded here as a decision rather than left implicit.
+Six variants were produced with **PySZZ v2** [@rosa2023szzvariants], the reference implementation released with the developer-informed-oracle study. Using the authors' own implementation rather than a reimplementation removes one source of unexplained variation, at the cost of inheriting whatever its defaults encode — a trade recorded here as a decision rather than left implicit.
 
 Each variant was run on the same fix-commit set, and its output aligned to the reference over an **identical 27,319-commit denominator**. Partial denominators are a known source of incomparability: a variant emitting fewer candidates can appear more precise merely by being scored on a smaller population.
 
@@ -130,9 +130,9 @@ Both are reported for every streaming result. They agree on every comparison in 
 
 Each comparison reports:
 
-- **Wilcoxon signed-rank *p*** — paired, distribution-free.
+- **Wilcoxon signed-rank *p*** [@wilcoxon1945] — paired, distribution-free.
 - **Matched-pairs rank-biserial correlation** — derived from the same signed ranks as the *p*-value, so the effect size and the test agree by construction. It reads as *consistency*: +1.000 means every project moved in the same direction.
-- **Hodges–Lehmann estimator** — the median of pairwise Walsh averages, the location estimate that accompanies the signed-rank test.
+- **Hodges–Lehmann estimator** [@hodges1963] — the median of pairwise Walsh averages, the location estimate that accompanies the signed-rank test.
 - **Percentile bootstrap confidence interval**, computed **for the Hodges–Lehmann statistic itself**, with the statistic recomputed inside every resample.
 
 Two of these are corrections to an earlier protocol and are recorded as such. Cliff's δ was initially computed *unpaired*, all-versus-all with denominator *n*·*m*, discarding the pairing the design exists to preserve; on the headline comparison it reported 0.74 where the paired statistic reports +1.000. Separately, the bootstrap originally resampled the median while the Hodges–Lehmann estimate was reported beside it — an interval for a different quantity than the point estimate.
@@ -141,8 +141,10 @@ Two of these are corrections to an earlier protocol and are recorded as such. Cl
 
 Seventy-four tests are run in Phase 2 alone. Multiplicity is corrected **twice**:
 
-- **Holm within test family** — families grouped by the comparison being made.
+- **Holm within test family** [@holm1979] — families grouped by the comparison being made.
 - **Holm globally across all tests** — no family argument required.
+
+A Benjamini--Hochberg false-discovery-rate correction [@benjamini1995fdr] is computed alongside both and is carried in the released result tables, but no claim in this report rests on it: where Holm and BH disagree, the Holm-corrected value is the one reported.
 
 The global column exists because the families were defined *during* analysis, not declared in advance. A sceptic can reasonably argue the grouping was chosen to help the results; **a claim surviving global Holm needs no defence of how families were drawn.** Every headline claim in this report survives the global column, and where a claim survives only within-family correction, that is stated.
 

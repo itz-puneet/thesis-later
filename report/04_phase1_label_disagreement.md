@@ -10,7 +10,7 @@ The chapter is deliberately placed before any predictive modelling. Chapter 5 is
 
 ### 4.1.1 The reference condition, and what it is not
 
-Every comparison in this report is made against `label_oracle`, taken from JIT-Defects4J (Ni et al., ESEC/FSE 2022), itself an extension of LLTC4J (Herbold et al.). Because the interpretation of every subsequent result depends on exactly what these labels are, we state their construction precisely.
+Every comparison in this report is made against `label_oracle`, taken from JIT-Defects4J [@ni2022jitdefects4j], itself an extension of LLTC4J [@herbold2022tangling]. Because the interpretation of every subsequent result depends on exactly what these labels are, we state their construction precisely.
 
 The dataset authors describe a two-stage procedure. First, within each bug-fixing commit, individual *lines* were annotated as contributing to the fix, with a line retained only where **at least three participants assigned it the same label**. Second, for each such verified fix line, **`git blame` was used to identify the commit that introduced it**. Commits not flagged by this procedure are treated as clean by residual.
 
@@ -26,7 +26,7 @@ This is a weaker claim than "we compare SZZ against truth", and a more precise o
 
 ### 4.1.2 Variants, corpus and alignment
 
-Six SZZ variants were executed using PySZZ v2 (Rosa et al., JSS 2023), the reference implementation released with the developer-informed-oracle study:
+Six SZZ variants were executed using PySZZ v2 [@rosa2023szzvariants], the reference implementation released with the developer-informed-oracle study:
 
 | Variant | Refinement over its predecessor |
 |---|---|

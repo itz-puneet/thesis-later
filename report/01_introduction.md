@@ -6,7 +6,7 @@ Defects are expensive in proportion to how long they survive. A fault caught at 
 
 Classical defect prediction operates at release granularity, predicting which files or modules will contain defects. Its practical difficulty is one of timing. A prediction about a file, delivered at release, arrives long after the change that introduced the problem, and often reaches a developer who did not write it.
 
-**Just-in-time software defect prediction (JIT-SDP)** moves the unit of prediction from the file to the *commit*. Each change is scored as it arrives, so a risky change can be flagged while its author still has it in mind. Kamei et al. (2013) established the modern form of the task, defining a set of change-level metrics — size, diffusion, history, and developer experience — that remain the standard feature set, and reporting roughly 68% accuracy and 64% recall at predicting defect-inducing changes.
+**Just-in-time software defect prediction (JIT-SDP)** moves the unit of prediction from the file to the *commit*. Each change is scored as it arrives, so a risky change can be flagged while its author still has it in mind. Kamei et al. [@kamei2013jit] established the modern form of the task, defining a set of change-level metrics — size, diffusion, history, and developer experience — that remain the standard feature set, and reporting roughly 68% accuracy and 64% recall at predicting defect-inducing changes.
 
 The setting is unusual in three ways that jointly shape everything in this report. Commits arrive as a **stream**, so any realistic evaluation is temporal. Defect-introducing commits are **rare** — 8.54% on the corpus studied here — so the task is severely imbalanced. And, critically, **the label for a commit is not available when the commit arrives.** It becomes available only when someone finds the defect, traces it to its origin, and fixes it.
 
@@ -14,11 +14,11 @@ The setting is unusual in three ways that jointly shape everything in this repor
 
 JIT-SDP requires a label for every commit: did this change introduce a defect? Almost no project records this directly. What projects record is which commits *fixed* defects.
 
-The gap is bridged by the **SZZ algorithm** (Śliwerski, Zimmermann and Zeller), which works backwards: take a bug-fixing commit, identify the lines it modified, and use `git blame` to find which earlier commit last touched each of those lines. Those earlier commits are labelled defect-introducing.
+The gap is bridged by the **SZZ algorithm** (Śliwerski, Zimmermann and Zeller), [@sliwerski2005szz], which works backwards: take a bug-fixing commit, identify the lines it modified, and use `git blame` to find which earlier commit last touched each of those lines. Those earlier commits are labelled defect-introducing.
 
 The inference is only as good as its premise — that the lines a fix modifies are the lines that were wrong. **That premise fails routinely, because bug-fixing commits are tangled.** Developers reformat while fixing, rename while fixing, refactor while fixing, update comments and tests while fixing. Every such line is blamed by SZZ, and every commit that last touched one is labelled as having introduced a defect it had nothing to do with.
 
-The magnitude is now measured rather than suspected. Herbold et al. (2022), using four annotators per line, found that **between 17% and 32% of all changes within bug-fixing commits actually address the underlying problem** — rising to 66–87% when only production code files are considered. The remainder is tangled. Roughly 11% of lines were hard enough to classify that annotators actively disagreed.
+The magnitude is now measured rather than suspected. Herbold et al. [@herbold2022tangling], using four annotators per line, found that **between 17% and 32% of all changes within bug-fixing commits actually address the underlying problem** — rising to 66–87% when only production code files are considered. The remainder is tangled. Roughly 11% of lines were hard enough to classify that annotators actively disagreed.
 
 A substantial body of work has proposed refinements — AG-SZZ, MA-SZZ, R-SZZ, L-SZZ, RA-SZZ — each adding filters intended to remove the over-collection. Whether those refinements improve the labels, and at what cost, is the subject of Chapter 4.
 
@@ -34,7 +34,7 @@ The standard evaluation protocol in the JIT-SDP literature is random *k*-fold cr
 
 This is worse than a delay. A system with a 90-day window does not simply wait — it concludes that an unfixed commit is clean, trains on that conclusion, and is corrected months later. **A learner under verification latency is actively trained on labels it will subsequently discover were wrong**, and the wrong labels it receives are exactly the defect-introducing commits it most needs to learn from.
 
-Cabral and Minku (2019) characterised this setting, showing that the class imbalance itself evolves over time under latency, and proposed **Oversampling Rate Boosting (ORB)** — an online ensemble that adjusts its resampling rate when predictions become biased toward one class. ORB is the online learner used throughout this report. The mechanism it uses to handle imbalance — amplifying minority-class examples in proportion to how rare they appear — is also, on the evidence assembled here, a plausible route by which label noise could do disproportionate damage. Testing that is the next phase of the work and is not attempted here.
+Cabral and Minku [@cabral2019orb] characterised this setting, showing that the class imbalance itself evolves over time under latency, and proposed **Oversampling Rate Boosting (ORB)** — an online ensemble that adjusts its resampling rate when predictions become biased toward one class. ORB is the online learner used throughout this report. The mechanism it uses to handle imbalance — amplifying minority-class examples in proportion to how rare they appear — is also, on the evidence assembled here, a plausible route by which label noise could do disproportionate damage. Testing that is the next phase of the work and is not attempted here.
 
 ## 1.4 Problem statement
 

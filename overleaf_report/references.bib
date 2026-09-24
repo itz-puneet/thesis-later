@@ -1,0 +1,369 @@
+% =============================================================================
+%  references.bib
+%
+%  Every entry below was checked against a publisher record or the source
+%  during preparation. Entries marked NEEDS-CHECK carry a note naming the
+%  field that could not be confirmed; confirm before final submission.
+% =============================================================================
+
+% ------------------------------------------------------------ SZZ and variants
+@inproceedings{sliwerski2005szz,
+  author    = {{\'S}liwerski, Jacek and Zimmermann, Thomas and Zeller, Andreas},
+  title     = {When Do Changes Induce Fixes?},
+  booktitle = {Proceedings of the 2005 International Workshop on Mining
+               Software Repositories (MSR)},
+  year      = {2005},
+  pages     = {1--5},
+  doi       = {10.1145/1083142.1083147},
+}
+
+@inproceedings{kim2006agszz,
+  author    = {Kim, Sunghun and Zimmermann, Thomas and Pan, Kai and
+               Whitehead, E. James, Jr.},
+  title     = {Automatic Identification of Bug-Introducing Changes},
+  booktitle = {Proceedings of the 21st IEEE/ACM International Conference on
+               Automated Software Engineering (ASE)},
+  year      = {2006},
+  pages     = {81--90},
+  doi       = {10.1109/ASE.2006.23},
+  note      = {Introduces AG-SZZ: annotation graphs and cosmetic-change filtering},
+}
+
+@article{dacosta2017maszz,
+  author  = {da Costa, Daniel Alencar and McIntosh, Shane and Shang, Weiyi and
+             Kulesza, Uir{\'a} and Coelho, Roberta and Hassan, Ahmed E.},
+  title   = {A Framework for Evaluating the Results of the {SZZ} Approach for
+             Identifying Bug-Introducing Changes},
+  journal = {IEEE Transactions on Software Engineering},
+  year    = {2017},
+  volume  = {43},
+  number  = {7},
+  pages   = {641--657},
+  note    = {Introduces MA-SZZ: excludes meta-changes},
+}
+
+@article{davies2014rlszz,
+  author  = {Davies, Steven and Roper, Marc and Wood, Murray},
+  title   = {Comparing Text-Based and Dependence-Based Approaches for
+             Determining the Origins of Bugs},
+  journal = {Journal of Software: Evolution and Process},
+  year    = {2014},
+  volume  = {26},
+  number  = {1},
+  pages   = {107--139},
+  note    = {Source of R-SZZ (most recent candidate) and L-SZZ (largest candidate)},
+}
+
+@inproceedings{neto2018raszz,
+  author    = {Neto, Edmilson Campos and da Costa, Daniel Alencar and
+               Kulesza, Uir{\'a}},
+  title     = {The Impact of Refactoring Changes on the {SZZ} Algorithm:
+               An Empirical Study},
+  booktitle = {Proceedings of the IEEE 25th International Conference on
+               Software Analysis, Evolution and Reengineering (SANER)},
+  year      = {2018},
+  pages     = {380--390},
+  note      = {Introduces RA-SZZ: refactoring-aware, Java only},
+}
+
+@inproceedings{rosa2021oracle,
+  author    = {Rosa, Giovanni and Pascarella, Luca and Scalabrino, Simone and
+               Tufano, Rosalia and Bavota, Gabriele and Lanza, Michele and
+               Oliveto, Rocco},
+  title     = {Evaluating {SZZ} Implementations Through a Developer-Informed
+               Oracle},
+  booktitle = {Proceedings of the 43rd IEEE/ACM International Conference on
+               Software Engineering (ICSE)},
+  year      = {2021},
+  doi       = {10.1109/ICSE43902.2021.00049},
+}
+
+@article{rosa2023szzvariants,
+  author    = {Rosa, Giovanni and Pascarella, Luca and Scalabrino, Simone and
+               Tufano, Rosalia and Bavota, Gabriele and Lanza, Michele and
+               Oliveto, Rocco},
+  title     = {A Comprehensive Evaluation of {SZZ} Variants Through a
+               Developer-Informed Oracle},
+  journal   = {Journal of Systems and Software},
+  year      = {2023},
+  volume    = {202},
+  pages     = {111729},
+  doi       = {10.1016/j.jss.2023.111729},
+  note      = {Source of the PySZZ v2 implementation used in this work},
+}
+
+% ------------------------------------------------------------ datasets
+@article{herbold2022tangling,
+  author  = {Herbold, Steffen and Trautsch, Alexander and Ledel, Benjamin and
+             others},
+  title   = {A Fine-Grained Data Set and Analysis of Tangling in Bug Fixing
+             Commits},
+  journal = {Empirical Software Engineering},
+  year    = {2022},
+  doi     = {10.1007/s10664-021-10083-5},
+  note    = {NEEDS-CHECK: volume, issue and article number. Full author list
+             abbreviated; complete it from the publisher record},
+}
+
+@inproceedings{ni2022jitdefects4j,
+  author    = {Ni, Chao and Wang, Wei and Yang, Kaiwen and Gall, Harald and
+               Liu, Xiang},
+  title     = {The Best of Both Worlds: Integrating Semantic Features with
+               Expert Features for Defect Prediction and Localization},
+  booktitle = {Proceedings of the 30th ACM Joint European Software Engineering
+               Conference and Symposium on the Foundations of Software
+               Engineering (ESEC/FSE)},
+  year      = {2022},
+  note      = {Source of JIT-Defects4J, the reference labels used throughout.
+               NEEDS-CHECK: page range and exact author order},
+}
+
+@inproceedings{keshavarz2022apachejit,
+  author    = {Keshavarz, Hossein and Nagappan, Meiyappan},
+  title     = {{ApacheJIT}: A Large Dataset for Just-In-Time Defect Prediction},
+  booktitle = {Proceedings of the 19th International Conference on Mining
+               Software Repositories (MSR)},
+  year      = {2022},
+}
+
+@inproceedings{mahbub2023defectors,
+  author    = {Mahbub, Parvez and Shuvo, Ohiduzzaman and Rahman,
+               Mohammad Masudur},
+  title     = {Defectors: A Large, Diverse Python Dataset for Defect Prediction},
+  booktitle = {Proceedings of the 20th International Conference on Mining
+               Software Repositories (MSR)},
+  year      = {2023},
+}
+
+% ------------------------------------------------------------ JIT-SDP models
+@article{kamei2013jit,
+  author  = {Kamei, Yasutaka and Shihab, Emad and Adams, Bram and
+             Hassan, Ahmed E. and Mockus, Audris and Sinha, Anand and
+             Ubayashi, Naoyasu},
+  title   = {A Large-Scale Empirical Study of Just-in-Time Quality Assurance},
+  journal = {IEEE Transactions on Software Engineering},
+  year    = {2013},
+  volume  = {39},
+  number  = {6},
+  pages   = {757--773},
+  doi     = {10.1109/TSE.2012.70},
+}
+
+@inproceedings{hoang2019deepjit,
+  author    = {Hoang, Thong and Dam, Hoa Khanh and Kamei, Yasutaka and
+               Lo, David and Ubayashi, Naoyasu},
+  title     = {{DeepJIT}: An End-to-End Deep Learning Framework for
+               Just-in-Time Defect Prediction},
+  booktitle = {Proceedings of the 16th International Conference on Mining
+               Software Repositories (MSR)},
+  year      = {2019},
+}
+
+@inproceedings{hoang2020cc2vec,
+  author    = {Hoang, Thong and Kang, Hong Jin and Lo, David and Lawall, Julia},
+  title     = {{CC2Vec}: Distributed Representations of Code Changes},
+  booktitle = {Proceedings of the 42nd International Conference on Software
+               Engineering (ICSE)},
+  year      = {2020},
+}
+
+@inproceedings{zeng2021lapredict,
+  author    = {Zeng, Zhengran and Zhang, Yuqun and Zhang, Haotian and
+               Zhang, Lingming},
+  title     = {Deep Just-in-Time Defect Prediction: How Far Are We?},
+  booktitle = {Proceedings of the 30th ACM SIGSOFT International Symposium on
+               Software Testing and Analysis (ISSTA)},
+  year      = {2021},
+  doi       = {10.1145/3460319.3464819},
+  note      = {Source of the LApredict baseline},
+}
+
+@inproceedings{pornprasit2021jitline,
+  author    = {Pornprasit, Chanathip and Tantithamthavorn, Chakkrit},
+  title     = {{JITLine}: A Simpler, Better, Faster, Finer-Grained
+               Just-In-Time Defect Prediction},
+  booktitle = {Proceedings of the 18th International Conference on Mining
+               Software Repositories (MSR)},
+  year      = {2021},
+  pages     = {369--379},
+}
+
+% ------------------------------------------------------- online learning
+@inproceedings{oza2001onlinebagging,
+  author    = {Oza, Nikunj C. and Russell, Stuart},
+  title     = {Online Bagging and Boosting},
+  booktitle = {Proceedings of the Eighth International Workshop on Artificial
+               Intelligence and Statistics (AISTATS)},
+  series    = {PMLR},
+  volume    = {R3},
+  year      = {2001},
+  pages     = {229--236},
+}
+
+@article{wang2015oob,
+  author  = {Wang, Shuo and Minku, Leandro L. and Yao, Xin},
+  title   = {Resampling-Based Ensemble Methods for Online Class Imbalance
+             Learning},
+  journal = {IEEE Transactions on Knowledge and Data Engineering},
+  year    = {2015},
+  volume  = {27},
+  number  = {5},
+  pages   = {1356--1368},
+  note    = {Source of OOB and UOB},
+}
+
+@inproceedings{cabral2019orb,
+  author    = {Cabral, George G. and Minku, Leandro L. and Shihab, Emad and
+               Mujahid, Suhaib},
+  title     = {Class Imbalance Evolution and Verification Latency in
+               Just-in-Time Software Defect Prediction},
+  booktitle = {Proceedings of the 41st IEEE/ACM International Conference on
+               Software Engineering (ICSE)},
+  year      = {2019},
+  note      = {Source of ORB, the online learner used throughout this work.
+               NEEDS-CHECK: page range and full author list},
+}
+
+@article{cabral2023reliable,
+  author  = {Cabral, George G. and Minku, Leandro L.},
+  title   = {Towards Reliable Online Just-in-Time Software Defect Prediction},
+  journal = {IEEE Transactions on Software Engineering},
+  year    = {2023},
+  note    = {Source of the 90-day verification window justification.
+             NEEDS-CHECK: journal, volume, number and pages},
+}
+
+@article{gama2013prequential,
+  author  = {Gama, Jo{\~a}o and Sebasti{\~a}o, Raquel and Rodrigues, Pedro P.},
+  title   = {On Evaluating Stream Learning Algorithms},
+  journal = {Machine Learning},
+  year    = {2013},
+  volume  = {90},
+  number  = {3},
+  pages   = {317--346},
+  doi     = {10.1007/s10994-012-5320-9},
+}
+
+% ------------------------------------------------- learning with noisy labels
+@inproceedings{natarajan2013noisy,
+  author    = {Natarajan, Nagarajan and Dhillon, Inderjit S. and
+               Ravikumar, Pradeep and Tewari, Ambuj},
+  title     = {Learning with Noisy Labels},
+  booktitle = {Advances in Neural Information Processing Systems (NIPS)},
+  year      = {2013},
+}
+
+@inproceedings{han2018coteaching,
+  author    = {Han, Bo and Yao, Quanming and Yu, Xingrui and Niu, Gang and
+               Xu, Miao and Hu, Weihua and Tsang, Ivor and Sugiyama, Masashi},
+  title     = {Co-Teaching: Robust Training of Deep Neural Networks with
+               Extremely Noisy Labels},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2018},
+}
+
+@article{northcutt2021confident,
+  author  = {Northcutt, Curtis G. and Jiang, Lu and Chuang, Isaac L.},
+  title   = {Confident Learning: Estimating Uncertainty in Dataset Labels},
+  journal = {Journal of Artificial Intelligence Research},
+  year    = {2021},
+  volume  = {70},
+  pages   = {1373--1411},
+  doi     = {10.1613/jair.1.12125},
+}
+
+% ------------------------------------------------- evaluation and methodology
+@article{zhao2023survey,
+  author  = {Zhao, Yunhua and Damevski, Kostadin and Chen, Hui},
+  title   = {A Systematic Survey of Just-in-Time Software Defect Prediction},
+  journal = {ACM Computing Surveys},
+  year    = {2023},
+  volume  = {55},
+  number  = {10},
+  pages   = {1--35},
+  doi     = {10.1145/3567550},
+}
+
+@article{destefanis2026audit,
+  author  = {Destefanis, Giuseppe and others},
+  title   = {An Audit of Machine Learning Experiments on Software Defect
+             Prediction},
+  journal = {Empirical Software Engineering},
+  year    = {2026},
+  doi     = {10.1007/s10664-025-10797-w},
+  note    = {NEEDS-CHECK: full author list, volume and pages},
+}
+
+@article{falessi2020timetravel,
+  author  = {Falessi, Davide and others},
+  title   = {On the Need of Removing Last Releases of Data When Using or
+             Validating Defect Prediction Models},
+  journal = {arXiv preprint arXiv:2003.14376},
+  year    = {2020},
+  note    = {NEEDS-CHECK: this work may since have appeared in a peer-reviewed
+             venue; prefer that record. Full author list abbreviated},
+}
+
+% ------------------------------------------------- statistics
+@article{matthews1975mcc,
+  author  = {Matthews, B. W.},
+  title   = {Comparison of the Predicted and Observed Secondary Structure of
+             {T4} Phage Lysozyme},
+  journal = {Biochimica et Biophysica Acta (BBA) --- Protein Structure},
+  year    = {1975},
+  volume  = {405},
+  number  = {2},
+  pages   = {442--451},
+  doi     = {10.1016/0005-2795(75)90109-9},
+}
+
+@article{cohen1960kappa,
+  author  = {Cohen, Jacob},
+  title   = {A Coefficient of Agreement for Nominal Scales},
+  journal = {Educational and Psychological Measurement},
+  year    = {1960},
+  volume  = {20},
+  number  = {1},
+  pages   = {37--46},
+}
+
+@article{wilcoxon1945,
+  author  = {Wilcoxon, Frank},
+  title   = {Individual Comparisons by Ranking Methods},
+  journal = {Biometrics Bulletin},
+  year    = {1945},
+  volume  = {1},
+  number  = {6},
+  pages   = {80--83},
+}
+
+@article{hodges1963,
+  author  = {Hodges, J. L. and Lehmann, E. L.},
+  title   = {Estimates of Location Based on Rank Tests},
+  journal = {The Annals of Mathematical Statistics},
+  year    = {1963},
+  volume  = {34},
+  number  = {2},
+  pages   = {598--611},
+}
+
+@article{holm1979,
+  author  = {Holm, Sture},
+  title   = {A Simple Sequentially Rejective Multiple Test Procedure},
+  journal = {Scandinavian Journal of Statistics},
+  year    = {1979},
+  volume  = {6},
+  number  = {2},
+  pages   = {65--70},
+}
+
+@article{benjamini1995fdr,
+  author  = {Benjamini, Yoav and Hochberg, Yosef},
+  title   = {Controlling the False Discovery Rate: A Practical and Powerful
+             Approach to Multiple Testing},
+  journal = {Journal of the Royal Statistical Society: Series B},
+  year    = {1995},
+  volume  = {57},
+  number  = {1},
+  pages   = {289--300},
+}

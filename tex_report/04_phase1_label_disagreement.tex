@@ -17,10 +17,10 @@ phases will consume.
 not}\label{the-reference-condition-and-what-it-is-not}
 
 Every comparison in this report is made against \texttt{label\_oracle},
-taken from JIT-Defects4J (Ni et al., ESEC/FSE 2022), itself an extension
-of LLTC4J (Herbold et al.). Because the interpretation of every
-subsequent result depends on exactly what these labels are, we state
-their construction precisely.
+taken from JIT-Defects4J \citep{ni2022jitdefects4j}, itself an extension
+of LLTC4J \citep{herbold2022tangling}. Because the interpretation of
+every subsequent result depends on exactly what these labels are, we
+state their construction precisely.
 
 The dataset authors describe a two-stage procedure. First, within each
 bug-fixing commit, individual \emph{lines} were annotated as
@@ -64,9 +64,9 @@ precise one. It is also the claim the data actually support.
 \subsection{4.1.2 Variants, corpus and
 alignment}\label{variants-corpus-and-alignment}
 
-Six SZZ variants were executed using PySZZ v2 (Rosa et al., JSS 2023),
-the reference implementation released with the developer-informed-oracle
-study:
+Six SZZ variants were executed using PySZZ v2
+\citep{rosa2023szzvariants}, the reference implementation released with
+the developer-informed-oracle study:
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}

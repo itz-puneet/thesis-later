@@ -26,9 +26,9 @@ retrospective one.
 
 \subsection{2.1.2 The Kamei feature set}\label{the-kamei-feature-set}
 
-Kamei et al.~established the modern formulation, together with the
-change-level metrics that remain standard. The 14 features group into
-five families:
+Kamei et al. \citep{kamei2013jit} established the modern formulation,
+together with the change-level metrics that remain standard. The 14
+features group into five families:
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
@@ -59,10 +59,10 @@ being changed \\
 \end{longtable}
 
 Kamei et al.~report approximately \textbf{68\% accuracy and 64\% recall}
-on defect-inducing changes. These features are used throughout this
-report, taken as published rather than recomputed so that feature
-extraction cannot differ between the reference labels and the SZZ
-variants.
+on defect-inducing changes \citep{kamei2013jit}. These features are used
+throughout this report, taken as published rather than recomputed so
+that feature extraction cannot differ between the reference labels and
+the SZZ variants.
 
 \subsection{2.1.3 Class imbalance and concept
 drift}\label{class-imbalance-and-concept-drift}
@@ -83,15 +83,17 @@ designed to answer; it is outside the scope of this report.
 Projects also change over time --- team composition, architecture,
 process --- so the relationship between features and defect-proneness is
 not stationary. Concept drift in this setting is addressed by Cabral and
-Minku and by subsequent work; \S{}2.4 returns to it.
+Minku \citep{cabral2019orb, cabral2023reliable} and by subsequent work;
+\S{}2.4 returns to it.
 
 \section{2.2 SZZ and its variants}\label{szz-and-its-variants}
 
 \subsection{2.2.1 The original algorithm}\label{the-original-algorithm}
 
 \'{S}liwerski, Zimmermann and Zeller, in \emph{When Do Changes Induce
-Fixes?} (MSR 2005), introduced the procedure now universally called SZZ
-after their initials. Given a commit identified as fixing a defect, it:
+Fixes?} \citep{sliwerski2005szz}, introduced the procedure now
+universally called SZZ after their initials. Given a commit identified
+as fixing a defect, it:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -113,13 +115,13 @@ last commit to touch a line is the commit that made it wrong.
 
 \textbf{Tangled commits} violate the first premise. Bug-fixing commits
 routinely contain reformatting, renaming, comment updates and test
-changes alongside the fix. Herbold et al., using four annotators per
-line, found that \textbf{between 17\% and 32\% of all changes in
-bug-fixing commits address the underlying problem}, rising to
-\textbf{66--87\%} when only production-code files are considered; about
-\textbf{11\%} of lines produced active annotator disagreement. Every
-tangled line is blamed, and every commit that last touched one is
-mislabelled.
+changes alongside the fix. Herbold et al. \citep{herbold2022tangling},
+using four annotators per line, found that \textbf{between 17\% and 32\%
+of all changes in bug-fixing commits address the underlying problem},
+rising to \textbf{66--87\%} when only production-code files are
+considered; about \textbf{11\%} of lines produced active annotator
+disagreement. Every tangled line is blamed, and every commit that last
+touched one is mislabelled.
 
 \textbf{Blame attribution error} violates the second premise.
 \texttt{git\ blame} identifies the last commit to \emph{touch} a line,
@@ -154,18 +156,19 @@ Attribution
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{B-SZZ} & The original & \'{S}liwerski et al., MSR 2005 \\
+\textbf{B-SZZ} & The original & \citet{sliwerski2005szz} \\
 \textbf{AG-SZZ} & Annotation graphs for precise line tracing; filters
-cosmetic changes such as blank lines and comments & Kim et al., 2006 \\
+cosmetic changes such as blank lines and comments &
+\citet{kim2006agszz} \\
 \textbf{MA-SZZ} & Additionally excludes meta-changes --- branch merges,
-property changes --- that do not alter program behaviour & da Costa et
-al., 2017 \\
-\textbf{R-SZZ} & Retains only the most recent candidate commit & Davies
-et al., 2014 \\
+property changes --- that do not alter program behaviour &
+\citet{dacosta2017maszz} \\
+\textbf{R-SZZ} & Retains only the most recent candidate commit &
+\citet{davies2014rlszz} \\
 \textbf{L-SZZ} & Retains only the candidate with the most changed lines
-& Davies et al., 2014 \\
+& \citet{davies2014rlszz} \\
 \textbf{RA-SZZ} & Refactoring-aware; detects and filters refactorings
-via RefDiff and RefactoringMiner (Java only) & Neto et al., 2018 \\
+via RefDiff and RefactoringMiner (Java only) & \citet{neto2018raszz} \\
 \end{longtable}
 
 The progression assumes that B-SZZ's dominant error is over-collection
@@ -177,14 +180,14 @@ variants, more than half of what the filters remove is correct.}
 oracles}\label{developer-informed-oracles}
 
 Evaluating SZZ requires a reference that does not itself use SZZ. Rosa
-et al.~constructed one by mining commit messages in which developers
-\emph{explicitly name} the commit that introduced the defect being fixed
---- yielding \textbf{1,930 fix-to-inducing links across eight
-programming languages}, extended in the journal version to an evaluation
-of nine variants over \textbf{2,304 instances}. Against that oracle,
-\textbf{R-SZZ performed best (F-measure \ensuremath{\approx} 61\%, precision \ensuremath{\approx} 66\%)} while
-B-SZZ achieved higher recall (\ensuremath{\approx} 0.69) at markedly lower precision (\ensuremath{\approx}
-0.39).
+et al. \citep{rosa2021oracle, rosa2023szzvariants} constructed one by
+mining commit messages in which developers \emph{explicitly name} the
+commit that introduced the defect being fixed --- yielding \textbf{1,930
+fix-to-inducing links across eight programming languages}, extended in
+the journal version to an evaluation of nine variants over \textbf{2,304
+instances}. Against that oracle, \textbf{R-SZZ performed best (F-measure
+\ensuremath{\approx} 61\%, precision \ensuremath{\approx} 66\%)} while B-SZZ achieved higher recall (\ensuremath{\approx} 0.69)
+at markedly lower precision (\ensuremath{\approx} 0.39).
 
 \textbf{Two points about this dataset matter for the present work.}
 
@@ -206,12 +209,13 @@ a contradiction, and Chapter 6 addresses it explicitly.}
 \subsection{2.2.5 JIT-Defects4J and the reference
 labels}\label{jit-defects4j-and-the-reference-labels}
 
-Ni et al.~published \textbf{JIT-Defects4J}, an extension of LLTC4J,
-comprising \textbf{27,319 commits from 21 Java projects, of which 2,332
-(8.54\%) are labelled defect-introducing}. Its construction is
-two-stage: lines within bug-fixing commits were annotated manually,
-retained where at least three participants agreed; \texttt{git\ blame}
-was then applied to those verified lines.
+Ni et al. \citep{ni2022jitdefects4j} published \textbf{JIT-Defects4J},
+an extension of LLTC4J \citep{herbold2022tangling}, comprising
+\textbf{27,319 commits from 21 Java projects, of which 2,332 (8.54\%)
+are labelled defect-introducing}. Its construction is two-stage: lines
+within bug-fixing commits were annotated manually, retained where at
+least three participants agreed; \texttt{git\ blame} was then applied to
+those verified lines.
 
 \textbf{The labels are therefore \texttt{git\ blame} seeded with
 human-verified fix lines --- not manually verified ground truth for
@@ -243,11 +247,12 @@ Relevance here
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{ApacheJIT} & 106,674 commits (28,239 bug-inducing), 14 Apache
-projects & SZZ-derived & Larger, but cannot serve as an oracle for a
-study of SZZ noise \\
-\textbf{Defectors} & \textasciitilde213K files, 24 Python projects, 18
-domains & SZZ-derived & File-level; same objection \\
+\textbf{ApacheJIT} \citep{keshavarz2022apachejit} & 106,674 commits
+(28,239 bug-inducing), 14 Apache projects & SZZ-derived & Larger, but
+cannot serve as an oracle for a study of SZZ noise \\
+\textbf{Defectors} \citep{mahbub2023defectors} & \textasciitilde213K
+files, 24 Python projects, 18 domains & SZZ-derived & File-level; same
+objection \\
 \textbf{ReDef} & 3,164 defective / 10,268 clean functions, 22 C/C++
 projects & \textbf{Revert-anchored}, LLM-triaged, \textasciitilde92\%
 audited precision & Non-blame labels, but function-level, C/C++, no
@@ -268,11 +273,16 @@ Random \emph{k}-fold cross-validation on temporally ordered data allows
 a model to train on future commits and be tested on past ones.
 Time-aware evaluation --- training only on the past and evaluating only
 on the future --- has been advocated repeatedly, notably by Falessi and
-colleagues, who caution researchers against ``time travel'' and against
-generalising beyond the evaluation context. The reported effect is
-consistent in direction with this report's: in-sample performance is
-systematically inflated relative to time-aware performance. Random
-\emph{k}-fold nonetheless remains widespread in the JIT-SDP literature.
+colleagues \citep{falessi2020timetravel}, who caution researchers
+against ``time travel'' and against generalising beyond the evaluation
+context. The reported effect is consistent in direction with this
+report's: in-sample performance is systematically inflated relative to
+time-aware performance. Random \emph{k}-fold nonetheless remains
+widespread in the JIT-SDP literature: the systematic survey of the field
+\citep{zhao2023survey} catalogues 67 studies, and a recent audit of 101
+defect-prediction papers \citep{destefanis2026audit} assessed design,
+analysis and reporting practice against accepted norms and found both
+wanting.
 
 \textbf{Chapter 5 measures the consequence rather than restating the
 argument.} The inflation is +0.137 MCC on a high-capacity model and it
@@ -286,11 +296,10 @@ For streams, the standard protocol is \emph{test-then-train}: each
 example is first predicted, then used for learning. Summarising a metric
 over a stream requires a forgetting mechanism, conventionally a fading
 factor applied to the error estimate. Gama, Sebasti\~{a}o and Rodrigues
-(\emph{On Evaluating Stream Learning Algorithms}, Machine Learning,
-2013) defend prequential error with forgetting and prove that,
-\textbf{for consistent learning algorithms on stationary data, the
-prequential error computed with fading factors converges to the Bayes
-error}.
+\citep{gama2013prequential} defend prequential error with forgetting and
+prove that, \textbf{for consistent learning algorithms on stationary
+data, the prequential error computed with fading factors converges to
+the Bayes error}.
 
 \textbf{An important caveat for this report.} That convergence result is
 established for an \emph{error rate} --- a decomposable loss accumulated
@@ -306,12 +315,12 @@ estimator''; that was incorrect and is corrected in Chapter 3 \S{}3.4.2.
 
 \subsection{2.3.3 Verification latency}\label{verification-latency}
 
-Cabral and Minku identified verification latency as a first-class
-concern in JIT-SDP: labels arrive with a delay, and the delay differs
-systematically between classes, since a clean commit is only ever
-\emph{presumed} clean while a defective one must be discovered. Their
-framing of latency and of the resulting \textbf{class imbalance
-evolution} is the setting this report adopts.
+Cabral and Minku \citep{cabral2019orb} identified verification latency
+as a first-class concern in JIT-SDP: labels arrive with a delay, and the
+delay differs systematically between classes, since a clean commit is
+only ever \emph{presumed} clean while a defective one must be
+discovered. Their framing of latency and of the resulting \textbf{class
+imbalance evolution} is the setting this report adopts.
 
 On the corpus studied here the median latency is \textbf{113 days}, with
 \textbf{53\% of defect labels arriving after a 90-day window}. Under a
@@ -323,12 +332,12 @@ exactly the minority class.
 \section{2.4 Online learning for
 JIT-SDP}\label{online-learning-for-jit-sdp}
 
-\textbf{Online Bagging} (Oza and Russell, AISTATS 2001) adapts bagging
-to streams by presenting each arriving example to each ensemble member
+\textbf{Online Bagging} \citep{oza2001onlinebagging} adapts bagging to
+streams by presenting each arriving example to each ensemble member
 \emph{k} \textasciitilde{} Poisson(\ensuremath{\lambda}) times, achieving performance
 comparable to batch bagging without storing the dataset.
 
-\textbf{Oversampling Online Bagging (OOB)} (Wang, Minku and Yao) handles
+\textbf{Oversampling Online Bagging (OOB)} \citep{wang2015oob} handles
 imbalance by setting \ensuremath{\lambda} from the running observed class ratio --- tracked
 with time-decayed metrics --- so minority examples are presented more
 often as the imbalance grows. OOB and its undersampling counterpart UOB
@@ -350,42 +359,42 @@ learner is a hypothesis this report raises and does not test; Phase 3 is
 designed to measure the coupling directly.
 \end{quote}
 
-Cabral and Minku's later work (\emph{Towards Reliable Online
-Just-in-Time Software Defect Prediction}) analyses concept drift in
-JIT-SDP across p(y), p(x\textbar y) and p(x), reports \textbf{defect
-discovery delays ranging from one day to more than eleven years}, and
-proposes a drift-adaptive method that monitors predictions on unlabelled
-data rather than waiting for labels. \textbf{Their finding that medians
-are typically at or below 90 days, and that a 90-day waiting period
-trades off correct labelling against drift, is the basis for this
-report's choice of \emph{W} = 90 days.} \textbf{The distinction from the
-present work is the origin of the noise.} Latency-induced noise is a
-timing artefact: the label is correct but late. SZZ-induced noise is a
-\emph{labelling} artefact: the label is wrong and will never be
+Cabral and Minku's later work \citep{cabral2023reliable} analyses
+concept drift in JIT-SDP across p(y), p(x\textbar y) and p(x), reports
+\textbf{defect discovery delays ranging from one day to more than eleven
+years}, and proposes a drift-adaptive method that monitors predictions
+on unlabelled data rather than waiting for labels. \textbf{Their finding
+that medians are typically at or below 90 days, and that a 90-day
+waiting period trades off correct labelling against drift, is the basis
+for this report's choice of \emph{W} = 90 days.} \textbf{The distinction
+from the present work is the origin of the noise.} Latency-induced noise
+is a timing artefact: the label is correct but late. SZZ-induced noise
+is a \emph{labelling} artefact: the label is wrong and will never be
 corrected. This report addresses the second, under conditions that
 include the first.
 
 \section{2.5 The weak-baseline problem}\label{the-weak-baseline-problem}
 
-Deep learning approaches to JIT-SDP --- \textbf{DeepJIT} (Hoang et al.,
-MSR 2019), which encodes commits hierarchically from line to hunk to
-file to commit using a convolutional text model, and \textbf{CC2Vec}
-(Hoang et al., ICSE 2020), which learns code-change representations
-supervised by commit logs via a hierarchical attention network ---
-reported substantial gains over feature-based models. Two subsequent
-results complicate that picture.
+Deep learning approaches to JIT-SDP --- \textbf{DeepJIT}
+\citep{hoang2019deepjit}, which encodes commits hierarchically from line
+to hunk to file to commit using a convolutional text model, and
+\textbf{CC2Vec} \citep{hoang2020cc2vec}, which learns code-change
+representations supervised by commit logs via a hierarchical attention
+network --- reported substantial gains over feature-based models. Two
+subsequent results complicate that picture.
 
-Zeng et al., evaluating on over \textbf{310,370 changes}, found that
-CC2Vec could not consistently outperform DeepJIT and that neither
-consistently outperformed traditional feature-based JIT prediction. They
-then constructed \textbf{LApredict} --- logistic regression on the
-added-lines feature alone --- which outperformed both deep models while
-being roughly \textbf{81,000--120,000\ensuremath{\times} faster} to train and test.
+Zeng et al. \citep{zeng2021lapredict}, evaluating on over
+\textbf{310,370 changes}, found that CC2Vec could not consistently
+outperform DeepJIT and that neither consistently outperformed
+traditional feature-based JIT prediction. They then constructed
+\textbf{LApredict} --- logistic regression on the added-lines feature
+alone --- which outperformed both deep models while being roughly
+\textbf{81,000--120,000\ensuremath{\times} faster} to train and test.
 
-Pornprasit and Tantithamthavorn reported \textbf{JITLine}, a simpler
-feature-based approach that was \textbf{26--38\% better in F-measure,
-17--51\% more cost-effective, and 70--100\ensuremath{\times} faster} than CC2Vec and
-DeepJIT.
+Pornprasit and Tantithamthavorn \citep{pornprasit2021jitline} reported
+\textbf{JITLine}, a simpler feature-based approach that was
+\textbf{26--38\% better in F-measure, 17--51\% more cost-effective, and
+70--100\ensuremath{\times} faster} than CC2Vec and DeepJIT.
 
 \textbf{Both models are used in this report, and the reason is
 methodological rather than deferential.} LApredict has minimal capacity;
@@ -403,18 +412,18 @@ Under an 8.54\% positive rate, accuracy is uninformative. This report
 uses:
 
 \textbf{Matthews Correlation Coefficient (MCC)} --- introduced by
-Matthews (1975) for protein secondary-structure prediction and since
-adopted widely for imbalanced binary classification --- as primary. It
-incorporates all four confusion-matrix cells and is near zero for any
-uninformed strategy. A majority-class predictor scores 0.0 MCC and
-91.5\% accuracy on this corpus.
+Matthews \citep{matthews1975mcc} for protein secondary-structure
+prediction and since adopted widely for imbalanced binary classification
+--- as primary. It incorporates all four confusion-matrix cells and is
+near zero for any uninformed strategy. A majority-class predictor scores
+0.0 MCC and 91.5\% accuracy on this corpus.
 
 \textbf{G-mean}, the geometric mean of per-class recalls, which
 collapses toward zero if either class is abandoned.
 
-\textbf{Cohen's \ensuremath{\kappa}} (Cohen, 1960), the proportion of agreement corrected
-for chance, for agreement between labelling procedures, where the
-question is concordance rather than prediction quality.
+\textbf{Cohen's \ensuremath{\kappa}} \citep{cohen1960kappa}, the proportion of agreement
+corrected for chance, for agreement between labelling procedures, where
+the question is concordance rather than prediction quality.
 
 Effort-aware metrics --- recall at a fixed inspection budget ---
 arguably match the practitioner's objective more closely and are
@@ -423,30 +432,30 @@ identified as future work in Chapter 6, not reported here.
 \section{2.7 Learning with noisy
 labels}\label{learning-with-noisy-labels}
 
-\textbf{Loss correction.} Natarajan et al.~(\emph{Learning with Noisy
-Labels}, NIPS 2013) study binary classification under random
-classification noise whose \textbf{flip probability is
-class-conditional} --- precisely the noise model Chapter 4 measures ---
-and construct a simple \textbf{unbiased estimator of any loss}, with
-performance bounds for empirical risk minimisation on noisily labelled
-i.i.d. data. The correction becomes numerically unstable as \ensuremath{\rho}\ensuremath{_0} + \ensuremath{\rho}\ensuremath{_1} \ensuremath{\rightarrow} 1.
-\textbf{This matters directly here}: Chapter 4 measures \ensuremath{\rho}\ensuremath{_0} + \ensuremath{\rho}\ensuremath{_1}
-approaching 0.8 for the conservative variants, which is why the
-loss-correction arm evaluated in this report is capped.
+\textbf{Loss correction.} Natarajan et al. \citep{natarajan2013noisy}
+study binary classification under random classification noise whose
+\textbf{flip probability is class-conditional} --- precisely the noise
+model Chapter 4 measures --- and construct a simple \textbf{unbiased
+estimator of any loss}, with performance bounds for empirical risk
+minimisation on noisily labelled i.i.d. data. The correction becomes
+numerically unstable as \ensuremath{\rho}\ensuremath{_0} + \ensuremath{\rho}\ensuremath{_1} \ensuremath{\rightarrow} 1. \textbf{This matters directly
+here}: Chapter 4 measures \ensuremath{\rho}\ensuremath{_0} + \ensuremath{\rho}\ensuremath{_1} approaching 0.8 for the conservative
+variants, which is why the loss-correction arm evaluated in this report
+is capped.
 
-\textbf{Sample selection.} Co-teaching (Han et al., NeurIPS 2018) trains
+\textbf{Sample selection.} Co-teaching \citep{han2018coteaching} trains
 two networks simultaneously; on each mini-batch, each selects the
 examples it considers clean and back-propagates only the examples
 selected by its peer, on the premise that mislabelled examples exhibit
 higher loss early in training. It assumes a batch setting with multiple
 epochs and two models.
 
-\textbf{Confident Learning} (Northcutt, Jiang and Chuang, JAIR 2021)
-assumes a \textbf{class-conditional} noise process and directly
-estimates the joint distribution between noisy and true labels, then
-prunes, counts with probabilistic thresholds, and ranks examples by
-confidence. It is a batch method requiring cross-validated out-of-sample
-predictions over a fixed dataset.
+\textbf{Confident Learning} \citep{northcutt2021confident} assumes a
+\textbf{class-conditional} noise process and directly estimates the
+joint distribution between noisy and true labels, then prunes, counts
+with probabilistic thresholds, and ranks examples by confidence. It is a
+batch method requiring cross-validated out-of-sample predictions over a
+fixed dataset.
 
 \textbf{Why these do not transfer directly.} Each assumes a fixed
 dataset, repeated passes, and labels that are wrong but \emph{stable}. A

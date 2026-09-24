@@ -23,7 +23,20 @@ generated, so no `fontspec` and no XeLaTeX are required.
 main.tex            all document-level formatting; hand-written
 chapters/*.tex      chapter bodies (generated — see below)
 figures/*.png       the nine figures, referenced by bare filename
+references.bib      33 entries, all cited
 ```
+
+## Bibliography
+
+Citations use `natbib` with `plainnat`, which ships with natbib, so nothing
+extra needs installing. Overleaf runs BibTeX automatically; locally you need
+the usual `pdflatex → bibtex → pdflatex → pdflatex` cycle, or just `latexmk`.
+
+**Seven entries carry a `NEEDS-CHECK` note** naming a field that could not be
+confirmed — usually a page range, a volume, or an author list abbreviated to
+`and others`. Search the file for `NEEDS-CHECK` and complete those against the
+publisher records before submission. Everything else was verified against a
+publisher record or the source.
 
 ## Editing
 

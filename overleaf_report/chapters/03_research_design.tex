@@ -92,10 +92,10 @@ Chapter 6.
 
 \subsection{3.2.2 The reference labels}\label{the-reference-labels}
 
-\texttt{label\_oracle} derives from JIT-Defects4J (Ni et al., ESEC/FSE
-2022), an extension of LLTC4J (Herbold et al.). Its provenance was
-traced through the repository and confirmed against the source paper
-rather than assumed:
+\texttt{label\_oracle} derives from JIT-Defects4J
+\citep{ni2022jitdefects4j}, an extension of LLTC4J
+\citep{herbold2022tangling}. Its provenance was traced through the
+repository and confirmed against the source paper rather than assumed:
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
@@ -182,12 +182,13 @@ Every streaming result in Chapters 5--7 inherits this threat.
 \section{3.3 SZZ variant
 implementations}\label{szz-variant-implementations}
 
-Six variants were produced with \textbf{PySZZ v2} (Rosa et al., JSS
-2023), the reference implementation released with the
-developer-informed-oracle study. Using the authors' own implementation
-rather than a reimplementation removes one source of unexplained
-variation, at the cost of inheriting whatever its defaults encode --- a
-trade recorded here as a decision rather than left implicit.
+Six variants were produced with \textbf{PySZZ v2}
+\citep{rosa2023szzvariants}, the reference implementation released with
+the developer-informed-oracle study. Using the authors' own
+implementation rather than a reimplementation removes one source of
+unexplained variation, at the cost of inheriting whatever its defaults
+encode --- a trade recorded here as a decision rather than left
+implicit.
 
 Each variant was run on the same fix-commit set, and its output aligned
 to the reference over an \textbf{identical 27,319-commit denominator}.
@@ -277,15 +278,17 @@ Each comparison reports:
 \begin{itemize}
 \tightlist
 \item
-  \textbf{Wilcoxon signed-rank \emph{p}} --- paired, distribution-free.
+  \textbf{Wilcoxon signed-rank \emph{p}} \citep{wilcoxon1945} ---
+  paired, distribution-free.
 \item
   \textbf{Matched-pairs rank-biserial correlation} --- derived from the
   same signed ranks as the \emph{p}-value, so the effect size and the
   test agree by construction. It reads as \emph{consistency}: +1.000
   means every project moved in the same direction.
 \item
-  \textbf{Hodges--Lehmann estimator} --- the median of pairwise Walsh
-  averages, the location estimate that accompanies the signed-rank test.
+  \textbf{Hodges--Lehmann estimator} \citep{hodges1963} --- the median
+  of pairwise Walsh averages, the location estimate that accompanies the
+  signed-rank test.
 \item
   \textbf{Percentile bootstrap confidence interval}, computed
   \textbf{for the Hodges--Lehmann statistic itself}, with the statistic
@@ -309,12 +312,18 @@ Seventy-four tests are run in Phase 2 alone. Multiplicity is corrected
 \begin{itemize}
 \tightlist
 \item
-  \textbf{Holm within test family} --- families grouped by the
-  comparison being made.
+  \textbf{Holm within test family} \citep{holm1979} --- families grouped
+  by the comparison being made.
 \item
   \textbf{Holm globally across all tests} --- no family argument
   required.
 \end{itemize}
+
+A Benjamini--Hochberg false-discovery-rate correction
+\citep{benjamini1995fdr} is computed alongside both and is carried in
+the released result tables, but no claim in this report rests on it:
+where Holm and BH disagree, the Holm-corrected value is the one
+reported.
 
 The global column exists because the families were defined \emph{during}
 analysis, not declared in advance. A sceptic can reasonably argue the

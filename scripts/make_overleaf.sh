@@ -47,6 +47,7 @@ s = s.replace("%  BUILD   latexmk -pdf report_main.tex",
 p.write_text(s)
 PY
 
+cp references.bib overleaf_report/
 [ -f README_overleaf.md ] && cp README_overleaf.md overleaf_report/README.md
 
 # Refuse to ship a package that references anything outside itself.
@@ -61,6 +62,16 @@ for t in root.glob("chapters/*.tex"):
     for g in re.findall(r"\\includegraphics\[[^\]]*\]\{(.*?)\}", t.read_text()):
         if not (root / "figures" / pathlib.Path(g).name).exists():
             print("MISSING figure:", g); ok = False
+bib = set(re.findall(r"^@\w+\{([^,]+),", (root / "references.bib").read_text(), re.M))
+cited = set()
+for t in root.glob("chapters/*.tex"):
+    for c in re.findall(r"\\cite[tp]?\{([^}]*)\}", t.read_text()):
+        cited |= {k.strip() for k in c.split(",")}
+missing = sorted(cited - bib)
+if missing:
+    print("CITED BUT NOT IN references.bib:", missing); ok = False
+else:
+    print(f"bibliography: {len(bib)} entries, {len(cited)} cited, all resolve")
 n = sum(sum(1 for c in p.read_text() if ord(c) > 127) for p in root.rglob("*.tex"))
 if n: print(f"WARNING: {n} non-ASCII characters remain; pdfLaTeX may fail")
 if not ok: sys.exit("package is not self-contained")
