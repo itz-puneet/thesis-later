@@ -1,0 +1,163 @@
+%==============================================================================
+%  Quantifying and Mitigating SZZ-Induced Label Noise in Just-In-Time
+%  Software Defect Prediction under Verification-Latency-Aware Online
+%  Evaluation
+%
+%  Puneet Deshwani -- M.Tech Thesis
+%
+%  BUILD
+%    latexmk -pdf thesis_main.tex          (or pdflatex x3 for the ToC/refs)
+%
+%  SCOPE OF THIS FILE
+%    Abstract and Chapters 1-5 only. Chapters 6-9 exist as markdown in
+%    chapters/ and are listed as commented \input lines at the end; convert
+%    them with scripts/md_to_tex.sh when they are wanted here.
+%
+%  The chapter bodies in tex/ are GENERATED from chapters/*.md. Edit the
+%  markdown and regenerate; do not hand-edit tex/0*.tex or the next
+%  regeneration will discard the change. This file is hand-written and is the
+%  one place to change document-level formatting.
+%
+%  Engine: written for pdfLaTeX. All Unicode in the source has been mapped to
+%  LaTeX commands during generation, so no fontspec/XeLaTeX is required.
+%==============================================================================
+\documentclass[12pt,a4paper,oneside]{report}
+
+%------------------------------------------------------------------ encoding
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+
+%------------------------------------------------------------------ layout
+\usepackage[a4paper,left=35mm,right=25mm,top=25mm,bottom=25mm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{microtype}
+\usepackage[bottom]{footmisc}
+
+%------------------------------------------------------------------ maths
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+%------------------------------------------------------------------ tables
+%  pandoc emits longtable with booktabs rules and calc-based column widths,
+%  so all four packages are required; calc supplies \real{}.
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{multirow}
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.15}
+
+%------------------------------------------------------------------ figures
+\usepackage{graphicx}
+\graphicspath{{./}{reports/figures/}}
+\usepackage[font=small,labelfont=bf,width=0.92\linewidth]{caption}
+% Figures are discussed immediately after they appear, so keep them close.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.75}
+
+%------------------------------------------------------------------ headings
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+%------------------------------------------------------------------ quotes
+\usepackage{xcolor}
+\usepackage{framed}
+% Block quotes carry the thesis's "state this exactly" passages, so they are
+% shaded rather than merely indented. snugshade comes from framed and takes
+% its colour from shadecolor; this is deliberately a stock construction
+% rather than a hand-rolled MakeFramed, which is fragile across classes.
+\definecolor{shadecolor}{HTML}{F1F5FA}
+\renewenvironment{quote}{\begin{snugshade}\small}{\end{snugshade}}
+
+%------------------------------------------------------------------ links
+\usepackage[hidelinks,breaklinks=true]{hyperref}
+\hypersetup{
+  pdftitle={Quantifying and Mitigating SZZ-Induced Label Noise in
+            Just-In-Time Software Defect Prediction},
+  pdfauthor={Puneet Deshwani},
+  bookmarksnumbered=true,
+}
+\usepackage{url}
+\urlstyle{same}
+
+%------------------------------------------------------------------ pandoc
+% Required by pandoc-generated bodies.
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+%==============================================================================
+\begin{document}
+
+%---------------------------------------------------------------- title page
+\begin{titlepage}
+\centering
+\vspace*{2cm}
+{\LARGE\bfseries Quantifying and Mitigating SZZ-Induced\\[0.3em]
+ Label Noise in Just-In-Time Software Defect\\[0.3em]
+ Prediction under Verification-Latency-Aware\\[0.3em]
+ Online Evaluation\par}
+\vspace{2.5cm}
+{\Large Puneet Deshwani\par}
+\vspace{0.6cm}
+{\large M.Tech Thesis\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+%---------------------------------------------------------------- abstract
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\markboth{Abstract}{Abstract}
+\input{tex/00_abstract}
+
+%---------------------------------------------------------------- abbreviations
+\chapter*{Abbreviations}
+\addcontentsline{toc}{chapter}{Abbreviations}
+\markboth{Abbreviations}{Abbreviations}
+\input{tex/00_abbreviations}
+
+%---------------------------------------------------------------- contents
+\tableofcontents
+\listoffigures
+% \listoftables is omitted deliberately: the tables are generated from
+% markdown and carry no \caption, so the list would be empty. Add captions in
+% chapters/*.md first if a List of Tables is required by the submission rules.
+
+\cleardoublepage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+%==============================================================================
+%  Chapters
+%==============================================================================
+\input{tex/01_introduction}
+\input{tex/02_background_related_work}
+\input{tex/03_research_design}
+\input{tex/04_phase1_label_disagreement}
+\input{tex/05_phase2_downstream_impact}
+
+% Remaining chapters, deliberately not included in this file yet.
+% Generate with: ./scripts/md_to_tex.sh   then uncomment.
+% \input{tex/06_phase3_mechanism}
+% \input{tex/07_phase4_noise_aware_orb}
+% \input{tex/08_discussion}
+% \input{tex/09_conclusion}
+
+% \bibliographystyle{IEEEtran}
+% \bibliography{references}
+
+\end{document}
