@@ -1,0 +1,151 @@
+%==============================================================================
+%  INTERIM REPORT -- Phases 1 and 2
+%
+%  Quantifying SZZ-Induced Label Noise in Just-In-Time Software Defect
+%  Prediction under Verification-Latency-Aware Online Evaluation
+%
+%  Puneet Deshwani -- M.Tech
+%
+%  BUILD   latexmk -pdf report_main.tex
+%
+%  SCOPE   This is a self-contained report on Phases 1 and 2. It is NOT a
+%          truncation of the full thesis: the chapter bodies live in report/
+%          and differ from chapters/ wherever the thesis forward-references
+%          results from later phases. Chapter 6 states what is deliberately
+%          left open and how it will be addressed.
+%
+%  SOURCES report/*.md  ->  tex_report/*.tex  via scripts/md_to_tex.sh report
+%          Edit the markdown. tex_report/ is overwritten on regeneration.
+%
+%  ENGINE  pdfLaTeX. All Unicode is mapped to LaTeX commands at generation
+%          time, so no fontspec or XeLaTeX is required.
+%==============================================================================
+\documentclass[12pt,a4paper,oneside]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+
+\usepackage[a4paper,left=35mm,right=25mm,top=25mm,bottom=25mm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{microtype}
+\usepackage[bottom]{footmisc}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% pandoc emits longtable with booktabs rules and calc-based widths; calc
+% supplies \real{}. All four packages are required.
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{etoolbox}          % must precede \AtBeginEnvironment below
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+% Several results tables run to six or seven columns; shrink them globally
+% rather than hand-editing the generated files.
+\AtBeginEnvironment{longtable}{\footnotesize}
+
+\usepackage{graphicx}
+\graphicspath{{./}{reports/figures/}}
+\usepackage[font=small,labelfont=bf,width=0.92\linewidth]{caption}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.75}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+\usepackage{xcolor}
+\usepackage{framed}
+% Block quotes carry the "state this exactly" passages. snugshade is framed's
+% stock construction and takes its colour from shadecolor; deliberately not a
+% hand-rolled MakeFramed, which is fragile across classes.
+\definecolor{shadecolor}{HTML}{F1F5FA}
+\renewenvironment{quote}{\begin{snugshade}\small}{\end{snugshade}}
+
+\usepackage[hidelinks,breaklinks=true]{hyperref}
+\hypersetup{
+  pdftitle={SZZ-Induced Label Noise in JIT Defect Prediction -- Interim Report, Phases 1 and 2},
+  pdfauthor={Puneet Deshwani},
+  bookmarksnumbered=true,
+}
+\usepackage{url}
+\urlstyle{same}
+
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+%==============================================================================
+\begin{document}
+
+\begin{titlepage}
+\centering
+\vspace*{1.6cm}
+{\large\scshape Interim Report --- Phases 1 and 2\par}
+\vspace{1.4cm}
+{\LARGE\bfseries Quantifying SZZ-Induced Label Noise in\\[0.3em]
+ Just-In-Time Software Defect Prediction under\\[0.3em]
+ Verification-Latency-Aware Online Evaluation\par}
+\vspace{2.2cm}
+{\Large Puneet Deshwani\par}
+\vspace{0.5cm}
+{\large M.Tech\par}
+\vspace{1.6cm}
+\begin{minipage}{0.82\linewidth}\small\setstretch{1.15}
+\textbf{Scope.} This report covers Phase~1 (SZZ label quality) and Phase~2
+(downstream impact under honest evaluation). Phases~3 and~4 --- the mechanism
+by which label noise degrades an online learner, and whether a learner can be
+built to withstand it --- are \emph{not} reported. Chapter~6 states what is
+left open, gives the design of each remaining phase, and records the controls
+this report has shown they will need.
+\end{minipage}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\markboth{Abstract}{Abstract}
+\input{tex_report/00_abstract}
+
+\chapter*{Abbreviations}
+\addcontentsline{toc}{chapter}{Abbreviations}
+\markboth{Abbreviations}{Abbreviations}
+\input{tex_report/00_abbreviations}
+
+\section*{A note on corrections}
+\input{tex_report/00_corrections}
+
+\tableofcontents
+\listoffigures
+% \listoftables omitted: the generated tables carry no \caption, so the list
+% would be empty. Add captions in report/*.md if the submission requires one.
+
+\cleardoublepage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+%==============================================================================
+\input{tex_report/01_introduction}
+\input{tex_report/02_background_related_work}
+\input{tex_report/03_research_design}
+\input{tex_report/04_phase1_label_disagreement}
+\input{tex_report/05_phase2_downstream_impact}
+\input{tex_report/06_conclusion_and_planned_work}
+
+% \bibliographystyle{IEEEtran}
+% \bibliography{references}
+
+\end{document}

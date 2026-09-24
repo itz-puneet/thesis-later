@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
-# Regenerate tex/*.tex from chapters/*.md for thesis_main.tex.
+# Regenerate LaTeX bodies from markdown.
+#   ./scripts/md_to_tex.sh            chapters/ -> tex/          (thesis_main.tex)
+#   ./scripts/md_to_tex.sh report     report/   -> tex_report/   (report_main.tex)
 #
 # The generated files are overwritten every run -- edit the markdown, not the
 # LaTeX. Unicode is mapped to LaTeX commands here so the document builds under
 # pdfLaTeX without fontspec.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-mkdir -p tex
-for f in chapters/0[1-9]_*.md; do
+if [ "${1:-}" = "report" ]; then SRC=report; OUT=tex_report; else SRC=chapters; OUT=tex; fi
+mkdir -p "$OUT"
+for f in "$SRC"/0[1-9]_*.md; do
   pandoc "$f" -f markdown -t latex --top-level-division=chapter \
-    -o "tex/$(basename "$f" .md).tex"
+    -o "$OUT/$(basename "$f" .md).tex"
 done
+export SRC OUT
 python3 - <<'PY'
 import re, pathlib, subprocess
 MATH = {"ρ":r"\rho","κ":r"\kappa","λ":r"\lambda","δ":r"\delta","₀":"_0","₁":"_1",
@@ -35,19 +39,21 @@ def clean(s):
     for u,t in TEXT.items(): s = s.replace(u, t)
     return s
 
-for p in sorted(pathlib.Path("tex").glob("0[1-9]*.tex")):
+import os
+OUT = os.environ.get("OUT", "tex"); SRC = os.environ.get("SRC", "chapters")
+for p in sorted(pathlib.Path(OUT).glob("0[1-9]*.tex")):
     p.write_text(clean(p.read_text()))
 
-src = pathlib.Path("chapters/00_front_matter.md").read_text()
+src = pathlib.Path(f"{SRC}/00_front_matter.md").read_text()
 for name, start, end in [("00_abstract","## Abstract","## Abbreviations"),
                          ("00_abbreviations","## Abbreviations","## A note on corrections")]:
     md = src[src.index(start):src.index(end)].replace(start,"").strip().rstrip("-").strip()
     out = subprocess.run(["pandoc","-f","markdown","-t","latex"],
                          input=md, text=True, capture_output=True).stdout
-    pathlib.Path(f"tex/{name}.tex").write_text(clean(out))
+    pathlib.Path(f"{OUT}/{name}.tex").write_text(clean(out))
 
 bad = {p.name: sum(1 for c in p.read_text() if ord(c) > 127)
-       for p in pathlib.Path("tex").glob("*.tex")}
+       for p in pathlib.Path(OUT).glob("*.tex")}
 left = {k: v for k, v in bad.items() if v}
-print("regenerated tex/ ;", "non-ASCII remaining:", left if left else "none")
+print(f"regenerated {OUT}/ ;", "non-ASCII remaining:", left if left else "none")
 PY
