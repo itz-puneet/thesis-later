@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Assemble chapters/ into Thesis_Draft.pdf, and rebuild the synthesis PDF.
+# Assemble chapters/ into Thesis_Draft.pdf.
 # Fails loudly if pandoc or Chrome is missing, and verifies the page count --
 # a silent one-page PDF is the failure mode this script exists to prevent.
 set -euo pipefail
@@ -29,4 +29,3 @@ PY
 cat chapters/00_front_matter.md > "$OUT/thesis.md"
 for f in chapters/0[1-9]_*.md; do printf '\n\n---\n\n' >> "$OUT/thesis.md"; cat "$f" >> "$OUT/thesis.md"; done
 build "$OUT/thesis.md" Thesis_Draft.pdf --toc --toc-depth=2
-build Thesis_Comprehensive_Synthesis.md Thesis_Comprehensive_Synthesis.pdf

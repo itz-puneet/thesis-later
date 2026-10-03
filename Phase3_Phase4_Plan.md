@@ -311,7 +311,7 @@ with an instrumented prediction before the grid runs, not after.
 ## Step 3 — Supervisor Meeting 3 (before touching Phase 4)
 
 Bring exactly five artifacts:
-1. The `label_source_gap` table **under both estimators**, with the estimator disagreement explained (`Phase2_Supervisor_Explanation_Guide.md` §7 has the wording).
+1. The `label_source_gap` table **under both estimators**, with the estimator disagreement explained (`Phase1_Phase2_Master_Results.md` §6 carries the numbers and the wording).
 2. The arm-compression figure.
 3. The repair bar chart with paired stats.
 4. The dose-slope table.

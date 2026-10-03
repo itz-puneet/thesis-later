@@ -207,15 +207,11 @@ python scripts/make_figures.py
 
 **Results and analysis (current):**
 - `Phase1_Phase2_Master_Results.md`: **single source of truth** — every Phase 1 and Phase 2 number, with the eight figures.
-- `Phase2_Supervisor_Explanation_Guide.md`: how to present Phase 2 and its statistical tests.
 - `Phase2_Audit_Findings_and_Remediation_Plan.md`: pipeline audit, what was fixed and how, what remains open.
 - `Phase3_Phase4_Plan.md`: ordered execution plan for Phases 3 and 4, with exit criteria per step.
 
 **Planning and reference:**
-- `01_Learning_Guide.md`: Theoretical concepts and learning guide for the thesis.
 - `02_Thesis_Outline.md`: Structure and chapter outline of the thesis.
-- `03_Execution_and_Supervisor_Plan.md`: Phase-wise milestones and meeting checklists.
-- `04_Alternative_Execution_Options.md`: Backup plans per phase.
 - `codebase/`:
   - `config.py`: Global constants, paths, and hyperparameters.
   - `data/loader.py`: Unified dataset loading and schema formatting.

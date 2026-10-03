@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# Regenerate LaTeX bodies from markdown.
-#   ./scripts/md_to_tex.sh            chapters/ -> tex/          (thesis_main.tex)
-#   ./scripts/md_to_tex.sh report     report/   -> tex_report/   (report_main.tex)
+# Regenerate LaTeX bodies from markdown: chapters/ -> tex/ for thesis_main.tex.
+#
+# The interim-report tree this script used to also serve was removed once
+# supervisor_report/ superseded it; that report is written directly in LaTeX
+# and does not go through this path.
 #
 # The generated files are overwritten every run -- edit the markdown, not the
 # LaTeX. Unicode is mapped to LaTeX commands here so the document builds under
 # pdfLaTeX without fontspec.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-if [ "${1:-}" = "report" ]; then SRC=report; OUT=tex_report; else SRC=chapters; OUT=tex; fi
+SRC=chapters; OUT=tex
 mkdir -p "$OUT"
 for f in "$SRC"/0[1-9]_*.md; do
   pandoc "$f" -f markdown -t latex --top-level-division=chapter --natbib \
@@ -20,7 +22,10 @@ import re, pathlib, subprocess
 MATH = {"ρ":r"\rho","κ":r"\kappa","λ":r"\lambda","δ":r"\delta","₀":"_0","₁":"_1",
         "×":r"\times","≈":r"\approx","≥":r"\geq","≤":r"\leq","±":r"\pm","÷":r"\div",
         "−":"-","∈":r"\in","→":r"\rightarrow","ℝ":r"\mathbb{R}","·":r"\cdot",
-        "●":r"\bullet","○":r"\circ","◐":r"\odot"}
+        "●":r"\bullet","○":r"\circ","◐":r"\odot",
+        # Chapter 7's algorithm block uses these; without them pdfLaTeX fails.
+        "ε":r"\varepsilon","τ":r"\tau","←":r"\leftarrow","⊥":r"\bot","≠":r"\neq",
+        "σ":r"\sigma","μ":r"\mu","θ":r"\theta","α":r"\alpha","β":r"\beta"}
 # Box-drawing goes to ASCII: pdfLaTeX has no glyphs for it, and the only use
 # is the pipeline diagram inside a verbatim block.
 TEXT = {"§":r"\S{}","Ś":r"\'{S}","ã":r"\~{a}","─":"-","│":"|","┼":"+","┐":"+",

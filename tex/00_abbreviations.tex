@@ -23,3 +23,21 @@ AG-, MA-, R-, L-, RA-) \\
 \textbf{\ensuremath{\lambda}} & Poisson oversampling rate in online bagging \\
 \textbf{W} & Verification-latency decision window (90 days) \\
 \end{longtable}
+
+\subsection{A note on corrections}\label{a-note-on-corrections}
+
+Several findings in this thesis contradict claims made earlier in the
+same project: the false-negative starvation hypothesis Phase 4 was
+originally designed around, a decomposition of the verification-latency
+effect, a conclusion about whether latency masks label quality, and the
+mechanism attributed to confidence damping --- refuted by its own
+registered test. In each case the superseded claim is stated together
+with the design error or the control that overturned it, rather than
+removed.
+
+This is deliberate. The corrections are part of the evidence --- they
+record which conclusions survived contact with a control and which did
+not, and in three of the four cases the control that overturned the
+claim had been built for a different purpose. A caveat is not a control,
+and most of the substantive revisions in this work exist because that
+distinction was eventually enforced.
