@@ -1,10 +1,10 @@
 """Generate the figures used in the progress report.
 
 Run from the repository root:
-    python supervisor_report/make_figures.py
+    python "MTP 2/report/make_figures.py"
 
 All figures are built from the committed result files, so they can be
-regenerated at any time. Output goes to supervisor_report/figures/.
+regenerated at any time. Output goes to the figures/ folder next to this script.
 """
 import json
 from pathlib import Path
@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import cohen_kappa_score
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 OUT = Path(__file__).resolve().parent / "figures"
 OUT.mkdir(exist_ok=True)
 

@@ -43,37 +43,103 @@
 
 \begin{document}
 
-% ---------------------------------------------------------------- title page
-% The front page will be replaced by the format prescribed by the institute.
+% ---------------------------------------------------------------- front page
+\newcommand{\reporttitle}{Quantifying SZZ-Induced Label Noise in Just-In-Time
+Software Defect Prediction under Verification-Latency-Aware Online Evaluation}
+\newcommand{\candidate}{Puneet Deshwani}
+\newcommand{\rollno}{2025MCS013}
+\newcommand{\supervisor}{Dr.\ Santosh Singh Rathore}
+% period of the work, as it should appear in the declaration
+\newcommand{\workperiod}{\underline{\hspace{45mm}}}
+
 \pagenumbering{Alph}
+\newgeometry{left=28mm,right=28mm,top=25mm,bottom=25mm}
 \begin{titlepage}
-\centering
-{\large\bfseries Atal Bihari Vajpayee Indian Institute of\\[2pt]
- Information Technology and Management, Gwalior\par}
-\vspace{4pt}
-{\normalsize Department of Computer Science and Engineering\par}
-\vspace{2.2cm}
-{\large M.Tech Thesis Progress Report\par}
-\vspace{1.2cm}
-{\LARGE\bfseries Quantifying SZZ-Induced Label Noise in\\[0.35em]
- Just-In-Time Software Defect Prediction\\[0.35em]
- under Verification-Latency-Aware\\[0.35em]
- Online Evaluation\par}
-\vspace{1cm}
-{\large Report on the First Stage of the Thesis Work\par}
-\vfill
-\begin{tabular}{@{}l@{\hspace{2.5cm}}l@{}}
-\textbf{Submitted by} & \textbf{Under the supervision of} \\[2pt]
-Puneet Deshwani & Dr.\ Santosh Singh Rathore \\
-Roll No.\ 2025MCS013 & Department of CSE \\
-M.Tech (CSE) & ABV-IIITM Gwalior \\
-\end{tabular}
-\vfill
-{\large October 2026\par}
+\centering\setstretch{1.2}
+\vspace*{2mm}
+{\fontsize{16pt}{21pt}\selectfont\bfseries \reporttitle\par}
+\vspace{3mm}
+{\fontsize{13pt}{17pt}\selectfont
+A\par
+report submitted in fulfilment for the award of the degree of\par
+\vspace{4mm}
+\textbf{Master of Technology}\par
+In\par
+Computer Science and Engineering\par
+\textbf{by}\par
+\vspace{3mm}
+\textbf{\candidate: \rollno}\par
+\vspace{5mm}
+\textbf{Under the supervision}\par
+\textbf{\supervisor}\par
+\textbf{Department of Computer Science and Engineering}\par}
+\vspace{9mm}
+\includegraphics[width=5.4cm]{iiitm_logo}\par
+\vspace{3mm}
+{\fontsize{12pt}{15pt}\selectfont\bfseries
+ATAL BIHARI VAJPAYEE-\par
+INDIAN INSTITUTE OF INFORMATION TECHNOLOGY AND MANAGEMENT\par
+GWALIOR - 474015, MADHYA PRADESH, INDIA\par}
 \end{titlepage}
+\restoregeometry
 
 \pagenumbering{roman}
 \setcounter{page}{1}
+
+% --------------------------------------------------------------- declaration
+\phantomsection\addcontentsline{toc}{chapter}{Declaration}
+\vspace*{6mm}
+\begin{center}{\Large\bfseries DECLARATION}\end{center}
+\vspace{8mm}
+\begingroup\setstretch{1.2}\setlength{\parskip}{7pt}
+\noindent I hereby certify that the work, which is being presented in the
+report/thesis, entitled \reporttitle{} in fulfilment of the requirements for
+the award of the degree of Master of Technology and submitted to the
+institution is an authentic record of my own work carried out during the
+period \workperiod{} under the supervision of \supervisor.
+
+\noindent I also cited the reference about the text(s)/figure(s)/table(s)
+found where they have been taken.
+
+\vspace{12mm}
+\noindent Dated: \hfill Signature of the candidate\hspace{22mm}\null
+
+\vspace{22mm}
+\noindent This is to certify that the above statement made by the candidate is
+correct to the best of my knowledge.
+
+\vspace{12mm}
+\noindent Dated: \hfill Signature of the Supervisor\hspace{22mm}\null
+\endgroup
+\clearpage
+
+% ----------------------------------------------------------- acknowledgments
+\phantomsection\addcontentsline{toc}{chapter}{Acknowledgments}
+\vspace*{6mm}
+\begin{center}{\Large\bfseries ACKNOWLEDGMENTS}\end{center}
+\vspace{-2mm}
+\noindent{\color{black!35}\rule{\linewidth}{0.5pt}}
+\vspace{1mm}
+
+I express my sincere gratitude to my supervisor, \supervisor, for his guidance
+and support during this work. He helped me to choose the problem, suggested
+the direction of the study and gave regular feedback on my progress in our
+weekly meetings. His comments on the earlier drafts have improved this report
+considerably. I am thankful to him for his patience and for the freedom he
+gave me to try out my own ideas.
+
+I am grateful to the Department of Computer Science and Engineering and to
+ABV-IIITM Gwalior for providing the facilities and the environment needed to
+carry out this work. I also thank my classmates and friends for the useful
+discussions and for their encouragement.
+
+Finally, I thank my parents and my family for their constant support.
+
+\vspace{16mm}
+\noindent Signature:\\
+Name: \candidate\\
+Roll No.: \rollno
+\clearpage
 
 % ------------------------------------------------------------------ abstract
 \chapter*{Abstract}

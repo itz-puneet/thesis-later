@@ -1,0 +1,20 @@
+\input{preamble}
+\begin{document}
+\begin{tikzpicture}[node distance=7mm and 7mm,
+  box/.style={draw, rounded corners=2pt, align=center, minimum height=13mm, text width=29mm},
+  arr/.style={-{Stealth[length=2.2mm]}, semithick}]
+\node[box] (hist) {Past commits of the project};
+\node[box, right=of hist] (feat) {Change metrics and labels (SZZ)};
+\node[box, right=of feat] (train) {Training of the classifier};
+\node[box, below=of train] (model) {Prediction model};
+\node[box, left=of model] (newf) {Change metrics of\\the new commit};
+\node[box, left=of newf] (new) {New commit};
+\node[box, below=of model] (out) {Clean or defect-introducing};
+\draw[arr] (hist) -- (feat);
+\draw[arr] (feat) -- (train);
+\draw[arr] (train) -- (model);
+\draw[arr] (new) -- (newf);
+\draw[arr] (newf) -- (model);
+\draw[arr] (model) -- (out);
+\end{tikzpicture}
+\end{document}

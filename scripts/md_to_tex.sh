@@ -2,7 +2,7 @@
 # Regenerate LaTeX bodies from markdown: chapters/ -> tex/ for thesis_main.tex.
 #
 # The interim-report tree this script used to also serve was removed once
-# supervisor_report/ superseded it; that report is written directly in LaTeX
+# "MTP 2/report/" superseded it; that report is written directly in LaTeX
 # and does not go through this path.
 #
 # The generated files are overwritten every run -- edit the markdown, not the
