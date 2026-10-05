@@ -1272,8 +1272,13 @@ obtained.
 
 \section{Plan of Work}\label{sec:plan}
 
-Figure~\ref{fig:plan} shows the studies that are planned and the research
-question that each of them addresses.
+The remaining work is planned in three further stages, which follow from the
+research questions of Chapter~\ref{ch:gaps}. Each stage uses the output of the
+stage before it. The noise in the SZZ labels has to be measured before its
+effect on prediction models can be studied, and this effect has to be
+understood before a way to reduce it can be designed.
+Figure~\ref{fig:plan} shows the planned studies and the research question
+that each of them addresses.
 
 \begin{figure}[htbp]
 \centering
@@ -1302,6 +1307,16 @@ question that each of them addresses.
 address.}
 \label{fig:plan}
 \end{figure}
+
+As the figure shows, the second stage produces two things. The label quality
+analysis gives the labels of the SZZ variants and the rate of each type of
+labelling error, and the impact analysis shows how much these errors cost a
+prediction model. The third stage uses the error rates to set up experiments
+in which the noise is controlled, and the fourth stage uses the outcome of the
+third stage to design a learner that is less affected by the noise. The
+reference labels of the dataset are needed in every stage. The SZZ labels are
+compared with them, and the predictions of all models are scored against
+them. The three stages are described below.
 
 \subsection{Second stage: label quality and impact on prediction models}
 
