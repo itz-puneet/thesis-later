@@ -23,6 +23,8 @@
 \usepackage{xcolor}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,shapes.geometric}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage[hidelinks]{hyperref}
 
@@ -42,8 +44,7 @@
 \begin{document}
 
 % ---------------------------------------------------------------- front page
-\newcommand{\reporttitle}{Quantifying SZZ-Induced Label Noise in Just-In-Time
-Software Defect Prediction under Verification-Latency-Aware Online Evaluation}
+\newcommand{\reporttitle}{Label Noise in Just-In-Time Software Defect Prediction}
 \newcommand{\candidate}{Puneet Deshwani}
 \newcommand{\rollno}{2025MCS013}
 \newcommand{\supervisor}{Dr.\ Santosh Singh Rathore}
@@ -163,19 +164,16 @@ first stage of the thesis.
 The literature on JIT-SDP, on the SZZ algorithm and its variants, on label
 noise in defect prediction, on the evaluation of prediction models and on
 online learning with delayed labels is reviewed. From this review, five
-research gaps are identified, and four research questions and six objectives
-are formulated. A dataset that suits the study is then selected and
+research gaps are identified, and three objectives and four research
+questions are formulated. A dataset that suits the study is then selected and
 described. It is the JIT-Defects4J dataset, which contains 27,319 commits from
 21 Apache Java projects together with reference labels that were derived from
 manually validated bug-fixing lines. With such labels, the SZZ labels and the
 predictions of the models can be assessed against a source that does not
-depend on the SZZ variants under study.
-
-The report ends with the plan of work for the remaining stages. In the second
-stage the labels of six SZZ variants will be compared with the reference
-labels, and their effect on prediction models will be measured under several
-evaluation settings. The third and fourth stages will study how the noise
-affects an online learner and how its effect can be reduced.
+depend on the SZZ variants under study. Finally, the methodology proposed for
+the study is described. It covers the generation of the SZZ labels, the
+analysis of their quality, the prediction models, the evaluation settings
+with delayed labels, and the statistical analysis.
 
 \vspace{0.5em}
 \noindent\textbf{Keywords:} just-in-time software defect prediction, SZZ
@@ -194,6 +192,7 @@ algorithm, label noise, verification latency, online learning, class imbalance
 \begin{tabular}{@{}ll@{}}
 AG-SZZ & Annotation Graph SZZ \\
 B-SZZ & Basic SZZ (the original algorithm) \\
+FN, FP & False Negative, False Positive \\
 JIT-SDP & Just-In-Time Software Defect Prediction \\
 L-SZZ & Largest SZZ \\
 MA-SZZ & Meta-change Aware SZZ \\
@@ -202,7 +201,9 @@ OOB & Oversampling Online Bagging \\
 ORB & Oversampling Rate Boosting \\
 R-SZZ & Recent SZZ \\
 RA-SZZ & Refactoring Aware SZZ \\
+SMOTE & Synthetic Minority Oversampling Technique \\
 SZZ & \'{S}liwerski--Zimmermann--Zeller algorithm \\
+TN, TP & True Negative, True Positive \\
 \end{tabular}
 
 \clearpage
@@ -418,10 +419,10 @@ affects an online learner and how its effect can be reduced.
 
 The thesis work is divided into four stages. This report presents the work of
 the first stage. It consists of the literature survey, the
-identification of the research gaps, the formulation of the research
-questions and objectives, and the selection and description of the dataset.
-The work planned for the remaining stages is described in
-Chapter~\ref{ch:conclusion}.
+identification of the research gaps, the formulation of the objectives and
+research questions, the selection and description of the dataset, and the
+design of the methodology. The work planned for the remaining stages is
+described in Chapter~\ref{ch:conclusion}.
 
 % ============================================================================
 \chapter{Literature Review}\label{ch:lit}
@@ -851,13 +852,14 @@ label noise & Batch setting; noise rates assumed to be known \\
 \end{table}
 
 % ============================================================================
-\chapter{Research Gaps, Research Questions and Objectives}\label{ch:gaps}
+\chapter{Research Gaps, Objectives and Research Questions}\label{ch:gaps}
 % ============================================================================
 
 This chapter states the research gaps that were identified from the
-literature reviewed in Chapter~\ref{ch:lit}. Based on these gaps, the research
-questions and the objectives of the thesis are formulated. The stage of the
-thesis in which each of them will be addressed is indicated.
+literature reviewed in Chapter~\ref{ch:lit}. Based on these gaps, the
+objectives of the thesis are formulated, and the research questions that
+follow from them are stated. The stage of the thesis in which each of them
+will be addressed is indicated.
 
 \section{Research Gaps}
 
@@ -909,65 +911,56 @@ learning with noisy labels assume a batch setting and stable
 labels~\cite{natarajan2013noisy,northcutt2021confident} and cannot be applied
 directly to a stream with delayed labels.
 
+\section{Objectives}
+
+Based on these gaps, the main objectives of the thesis are as follows.
+
+\begin{enumerate}[leftmargin=*]
+\item To quantify the label noise introduced by SZZ and its variants, by
+comparing their labels with independently obtained reference labels over
+complete project histories.
+\item To measure the effect of this noise on JIT-SDP models under a realistic
+evaluation, in which the order of the commits and the delay of the labels are
+respected, and to separate it from the effect of the evaluation procedure.
+\item To identify how the noise affects an online learner, and to develop a
+noise-aware online learning approach that reduces its effect.
+\end{enumerate}
+
+Objectives 1 and 2 will be addressed in the second stage of the thesis.
+Objective 3 will be addressed in the third and fourth stages. The plan of
+work is given in Section~\ref{sec:plan}.
+
 \section{Research Questions}
 
-Based on these gaps, the thesis addresses the following research questions.
+To meet these objectives, the following research questions will be answered.
 
 \paragraph{RQ1: How much do the labels of different SZZ variants disagree with one
 another and with independently obtained reference labels, and what type of
 error does each variant make?}
-This question corresponds to Gap~1. To answer it, the labels of six SZZ
-variants will be compared with reference labels on the same set of commits,
-and the false positive and false negative rates of each variant will be
-estimated. This question will be addressed in the second stage of the thesis.
+This question belongs to Objective~1 and corresponds to Gap~1. To answer it,
+the labels of six SZZ variants will be compared with reference labels on the
+same set of commits, and the false positive and false negative rates of each
+variant will be estimated.
 
 \paragraph{RQ2: How does the choice of the label source affect the measured
 performance of JIT-SDP models under different evaluation settings?}
-This question corresponds to Gaps~2, 3 and~4. To answer it, models will be
-trained on the reference labels and on the labels of each SZZ variant, and
-will be evaluated with random cross-validation, with a chronological split
-and with prequential evaluation under verification latency. The predictions
-will be scored against the reference labels and, for comparison, against the
-training labels. This question will also be addressed in the second stage.
+This question belongs to Objective~2 and corresponds to Gaps~2, 3 and~4. To
+answer it, models will be trained on the reference labels and on the labels
+of each SZZ variant, and will be evaluated with random cross-validation, with
+a chronological split and with prequential evaluation under verification
+latency. The predictions will be scored against the reference labels and,
+for comparison, against the training labels.
 
 \paragraph{RQ3: Through which mechanism does label noise reduce the performance of
 an online learner, and which of the two types of error is responsible?}
-This question corresponds to the first part of Gap~5. It will be addressed in
-the third stage.
+This question belongs to Objective~3 and corresponds to the first part of
+Gap~5. It will be addressed in the third stage.
 
 \paragraph{RQ4: Can an online learner be modified so that it loses less
 performance when it is trained on SZZ labels, without access to clean labels
 and without losing performance when the labels are clean?}
-This question corresponds to the second part of Gap~5. It will be addressed
-in the fourth stage.
-
-\section{Objectives}
-
-The objectives of the thesis are as follows.
-
-\begin{enumerate}[leftmargin=*]
-\item To generate the labels of six SZZ variants for all projects of a
-dataset that provides independent reference labels, and to characterise the
-labelling errors of each variant in terms of false positive and false
-negative rates.
-\item To examine the agreement between the SZZ variants and to identify the
-sources of the errors that the variants make.
-\item To measure how much the evaluation procedure, namely the validation
-scheme and the labels used for scoring, changes the measured performance of
-JIT-SDP models.
-\item To measure the loss in performance caused by training on SZZ labels
-when an online learner is evaluated on a commit stream with verification
-latency.
-\item To identify the type of labelling error that is responsible for this
-loss and the mechanism through which it acts.
-\item To design and evaluate a modification of the online learner that
-reduces this loss.
-\end{enumerate}
-
-Objectives 1 to 4 will be addressed in the second stage, objective 5 in the
-third stage and objective 6 in the fourth stage. The plan of work for these
-stages is given in
-Section~\ref{sec:plan}.
+This question also belongs to Objective~3 and corresponds to the second part
+of Gap~5. It will be addressed in the fourth stage.
 
 % ============================================================================
 \chapter{Dataset}\label{ch:data}
@@ -1213,14 +1206,16 @@ The first is the set of SZZ labels. To study the noise of SZZ, six further
 labels will be attached to every commit, one for each SZZ variant of
 Table~\ref{tab:variants}. They will be generated by running the variants on
 the repositories of the 21 projects, with the bug-fixing commits of the
-dataset as input. Each commit will then have seven binary labels.
+dataset as input (Section~\ref{sec:szz-generation}). Each commit will then
+have seven binary labels.
 
 The second is the time at which the label of each commit becomes available.
 To evaluate an online learner realistically, it must be known when a commit
 could first have been recognised as defect-introducing. This is the time at
 which its defect was fixed. The dataset does not contain this information. It
 will be reconstructed from the dates of the bug-fixing commits, which can be
-read from the repositories.
+read from the repositories, and will be used as described in
+Section~\ref{sec:latency-method}.
 
 \section{Summary}
 
@@ -1233,52 +1228,27 @@ were cloned. The labels of the SZZ variants and the arrival times of the
 labels will be added in the second stage.
 
 % ============================================================================
-\chapter{Conclusion and Plan of Work}\label{ch:conclusion}
+\chapter{Proposed Methodology}\label{ch:method}
 % ============================================================================
 
-This chapter summarises the work done in the first stage and describes the
-work planned for the remaining stages of the thesis.
+This chapter describes the methodology proposed for the thesis. It begins
+with an overview of the approach. It then explains how the SZZ labels will be
+generated and how their quality will be analysed, describes the prediction
+models, the evaluation settings and the simulation of verification latency,
+and gives the performance measures and the statistical analysis. The
+methodology of the second stage is described in detail, since it is the next
+part of the work. The approach for the third and fourth stages depends on its
+results and is outlined at the end of the chapter.
 
-\section{Summary of the Work Done}
+\section{Overview of the Approach}
 
-The thesis deals with the effect of the label noise introduced by the SZZ
-algorithm on just-in-time software defect prediction. The work of the first
-stage consisted of three parts.
-
-First, the literature was reviewed. The review covered defect prediction at
-the level of changes, the SZZ algorithm and its variants together with the
-studies that evaluate them, the studies on label noise in defect data, the
-evaluation of prediction models with respect to time and to the delayed
-arrival of labels, online learning for imbalanced data streams, and learning
-with noisy labels.
-
-Second, the research gaps were identified and the research questions and
-objectives were formulated. The review showed that the accuracy of SZZ, the
-effect of label noise, time-aware evaluation and verification latency have
-each been studied, but mostly separately. The noise of SZZ labels has not been
-measured over complete project histories, models are tested against the same
-labels on which they are trained, the effect of label noise has not been
-separated from the effect of the evaluation procedure, and label noise has
-not been studied under verification latency. Four research questions and six
-objectives were derived from these gaps (Chapter~\ref{ch:gaps}).
-
-Third, a dataset was selected and prepared. The JIT-Defects4J dataset was
-chosen because it provides, for every commit of 21 projects, a label that was
-derived from manually validated bug-fixing lines and not from the SZZ variants
-under study. The construction of these labels was examined, and its
-consequences for the planned comparisons were noted. The dataset was merged,
-cleaned and ordered by time, and the repositories of the projects were
-obtained.
-
-\section{Plan of Work}\label{sec:plan}
-
-The remaining work is planned in three further stages, which follow from the
-research questions of Chapter~\ref{ch:gaps}. Each stage uses the output of the
-stage before it. The noise in the SZZ labels has to be measured before its
-effect on prediction models can be studied, and this effect has to be
-understood before a way to reduce it can be designed.
-Figure~\ref{fig:plan} shows the planned studies and the research question
-that each of them addresses.
+The work that follows the first stage is planned in three further stages,
+which follow from the objectives and research questions of
+Chapter~\ref{ch:gaps}. Each stage uses the output of the stage before it. The
+noise in the SZZ labels has to be measured before its effect on prediction
+models can be studied, and this effect has to be understood before a way to
+reduce it can be designed. Figure~\ref{fig:plan} shows the planned studies
+and the research question that each of them addresses.
 
 \begin{figure}[htbp]
 \centering
@@ -1308,79 +1278,687 @@ address.}
 \label{fig:plan}
 \end{figure}
 
-As the figure shows, the second stage produces two things. The label quality
-analysis gives the labels of the SZZ variants and the rate of each type of
-labelling error, and the impact analysis shows how much these errors cost a
-prediction model. The third stage uses the error rates to set up experiments
-in which the noise is controlled, and the fourth stage uses the outcome of the
-third stage to design a learner that is less affected by the noise. The
-reference labels of the dataset are needed in every stage. The SZZ labels are
-compared with them, and the predictions of all models are scored against
-them. The three stages are described below.
+The second stage consists of two studies that build on each other.
 
-\subsection{Second stage: label quality and impact on prediction models}
+In the first study, the \emph{label quality analysis}, six SZZ variants will
+be executed on the repositories of the 21 projects. Their labels will be
+compared with the reference labels of the dataset. The result will be a
+description of the errors of each variant, in particular its false positive
+and false negative rates, and a set of SZZ labels for every commit. This
+study addresses RQ1.
 
-The work of the second stage addresses RQ1 and RQ2 and consists of two
-studies.
+In the second study, the \emph{impact analysis}, prediction models will be
+trained on the reference labels and on each of the six SZZ label sets. The
+models will be evaluated in four evaluation settings, and their predictions
+will be scored against the reference labels. This will show how much
+performance is lost when a model is trained on SZZ labels, and how much the
+evaluation setting itself changes the measured performance. This study
+addresses RQ2.
 
-In the first study, the six SZZ variants of Table~\ref{tab:variants} will be
-executed on the repositories of the 21 projects with the PySZZ
-implementation~\cite{rosa2023szzvariants}. The same list of bug-fixing commits
-will be given to all variants, and every commit of the dataset will receive a
-label from each variant. These labels will be compared with the reference
-labels. For each variant the precision and the recall will be computed,
-together with the rate at which clean commits are labelled as
-defect-introducing and the rate at which defect-introducing commits are
-labelled as clean. The agreement between the variants will be measured with
-Cohen's $\kappa$~\cite{cohen1960kappa}, to see whether the variants make the
-same errors.
+The third stage will use the error rates measured in the second stage to set
+up experiments in which the noise is controlled, and the fourth stage will use
+the outcome of the third stage to design a learner that is less affected by
+the noise.
 
-In the second study, prediction models will be trained on the reference
-labels and on the labels of each SZZ variant. Three models of different
-complexity are planned: LApredict~\cite{zeng2021lapredict}, a random forest
-model in the style of JITLine~\cite{pornprasit2021jitline}, and the online
-learner ORB~\cite{cabral2019orb}. The models will be evaluated in settings of
-increasing realism: random $k$-fold cross-validation, a chronological split,
-and prequential evaluation in which the labels are delivered with the delay
-reconstructed from the data, using the waiting period of 90 days proposed by
-Cabral et al.~\cite{cabral2019orb}. The predictions will be scored against
-the reference labels and, for comparison, against the training labels. The
-Matthews correlation coefficient will be used as the main performance
-measure, since it is suitable for imbalanced
-data~\cite{matthews1975mcc,yao2020mcc}. The comparisons will be made for each
-project and tested with paired non-parametric tests over the 21 projects.
+The reference labels of the dataset are needed in every stage. In the first
+study they are the standard against which the SZZ labels are assessed. In the
+second study they are the standard against which the predictions are scored,
+and they also provide the best available training labels, which serve as a
+baseline for the models trained on SZZ labels.
 
-\subsection{Third stage: mechanism of the noise effect}
+\section{Generation of SZZ Labels}\label{sec:szz-generation}
 
-The third stage addresses RQ3. If the results of the second stage show that
-SZZ labels reduce
-the performance of an online learner, the next question is which type of
-labelling error causes the loss. Two label sources differ in the number of
+The six SZZ variants of Table~\ref{tab:variants} will be executed with PySZZ
+(version 2), the implementation released by Rosa et
+al.~\cite{rosa2023szzvariants}. An existing implementation is preferred over
+writing a new one, because it has been used in earlier studies and its
+behaviour is documented. The configuration supplied with the tool will be
+used for each variant. The filter that removes candidate commits made after
+the bug report date will be switched off, because the dataset does not
+contain the dates of the bug reports.
+
+The input of the tool is a list of bug-fixing commits. The 5,453 commits of
+the dataset whose FIX metric is set will be used for this purpose. The same
+list will be given to all six variants, so that the differences between the
+label sets come only from the variants and not from the selection of the
+bug-fixing commits.
+
+For every bug-fixing commit the tool returns the list of commits that the
+variant considers defect-introducing. These mappings will be stored, since
+they are also needed for the arrival times of the labels
+(Section~\ref{sec:additions}). A commit will be labelled as defect-introducing
+by a variant if it appears in the list of at least one bug-fixing commit, and
+as clean otherwise. The labels will be joined with the dataset on the commit
+identifier, so that all 27,319 commits receive a label from each variant.
+Using the same set of commits for every variant is important, because
+precision and recall are not comparable between variants when they are
+computed on different subsets.
+
+\section{Analysis of Label Quality}\label{sec:quality-method}
+
+\subsection{Comparison with the reference labels}
+
+For each variant, the SZZ label of every commit will be compared with its
+reference label. The four possible outcomes are shown in
+Table~\ref{tab:confusion}. A commit that is flagged by the variant and is
+defect-introducing according to the reference is a true positive (TP). A
+commit that is flagged by the variant but is clean according to the reference
+is a false positive (FP). A commit that is not flagged but is
+defect-introducing according to the reference is a false negative (FN), and a
+commit that is clean according to both is a true negative (TN).
+
+\begin{table}[htbp]
+\centering\small
+\caption{Outcomes of comparing an SZZ label with the reference label.}
+\label{tab:confusion}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+ & \multicolumn{2}{c}{Reference label} \\
+\cmidrule(l){2-3}
+SZZ label & Defect-introducing & Clean \\
+\midrule
+Defect-introducing & TP & FP \\
+Clean & FN & TN \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+From these counts the following measures will be computed:
+\begin{align}
+\text{Precision} &= \frac{TP}{TP+FP}, &
+\text{Recall} &= \frac{TP}{TP+FN}, &
+F_1 &= \frac{2\cdot\text{Precision}\cdot\text{Recall}}{\text{Precision}+\text{Recall}}.
+\end{align}
+Precision is the fraction of the commits flagged by the variant that are
+defect-introducing according to the reference. Recall is the fraction of the
+reference defect-introducing commits that the variant finds. In addition, MCC
+and Cohen's $\kappa$ between the SZZ labels and the reference labels will be
+reported. Both are defined below.
+
+\subsection{Noise rates}
+
+For the study of label noise it is useful to describe a variant by the
+probability with which it changes a reference label. Two rates are defined:
+\begin{equation}
+\rhoz = \frac{FP}{FP+TN}, \qquad \rhoo = \frac{FN}{FN+TP}.
+\label{eq:rho}
+\end{equation}
+The rate $\rhoz$ is the fraction of the clean commits that the variant labels
+as defect-introducing. It is called the false-alarm rate in this report. The
+rate $\rhoo$ is the fraction of the defect-introducing commits that the
+variant labels as clean. It is called the miss rate and equals one minus the
+recall. A noise process that is described by these two rates is known as
+class-conditional noise~\cite{natarajan2013noisy}. If both rates were equal,
+the noise would be symmetric. Describing each variant by the pair
+$(\rhoz,\rhoo)$ will show whether its noise is symmetric and, if not, which
+type of error dominates.
+
+Since the two classes have very different sizes, a rate and the corresponding
+number of wrong labels must be distinguished. The clean class is about eleven
+times larger than the defect-introducing class, so a small value of $\rhoz$
+can correspond to a larger number of wrong labels than a large value of
+$\rhoo$. Both the rates and the counts will therefore be reported.
+
+\subsection{Agreement between variants}
+
+The agreement between two label sets will be measured with Cohen's
+$\kappa$~\cite{cohen1960kappa},
+\begin{equation}
+\kappa = \frac{p_o - p_e}{1 - p_e},
+\end{equation}
+where $p_o$ is the observed fraction of commits on which the two label sets
+agree and $p_e$ is the fraction of agreement expected by chance, computed
+from the proportions of positive labels in the two sets. The value will be
+computed for every pair of variants and for every variant with the reference
+labels. If the variants make their errors independently of each other, their
+mutual agreement will not be much higher than their agreement with the
+reference. A much higher mutual agreement would indicate that the variants
+make the same errors.
+
+\subsection{Variation across projects and sources of false negatives}
+
+All measures will be computed for the whole dataset and also for each project
+separately, to see how much the quality of the labels varies between
+projects.
+
+To understand why a variant misses defect-introducing commits, the false
+negatives of each refined variant will be divided into two groups by
+comparing them with B-SZZ. B-SZZ applies no filtering, so it traces every
+line changed by the bug-fixing commits. A false negative of a refined variant
+that is also a false negative of B-SZZ was missed already before any
+filtering. A false negative that B-SZZ labels correctly was found by the
+basic procedure and was then removed by the additional rules of the variant.
+The sizes of the two groups will show how much of the miss rate of a variant
+is caused by its own filtering.
+
+\section{Prediction Models}\label{sec:models}
+
+Three prediction models will be used in the impact analysis. They were chosen
+to cover different levels of model complexity and both batch and online
+learning. All three will use the same fourteen change metrics, so that
+differences between them are not caused by different inputs.
+
+\subsection{LApredict}
+
+LApredict~\cite{zeng2021lapredict} is a logistic regression model that uses a
+single feature, the number of added lines (LA). The feature will be
+transformed as $\log(1+\mathrm{LA})$ and standardised, and the logistic
+regression will be trained with class weights that are inversely proportional
+to the class frequencies, so that both classes contribute equally to the
+loss. A commit is predicted as defect-introducing when the predicted
+probability is at least 0.5. The model represents a very simple learner with
+only two parameters.
+
+\subsection{Random forest model based on JITLine}
+
+The second model follows the design of
+JITLine~\cite{pornprasit2021jitline}: a random forest classifier combined
+with oversampling of the minority class. A random
+forest~\cite{breiman2001rf} with 100 trees will be trained on the fourteen
+change metrics, which will be transformed as $\mathrm{sign}(x)\log(1+|x|)$ to
+reduce their skewness. Before training, the minority class of the training
+data will be oversampled with SMOTE~\cite{chawla2002smote} until both classes
+have the same size. SMOTE creates new minority examples by interpolating
+between an existing minority example and one of its nearest minority
+neighbours.
+
+A random forest produces a probability for each commit, and a decision
+threshold is needed to turn it into a class. The threshold will be chosen on
+the training data so that it maximises the G-mean
+(Section~\ref{sec:measures}). To obtain probabilities that are not biased by
+the model having seen the same commits, the training data will be divided
+into consecutive blocks in time order, and each block will be predicted by a
+model trained only on the blocks before it.
+
+The original JITLine additionally uses features derived from the tokens of
+the changed code. These will not be used here, so that all three models work
+with the same features. For brevity this model is referred to as JITLine in
+the rest of the report. It represents a learner with high capacity, which can
+fit complex patterns in the training data.
+
+\subsection{ORB}
+
+The third model is ORB~\cite{cabral2019orb}, an online learner that was
+designed for JIT-SDP with verification latency. It is an ensemble that is
+updated with one training example at a time. The implementation planned for
+this work has 20 base learners, each of which is a logistic regression model
+trained by stochastic gradient descent. The features will be transformed in
+the same way as for the random forest and standardised with running estimates
+of their mean and variance.
+
+When a training example $(x, y)$ arrives, each base learner is updated $k$
+times with it, where $k$ is drawn from a Poisson distribution with parameter
+$\lambda$. The value of $\lambda$ is what distinguishes the methods of this
+family. In Online Bagging $\lambda = 1$. In OOB~\cite{wang2015oob}, $\lambda$
+depends on the class of the example and on the current proportion $r_1$ of
+positive examples, which is tracked as a decayed average,
+\begin{equation}
+r_1 \leftarrow \delta\, r_1 + (1-\delta)\,I(y=1), \qquad \delta = 0.99,
+\end{equation}
+where $I(y=1)$ is 1 if the example is positive and 0 otherwise. The rate is
+then
+\begin{equation}
+\lambda_{\mathrm{OOB}} =
+\begin{cases}
+(1-r_1)/r_1 & \text{if } y=1 \text{ and } r_1 < 0.5,\\
+r_1/(1-r_1) & \text{if } y=0 \text{ and } r_1 > 0.5,\\
+1 & \text{otherwise.}
+\end{cases}
+\label{eq:oob}
+\end{equation}
+For example, if 10\% of the recent training examples are positive, a positive
+example is presented on average nine times to each base learner.
+
+ORB multiplies this rate by a boosting factor $b$ that depends on the recent
+predictions of the model. Let $\bar{p}$ be a moving average of the
+predictions (1 for defect-introducing, 0 for clean), which is updated after
+every prediction as $\bar{p} \leftarrow \theta\,\bar{p} + (1-\theta)\,\hat{y}$
+with $\theta = 0.4$. If the model predicts the positive class less often than
+the proportion of positive examples it has seen ($\bar{p} < r_1$), positive
+training examples are boosted. If it predicts the positive class more often
+($\bar{p} > r_1$), negative training examples are boosted:
+\begin{equation}
+b =
+\begin{cases}
+l_0\,\dfrac{m^{\bar{p}} - m^{r_1}}{1 - m^{r_1}} + 1 & \text{if } y=1 \text{ and } \bar{p} < r_1,\\[2.2ex]
+l_1\,\dfrac{n^{1-\bar{p}} - n^{1-r_1}}{1 - n^{1-r_1}} + 1 & \text{if } y=0 \text{ and } \bar{p} > r_1,\\[1.6ex]
+1 & \text{otherwise,}
+\end{cases}
+\label{eq:orb}
+\end{equation}
+with the parameter values $l_0 = 10$, $l_1 = 12$, $m = 1.5$ and $n = 3$
+proposed by the authors of ORB~\cite{cabral2019orb}. The final rate is
+$\lambda = \lambda_{\mathrm{OOB}} \cdot b$. A commit is predicted as
+defect-introducing when the majority of the base learners predict it so.
+
+It can be seen from Equations~\ref{eq:oob} and~\ref{eq:orb} that the amount
+of oversampling depends on the number of positive labels received and on the
+predictions of the model, but not on whether the labels are correct. ORB
+represents the online learners that are used when the commit stream is
+processed in a realistic way.
+
+\section{Evaluation Settings}\label{sec:settings}
+
+The models will be evaluated in four settings, which are illustrated in
+Figure~\ref{fig:settings}. They are ordered from the least to the most
+realistic.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\footnotesize, x=1cm, y=1cm]
+\def\w{11}
+% (a) random k-fold
+\node[anchor=west, font=\small] at (0,5.55) {(a) Random $k$-fold cross-validation (one fold shown)};
+\foreach \i in {0,...,21} {
+  \pgfmathtruncatemacro{\istest}{(\i==2 || \i==7 || \i==11 || \i==16 || \i==20) ? 1 : 0}
+  \ifnum\istest=1
+    \fill[red!45] (\i*0.5,4.7) rectangle ++(0.5,0.5);
+  \else
+    \fill[blue!22] (\i*0.5,4.7) rectangle ++(0.5,0.5);
+  \fi
+  \draw[white] (\i*0.5,4.7) rectangle ++(0.5,0.5);
+}
+% (b) chronological
+\node[anchor=west, font=\small] at (0,4.15) {(b) Chronological split and chronological-online};
+\fill[blue!22] (0,3.3) rectangle (5.5,3.8);
+\fill[red!45] (5.5,3.3) rectangle (\w,3.8);
+\node at (2.75,3.55) {first half: training};
+\node at (8.25,3.55) {second half: testing};
+% (c) prequential
+\node[anchor=west, font=\small] at (0,2.75) {(c) Prequential evaluation with verification latency};
+\fill[blue!22] (0,1.9) rectangle (4.6,2.4);
+\fill[gray!30] (4.6,1.9) rectangle (7.0,2.4);
+\draw (7.0,1.9) rectangle (\w,2.4);
+\draw[thick] (7.0,1.75) -- (7.0,2.55);
+\node at (2.3,2.15) {labels received};
+\node at (5.8,2.15) {waiting};
+\node at (9.0,2.15) {future commits};
+\node[anchor=north] at (7.0,1.75) {commit being predicted};
+% time axis and legend
+\draw[-{Stealth[length=2mm]}] (0,0.85) -- (\w,0.85) node[right] {time};
+\fill[blue!22] (0.2,0.15) rectangle ++(0.35,0.3); \node[anchor=west] at (0.6,0.3) {training commits};
+\fill[red!45] (3.6,0.15) rectangle ++(0.35,0.3); \node[anchor=west] at (4.0,0.3) {test commits};
+\fill[gray!30] (6.6,0.15) rectangle ++(0.35,0.3); \node[anchor=west] at (7.0,0.3) {label not yet available};
+\end{tikzpicture}
+\caption{The evaluation settings. The commits of a project are ordered by
+time from left to right.}
+\label{fig:settings}
+\end{figure}
+
+\paragraph{Random $k$-fold cross-validation.} The commits of a project are
+divided at random into ten folds, stratified by the training label. Each fold
+is used once for testing while the model is trained on the other nine. The
+order of the commits is ignored, so the model is trained on commits that are
+both older and newer than the test commits. This setting is included because
+it is widely used in the literature. It will be applied to the two batch
+models.
+
+\paragraph{Chronological split.} The commits of a project are ordered by
+time. The model is trained on the first half and tested on the second half.
+The model never sees commits from the future, but it is assumed that the
+labels of all training commits are known at the time of training. This
+setting will also be applied to the two batch models.
+
+\paragraph{Chronological-online.} This setting uses the same split for ORB.
+The online learner processes the commits of the first half one by one with
+their labels and is then kept fixed while it predicts the second half. It
+makes it possible to compare ORB with the batch models on the same test
+commits.
+
+\paragraph{Prequential evaluation with verification latency.} The commits are
+processed in time order. Each commit is first predicted by the current model.
+Its label is given to the model for training only at the time at which it
+would have become available in practice. The details are given in the next
+section. The model is updated continuously over the whole stream. This
+setting is the closest to the actual use of a JIT-SDP model and will be
+applied to ORB.
+
+\section{Simulation of Verification Latency}\label{sec:latency-method}
+
+In the prequential setting the labels will be delivered to the learner
+according to the procedure of Cabral et al.~\cite{cabral2019orb} with a
+waiting period of $W = 90$ days. Let $t$ be the time of a commit. Four cases
+are distinguished according to the training label of the commit and the time
+of the bug-fixing commit linked to it (Section~\ref{sec:additions}). They are
+shown in Figure~\ref{fig:latency-cases}.
+
+\begin{enumerate}[leftmargin=*]
+\item The commit is clean according to the training labels. Nothing is known
+about it until the waiting period has passed. At time $t+W$ it is given to
+the learner as a clean example.
+\item The commit is defect-introducing and its fix is made before $t+W$. It
+is given to the learner as a defect-introducing example at the time of the
+fix.
+\item The commit is defect-introducing and its fix is made after $t+W$. At
+time $t+W$ no defect is known yet, so the commit is given to the learner as
+a clean example. At the time of the fix it is given again, this time as a
+defect-introducing example.
+\item The commit is defect-introducing according to the training labels, but
+no fix date is available for it. It is given to the learner as a clean
+example at $t+W$ and is never corrected.
+\end{enumerate}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\footnotesize, x=1cm, y=1cm,
+  ev/.style={circle, fill=black, inner sep=1.6pt},
+  fix/.style={diamond, draw, fill=green!35, inner sep=1.6pt}]
+\foreach \y/\lab in {3.6/Case 1, 2.4/Case 2, 1.2/Case 3, 0/Case 4} {
+  \draw[gray] (1.6,\y) -- (11.6,\y);
+  \node[anchor=east] at (1.4,\y) {\lab};
+  \node[ev] at (2.2,\y) {};
+}
+\draw[dashed] (6.2,-0.45) -- (6.2,4.3);
+\node[anchor=south] at (2.2,4.25) {commit ($t$)};
+\node[anchor=south] at (6.2,4.25) {$t+W$};
+% case 1
+\node[anchor=north west, inner sep=2pt] at (6.25,3.58) {clean label delivered};
+% case 2
+\node[fix] at (4.0,2.4) {};
+\node[anchor=south, inner sep=3pt] at (4.0,2.44) {fix: defect label delivered};
+% case 3
+\node[anchor=north west, inner sep=2pt] at (6.25,1.18) {clean label delivered};
+\node[fix] at (10.2,1.2) {};
+\node[anchor=south, inner sep=3pt] at (10.2,1.24) {fix: corrected to defect};
+% case 4
+\node[anchor=north west, inner sep=2pt] at (6.25,-0.02) {clean label delivered, never corrected};
+\draw[-{Stealth[length=2mm]}] (1.6,-0.75) -- (11.6,-0.75) node[right] {time};
+\end{tikzpicture}
+\caption{Delivery of training labels under verification latency. In case 3
+the learner first receives a wrong clean label, which is corrected when the
+defect is fixed.}
+\label{fig:latency-cases}
+\end{figure}
+
+Cases 3 and 4 are the ones in which the learner is trained on a wrong label
+because of the delay. In case 3 the error is temporary. In case 4 it is
+permanent. These errors occur with every label source, including the
+reference labels, and they concern only defect-introducing commits. They add
+to whatever errors the labels themselves contain.
+
+The prediction for a commit is made at time $t$ and is scored at once, using
+the label against which the model is evaluated (Section~\ref{sec:scoring}).
+The scoring is not delayed, because its purpose is to measure the quality of
+the predictions and not to simulate what a user of the model would know.
+Algorithm~\ref{alg:prequential} summarises the procedure.
+
+\begin{algorithm}[htbp]
+\caption{Prequential evaluation with verification latency}
+\label{alg:prequential}
+\begin{algorithmic}[1]
+\Require commits $c_1,\dots,c_N$ of a project in time order, with features
+$x_i$, time $t_i$, training label $y_i$, evaluation label $e_i$ and fix time
+$f_i$ (if available); waiting period $W$; online learner $M$
+\State $Q \gets$ empty priority queue of pending training examples, ordered by delivery time
+\For{$i = 1$ to $N$}
+  \While{$Q$ is not empty and the earliest delivery time in $Q$ is at most $t_i$}
+    \State remove the earliest example $(x_j, y)$ from $Q$ and update $M$ with it
+  \EndWhile
+  \State $\hat{y}_i \gets$ prediction of $M$ for $x_i$
+  \State update the evaluation measures with $(e_i, \hat{y}_i)$
+  \If{$y_i = 1$ and $f_i$ is available}
+    \If{$f_i \le t_i + W$}
+      \State add $(x_i, 1)$ to $Q$ with delivery time $f_i$
+    \Else
+      \State add $(x_i, 0)$ to $Q$ with delivery time $t_i + W$
+      \State add $(x_i, 1)$ to $Q$ with delivery time $f_i$
+    \EndIf
+  \Else
+    \State add $(x_i, 0)$ to $Q$ with delivery time $t_i + W$
+  \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\section{Scoring of the Predictions}\label{sec:scoring}
+
+The predictions of a model can be compared with two different labels.
+
+\paragraph{Scoring against the reference labels.} The predictions are
+compared with the reference labels of the test commits. These labels are
+never used for training when the model is trained on SZZ labels. The result
+shows how well the model identifies the commits that are defect-introducing
+according to the best available standard. This will be the main way of
+scoring in this work.
+
+\paragraph{Scoring against the training labels.} The predictions are
+compared with the labels of the same SZZ variant that was used for training.
+This is what is done in the literature, where only one set of labels is
+available. It is called \emph{self-scoring} in this report.
+
+For a model trained on SZZ labels both scores will be computed from the same
+predictions. The difference between them will show how much the usual way of
+scoring overestimates or underestimates the performance with respect to the
+reference. For a model trained on the reference labels the two scores are the
+same by definition.
+
+\section{Performance Measures}\label{sec:measures}
+
+The main performance measure will be the Matthews correlation
+coefficient~\cite{matthews1975mcc},
+\begin{equation}
+\mathrm{MCC} = \frac{TP\cdot TN - FP\cdot FN}
+{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}},
+\end{equation}
+where the four counts are now obtained by comparing the predictions with the
+evaluation labels. MCC ranges from $-1$ to $+1$. It is 0 for a model that
+predicts at random or assigns all commits to one class, and it is high only
+if the model performs well on both classes. It was chosen because of the
+class imbalance: a model that predicts every commit as clean would reach an
+accuracy of 91.5\% on this dataset but has an MCC of 0. MCC has also been
+recommended for defect prediction in place of the
+F-measure~\cite{yao2020mcc,chicco2020mcc}.
+
+As a second measure the G-mean will be reported, which is the geometric mean
+of the recall on the two classes,
+\begin{equation}
+\text{G-mean} = \sqrt{\frac{TP}{TP+FN}\cdot\frac{TN}{TN+FP}}.
+\end{equation}
+It is commonly used in online JIT-SDP~\cite{cabral2019orb} and becomes zero
+when one of the classes is not recognised at all.
+
+In the prequential setting the performance is not a single value, since the
+model changes during the stream. The usual practice is to compute the
+measures from a confusion matrix with a fading
+factor~\cite{gama2013prequential}. Before each update, the four counts are
+multiplied by a factor $f < 1$, and then the count that corresponds to the new
+prediction is increased by one. Older predictions thus have less weight. With
+$f = 0.99$ the weights add up to $1/(1-f) = 100$, so the matrix effectively
+describes the last hundred commits. The MCC computed from this matrix changes
+along the stream. Two summaries of it will be reported: its value at the end
+of the stream, and its mean over the whole stream. The convergence result of
+Gama et al.\ for the faded error rate does not carry over to MCC, so neither
+summary can be taken as the standard one, and the sensitivity of the
+conclusions to the fading factor will be examined.
+
+\section{Statistical Analysis}\label{sec:stats}
+
+Each configuration will be run with ten random seeds on each of the 21
+projects. The seeds affect the random forest, the oversampling, the
+assignment of commits to folds and the Poisson draws of ORB. Runs with
+different seeds on the same project are not independent observations, because
+they use the same data. For every configuration the results of the ten seeds
+will therefore be averaged for each project first, and the statistical tests
+will be carried out on the 21 project-level values. All comparisons will be
+paired by project.
+
+Let $d_1,\dots,d_{21}$ be the differences between two conditions for the 21
+projects. The following quantities will be reported for each comparison.
+
+\paragraph{Wilcoxon signed-rank test.} The null hypothesis that the
+differences are symmetric around zero will be tested with the Wilcoxon
+signed-rank test~\cite{wilcoxon1945}. The absolute differences are ranked,
+and the sum $W^{+}$ of the ranks of the positive differences and the sum
+$W^{-}$ of the ranks of the negative differences are computed. The test is
+non-parametric and does not assume that the differences are normally
+distributed, which cannot be assumed for MCC values of 21 projects.
+
+\paragraph{Rank-biserial correlation.} As a measure of how consistently the
+projects point in the same direction, the matched-pairs rank-biserial
+correlation will be used,
+\begin{equation}
+r = \frac{W^{+} - W^{-}}{W^{+} + W^{-}}.
+\end{equation}
+It is $+1$ if all differences are positive, $-1$ if all are negative, and 0
+if the positive and negative ranks balance.
+
+\paragraph{Hodges--Lehmann estimate.} The size of the difference will be
+estimated with the Hodges--Lehmann estimator~\cite{hodges1963}, which is the
+median of all pairwise averages $(d_i + d_j)/2$ with $i \le j$. It is the
+estimate of location that belongs to the signed-rank test and is less
+sensitive to single extreme projects than the mean. A 95\% confidence
+interval for it will be obtained with the percentile
+bootstrap~\cite{efron1979bootstrap}, by resampling the 21 projects with
+replacement.
+
+\paragraph{Correction for multiple comparisons.} The study involves many
+comparisons, and some of them would be expected to be significant by chance.
+The $p$-values will therefore be adjusted with the method of
+Holm~\cite{holm1979}. For $m$ tests with ordered $p$-values
+$p_{(1)} \le \dots \le p_{(m)}$, the adjusted value of the $i$-th one is
+\begin{equation}
+\tilde{p}_{(i)} = \max_{j \le i}\,\min\bigl(1,\,(m-j+1)\,p_{(j)}\bigr).
+\end{equation}
+The correction will be applied over all tests of the study together, and a
+significance level of 0.05 will be used.
+
+\section{Experimental Setup}
+
+The experiment of the impact analysis combines the three models with the
+seven label sources, the evaluation settings applicable to each model and
+the two ways of scoring. Table~\ref{tab:design} summarises the factors. For
+each project and seed there are 78 configurations: each of the two batch
+models is evaluated in two settings with seven label sources scored against
+the reference and six scored against the training labels, and the same holds
+for ORB with its two settings. With 21 projects and ten seeds this gives
+$78 \times 21 \times 10 = 16{,}380$ evaluation runs.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Factors of the experiment in the impact analysis.}
+\label{tab:design}
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+\toprule
+Factor & Levels \\
+\midrule
+Model & LApredict, JITLine (batch models); ORB (online model) \\
+Training labels & Reference labels; labels of B-SZZ, AG-SZZ, MA-SZZ, L-SZZ,
+R-SZZ and RA-SZZ \\
+Evaluation setting & Random 10-fold cross-validation and chronological split
+(batch models); chronological-online and prequential with verification
+latency (ORB) \\
+Scoring & Against the reference labels; against the training labels \\
+Projects & 21 \\
+Random seeds & 10 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The experiments will be implemented in Python with scikit-learn for the batch
+models and imbalanced-learn for SMOTE. The online learner and the prequential
+evaluation will be implemented for this work. Every table and figure will be
+produced by a script from the stored outputs of the experiments, so that the
+results can be regenerated.
+
+\section{Approach for the Third and Fourth Stages}\label{sec:later}
+
+The methodology of the later stages depends on the results of the second
+stage, so only its outline is given here.
+
+The third stage addresses RQ3. If the second stage shows that SZZ labels
+reduce the performance of an online learner, the next question is which type
+of labelling error causes the loss. Two label sources differ in the number of
 false positives, in the number of false negatives and in the arrival times of
 the labels at the same time, so a comparison of label sources cannot answer
 this question. Experiments are therefore planned in which one property of the
 labels is changed at a time. Label noise will be injected into the reference
 labels at the rates measured in the second stage, and the labels of an SZZ
-variant will
-be corrected with the help of the reference labels, one type of error at a
-time. It will also be examined whether the oversampling used by online
-learners for imbalanced streams (Section~\ref{sec:lit-online}) increases the
-effect of wrongly labelled positive examples.
-
-\subsection{Fourth stage: noise-aware online learner}
+variant will be corrected with the help of the reference labels, one type of
+error at a time. It will also be examined whether the oversampling used by
+online learners for imbalanced streams (Section~\ref{sec:models}) increases
+the effect of wrongly labelled positive examples.
 
 The fourth stage addresses RQ4. Based on the findings of the third stage, a
-modification of the
-online learner will be designed that makes it less sensitive to the type of
-error found to be harmful. The modification has to work without access to
-clean labels, since these are not available in practice. It should improve
-the performance when the learner is trained on SZZ labels, and it should not
-reduce the performance when the labels are clean. The writing of the thesis
-will be completed in this stage.
+modification of the online learner will be designed that makes it less
+sensitive to the type of error found to be harmful. The modification has to
+work without access to clean labels, since these are not available in
+practice. It should improve the performance when the learner is trained on
+SZZ labels, and it should not reduce the performance when the labels are
+clean.
 
-\section{Timeline}
+\section{Summary}
 
-Table~\ref{tab:timeline} gives the timeline of the thesis work.
+In the second stage, six SZZ variants will be run with PySZZ on the
+bug-fixing commits of the dataset, and their labels will be compared with the
+reference labels in terms of precision, recall, noise rates and agreement.
+Three models of different complexity will then be trained on seven label
+sources and evaluated in four settings, from random cross-validation to
+prequential evaluation with verification latency. The predictions will be
+scored against the reference labels and against the training labels, and the
+comparisons will be tested at the level of projects with the Wilcoxon
+signed-rank test and corrected for multiple comparisons. The third and fourth
+stages will study the cause of the loss and a way to reduce it.
+
+% ============================================================================
+\chapter{Conclusion and Plan of Work}\label{ch:conclusion}
+% ============================================================================
+
+This chapter summarises the work done in the first stage and gives the plan
+of work for the remaining stages of the thesis.
+
+\section{Summary of the Work Done}
+
+The thesis deals with the effect of the label noise introduced by the SZZ
+algorithm on just-in-time software defect prediction. The work of the first
+stage consisted of four parts.
+
+First, the literature was reviewed. The review covered defect prediction at
+the level of changes, the SZZ algorithm and its variants together with the
+studies that evaluate them, the studies on label noise in defect data, the
+evaluation of prediction models with respect to time and to the delayed
+arrival of labels, online learning for imbalanced data streams, and learning
+with noisy labels.
+
+Second, the research gaps were identified and the objectives and research
+questions were formulated. The review showed that the accuracy of SZZ, the
+effect of label noise, time-aware evaluation and verification latency have
+each been studied, but mostly separately. The noise of SZZ labels has not been
+measured over complete project histories, models are tested against the same
+labels on which they are trained, the effect of label noise has not been
+separated from the effect of the evaluation procedure, and label noise has
+not been studied under verification latency. Three objectives and four
+research questions were derived from these gaps (Chapter~\ref{ch:gaps}).
+
+Third, a dataset was selected and prepared. The JIT-Defects4J dataset was
+chosen because it provides, for every commit of 21 projects, a label that was
+derived from manually validated bug-fixing lines and not from the SZZ variants
+under study. The construction of these labels was examined, and its
+consequences for the planned comparisons were noted. The dataset was merged,
+cleaned and ordered by time, and the repositories of the projects were
+obtained.
+
+Fourth, the methodology of the study was designed
+(Chapter~\ref{ch:method}). It specifies how the SZZ labels will be generated
+and assessed, which prediction models will be used, how they will be
+evaluated with respect to time and to the delay of the labels, and how the
+results will be tested.
+
+\section{Plan of Work}\label{sec:plan}
+
+The remaining work is planned in three stages. Table~\ref{tab:timeline}
+gives the timeline.
+
+In the second stage, the methodology of Chapter~\ref{ch:method} will be
+carried out. The labels of the six SZZ variants will be generated and
+compared with the reference labels, which addresses RQ1, and their effect on
+prediction models will be measured in the four evaluation settings, which
+addresses RQ2. With this stage the first two objectives will be met.
+
+In the third stage, the cause of the loss will be studied with experiments in
+which the label noise is controlled, which addresses RQ3. In the fourth stage
+a noise-aware online learner will be designed and evaluated, which addresses
+RQ4, and the writing of the thesis will be completed. These two stages meet
+the third objective. Their outline is given in Section~\ref{sec:later}.
 
 \begin{table}[htbp]
 \centering\small
@@ -1390,9 +1968,9 @@ Table~\ref{tab:timeline} gives the timeline of the thesis work.
 \toprule
 Stage & Work & Status \\
 \midrule
-First & Literature survey; identification of research gaps; research
-questions and objectives; selection and preparation of the dataset &
-Completed \\
+First & Literature survey; identification of research gaps; objectives and
+research questions; selection and preparation of the dataset; design of the
+methodology & Completed \\
 Second & Generation of SZZ labels; label quality analysis (RQ1); impact on
 prediction models under different evaluation settings (RQ2) & Planned \\
 Third & Noise injection and label repair experiments; mechanism of the
@@ -1650,6 +2228,32 @@ Integrating semantic features with expert features for defect prediction and
 localization,'' in \emph{Proceedings of the 30th ACM Joint European Software
 Engineering Conference and Symposium on the Foundations of Software
 Engineering (ESEC/FSE)}, 2022, pp.~672--683.
+
+\bibitem{breiman2001rf}
+L.~Breiman, ``Random forests,'' \emph{Machine Learning}, vol.~45, no.~1,
+pp.~5--32, 2001.
+
+\bibitem{chawla2002smote}
+N.~V. Chawla, K.~W. Bowyer, L.~O. Hall, and W.~P. Kegelmeyer, ``SMOTE:
+Synthetic minority over-sampling technique,'' \emph{Journal of Artificial
+Intelligence Research}, vol.~16, pp.~321--357, 2002.
+
+\bibitem{wilcoxon1945}
+F.~Wilcoxon, ``Individual comparisons by ranking methods,'' \emph{Biometrics
+Bulletin}, vol.~1, no.~6, pp.~80--83, 1945.
+
+\bibitem{hodges1963}
+J.~L. Hodges and E.~L. Lehmann, ``Estimates of location based on rank tests,''
+\emph{The Annals of Mathematical Statistics}, vol.~34, no.~2, pp.~598--611,
+1963.
+
+\bibitem{efron1979bootstrap}
+B.~Efron, ``Bootstrap methods: Another look at the jackknife,'' \emph{The
+Annals of Statistics}, vol.~7, no.~1, pp.~1--26, 1979.
+
+\bibitem{holm1979}
+S.~Holm, ``A simple sequentially rejective multiple test procedure,''
+\emph{Scandinavian Journal of Statistics}, vol.~6, no.~2, pp.~65--70, 1979.
 
 \end{thebibliography}
 }

@@ -81,17 +81,19 @@ const finishFile = async (file) => {
   fs.writeFileSync(file, await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }));
 };
 
+const TITLE = "Label Noise in Just-In-Time Software Defect Prediction";
+
 // ------------------------------------------------------------------ one deck
 // stage: 1 for the MTP I deck, 2 for the MTP II deck
 // total: number of slides, shown as "n / total" (checked at the end)
 // refKeys: references of the deck in alphabetical order
 const buildDeck = async ({ stage, total, refKeys, out }) => {
-  const full = stage === 2; // the MTP II deck also has methodology and results
+  const full = stage === 2; // the MTP II deck also has results; the MTP I deck gives the methodology as proposed work
   const pres = new pptxgen();
   pres.layout = "LAYOUT_16x9"; // 10 x 5.625 in
   pres.theme = { headFontFace: THEME.headFontFace, bodyFontFace: THEME.bodyFontFace };
   pres.author = "Puneet Deshwani";
-  pres.title = "Quantifying SZZ-Induced Label Noise in Just-In-Time Software Defect Prediction";
+  pres.title = TITLE;
   const C = pres.SchemeColor;
 
   const used = new Set();
@@ -125,7 +127,7 @@ const buildDeck = async ({ stage, total, refKeys, out }) => {
     objects: [
       {
         placeholder: {
-          options: { name: "title", type: "title", x: 0.3, y: 0.5, w: 9.4, h: 1.38, fontSize: 24, color: C.background1, align: "center", valign: "middle", margin: 0 },
+          options: { name: "title", type: "title", x: 0.3, y: 0.62, w: 9.4, h: 1.1, fontSize: 26, color: C.background1, align: "center", valign: "middle", margin: 0 },
           text: "",
         },
       },
@@ -226,10 +228,10 @@ const buildDeck = async ({ stage, total, refKeys, out }) => {
   {
     const s = newSlide("TITLE_SLIDE", null);
     s.addShape(pres.shapes.ROUNDED_RECTANGLE, {
-      x: 0.16, y: 0.5, w: 9.68, h: 1.38, rectRadius: 0.07, fill: { color: C.text2 }, line: { color: C.text2, width: 0.5 },
+      x: 0.16, y: 0.62, w: 9.68, h: 1.1, rectRadius: 0.07, fill: { color: C.text2 }, line: { color: C.text2, width: 0.5 },
       shadow: { type: "outer", color: "000000", blur: 5, offset: 2.5, angle: 45, opacity: 0.4 }, objectName: "Title block",
     });
-    s.addText("Quantifying SZZ-Induced Label Noise in Just-In-Time Software Defect Prediction under Verification-Latency-Aware Online Evaluation", { placeholder: "title" });
+    s.addText(TITLE, { placeholder: "title" });
     const line = (text, y, fontSize, h = 0.35) =>
       s.addText(text, { x: 0.5, y, w: 9.0, h, fontSize, color: C.text1, align: "center", valign: "middle", isTextBox: true, margin: 0 });
     line("Puneet Deshwani", 2.22, 19, 0.42);
@@ -243,8 +245,8 @@ const buildDeck = async ({ stage, total, refKeys, out }) => {
   // ================================================================ contents
   {
     const items = full
-      ? ["Overview", "Motivation", "Related Works", "Research Gaps", "Research Questions and Objectives", "Dataset", "Methodology", "Results", "Conclusion and Future Work", "Timeline", "References"]
-      : ["Overview", "Motivation", "Related Works", "Research Gaps", "Research Questions and Objectives", "Dataset", "Proposed Work", "Timeline", "References"];
+      ? ["Overview", "Motivation", "Related Works", "Research Gaps", "Objectives and Research Questions", "Dataset", "Methodology", "Results", "Conclusion and Future Work", "Timeline", "References"]
+      : ["Overview", "Motivation", "Related Works", "Research Gaps", "Objectives and Research Questions", "Dataset", "Proposed Methodology", "References"];
     const s = newSlide("CONTENT", "Contents");
     s.addText(bulletRuns(items, { numbered: true, gap: full ? 4 : 6 }), { placeholder: "body", fontSize: full ? 16 : 17 });
   }
@@ -307,6 +309,12 @@ const buildDeck = async ({ stage, total, refKeys, out }) => {
   ]);
 
   const tag = (text) => (full ? " " + text : "");
+  bulletSlide("Objectives", [
+    [{ text: "Objective 1: ", bold: true }, { text: "To quantify the label noise introduced by SZZ and its variants, by comparing their labels with independent reference labels over complete project histories." }],
+    [{ text: "Objective 2: ", bold: true }, { text: "To measure the effect of this noise on JIT-SDP models under a realistic evaluation that respects the order of the commits and the delay of the labels, and to separate it from the effect of the evaluation procedure." }],
+    [{ text: "Objective 3: ", bold: true }, { text: "To identify how the noise affects an online learner, and to develop a noise-aware online learning approach that reduces its effect." + tag("(planned for MTP III and MTP IV)") }],
+  ], { fontSize: 16.5 });
+
   bulletSlide("Research Questions", [
     [{ text: "RQ1: ", bold: true }, { text: "How much do the labels of SZZ variants disagree with one another and with independent reference labels, and what type of error does each variant make?" }],
     [{ text: "RQ2: ", bold: true }, { text: "How does the choice of the label source affect the measured performance of JIT-SDP models under different evaluation settings?" }],
@@ -314,17 +322,8 @@ const buildDeck = async ({ stage, total, refKeys, out }) => {
     [{ text: "RQ4: ", bold: true }, { text: "Can an online learner be made less sensitive to SZZ label noise without access to clean labels?" + tag("(planned for MTP IV)") }],
   ], { fontSize: 16 });
 
-  bulletSlide("Objectives", [
-    [{ text: "Objective 1: ", bold: true }, { text: "Generate the labels of six SZZ variants for a dataset with independent reference labels, and characterise their false positive and false negative rates." }],
-    [{ text: "Objective 2: ", bold: true }, { text: "Examine the agreement between the variants and identify the sources of their errors." }],
-    [{ text: "Objective 3: ", bold: true }, { text: "Measure how much the evaluation procedure changes the measured performance of JIT-SDP models." }],
-    [{ text: "Objective 4: ", bold: true }, { text: "Measure the loss caused by SZZ labels for an online learner under verification latency." }],
-    [{ text: "Objective 5: ", bold: true }, { text: "Identify the type of labelling error responsible for the loss and its mechanism." + tag("(MTP III)") }],
-    [{ text: "Objective 6: ", bold: true }, { text: "Design and evaluate a noise-aware online learner." + tag("(MTP IV)") }],
-  ], { fontSize: 15, gap: 5 });
-
   // ================================================================ dataset
-  startSection(full ? "Dataset and methodology" : "Dataset and proposed work");
+  startSection("Dataset and methodology");
   {
     const s = newSlide("TITLE_ONLY", "Dataset");
     const items = [
@@ -345,9 +344,23 @@ const buildDeck = async ({ stage, total, refKeys, out }) => {
   }
 
   if (!full) {
-    // ============================================================== proposed work (MTP I deck)
-    const s = newSlide("TITLE_ONLY", "Proposed Work");
-    figure(s, "plan", 0.9, 1.05, 8.2, 2.545, "Planned studies and the research questions they address", 8.6);
+    // ============================================================== proposed methodology (MTP I deck)
+    {
+      const s = newSlide("TITLE_ONLY", "Proposed Methodology");
+      figure(s, "plan", 0.9, 1.05, 8.2, 2.545, "Planned studies and the research questions they address", 8.6);
+    }
+    bulletSlide("Proposed Methodology", [
+      [{ text: "SZZ labels: ", bold: true }, { text: "six variants (B-, AG-, MA-, L-, R- and RA-SZZ) will be run with PySZZ on the same 5,453 bug-fixing commits" }],
+      [{ text: "Label quality: ", bold: true }, { text: "precision, recall, false-alarm rate ρ₀, miss rate ρ₁ and Cohen's κ against the reference labels" }],
+      [{ text: "Models: ", bold: true }, { text: `LApredict (logistic regression on lines added) ${c("zeng")}, a JITLine-based random forest with SMOTE ${c("pornprasit")}, and ORB (online ensemble) ${c("cabral")}` }],
+      [{ text: "Scoring: ", bold: true }, { text: "against the reference labels, and against the training labels (self-scoring) for comparison" }],
+      [{ text: "Statistics: ", bold: true }, { text: "paired by project (n = 21), Wilcoxon signed-rank test, Hodges-Lehmann estimate with bootstrap confidence interval, Holm correction for multiple comparisons" }],
+      [{ text: "Planned scale: ", bold: true }, { text: "3 models, 7 label sources, 4 evaluation settings, 10 seeds" }],
+    ], { fontSize: 15, gap: 5 });
+    {
+      const s = newSlide("TITLE_ONLY", "Proposed Methodology: Evaluation Settings");
+      figure(s, "settings", 1.35, 0.88, 7.3, 1.987, "Evaluation settings. Commits of a project are ordered by time from left to right", 8.6);
+    }
   } else {
     // ============================================================== methodology (MTP II deck)
     {
@@ -462,12 +475,11 @@ const buildDeck = async ({ stage, total, refKeys, out }) => {
     ], { fontSize: 16 });
   }
 
-  // ================================================================ timeline
-  if (!full) startSection("Timeline");
-  {
+  // ================================================================ timeline (MTP II deck only)
+  if (full) {
     const s = newSlide("TITLE_ONLY", "Timeline");
     const boxes = [
-      { head: "MTP I", lines: "Literature Survey\n(Research Gaps,\nDataset)", cx: 1.6, top: true },
+      { head: "MTP I", lines: "Literature Survey,\nDataset and\nMethodology", cx: 1.6, top: true },
       { head: "MTP II", lines: "Label Quality and\nImpact Analysis\n(RQ1, RQ2)", cx: 3.87, top: false },
       { head: "MTP III", lines: "Mechanism of the\nNoise Effect\n(RQ3)", cx: 6.13, top: true },
       { head: "MTP IV", lines: "Noise-Aware\nOnline Learner\n(RQ4)", cx: 8.4, top: false },
@@ -526,8 +538,8 @@ const buildDeck = async ({ stage, total, refKeys, out }) => {
 (async () => {
   await buildDeck({
     stage: 1,
-    total: 15,
-    refKeys: ["cabral", "dacosta", "falessi", "fan", "herbold", "kamei", "mcintosh", "ni", "rosa", "sliwerski", "zeng"],
+    total: 16,
+    refKeys: ["cabral", "dacosta", "falessi", "fan", "herbold", "kamei", "mcintosh", "ni", "pornprasit", "rosa", "sliwerski", "zeng"],
     out: path.join(ROOT, "MTP 1", "presentation", "mtp1_presentation.pptx"),
   });
   await buildDeck({

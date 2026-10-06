@@ -1,4 +1,4 @@
-% M.Tech thesis progress report (first stage)
+% M.Tech thesis progress report (second stage)
 % Puneet Deshwani, 2025MCS013, ABV-IIITM Gwalior
 %
 % Compile with pdfLaTeX (run twice). Figures are in the figures/ folder.
@@ -44,8 +44,7 @@
 \begin{document}
 
 % ---------------------------------------------------------------- front page
-\newcommand{\reporttitle}{Quantifying SZZ-Induced Label Noise in Just-In-Time
-Software Defect Prediction under Verification-Latency-Aware Online Evaluation}
+\newcommand{\reporttitle}{Label Noise in Just-In-Time Software Defect Prediction}
 \newcommand{\candidate}{Puneet Deshwani}
 \newcommand{\rollno}{2025MCS013}
 \newcommand{\supervisor}{Dr.\ Santosh Singh Rathore}
@@ -159,7 +158,7 @@ usual experimental setup.
 
 The aim of this thesis is to measure how the label noise introduced by SZZ
 affects JIT-SDP models when they are evaluated under realistic conditions. This
-report presents the work carried out in the first stage of the thesis. The study
+report presents the work carried out in the second stage of the thesis. The study
 uses the JIT-Defects4J dataset, which contains 27,319 commits from 21 Apache
 Java projects together with reference labels derived from manually validated
 bug-fixing lines. These reference labels are used to assess both the SZZ labels
@@ -178,8 +177,8 @@ forest model by 0.137 compared with a chronological split, and that scoring a
 model against its own training labels raises it further by 0.230. When an online
 learner is evaluated on a commit stream with delayed labels, the model trained
 on the reference labels performs better than the models trained on any of the
-SZZ variants, by 0.034 to 0.064 MCC. The plan for the next stage of the thesis
-is given at the end of the report.
+SZZ variants, by 0.034 to 0.064 MCC. The plan for the remaining stages of the
+thesis is given at the end of the report.
 
 \vspace{0.5em}
 \noindent\textbf{Keywords:} just-in-time software defect prediction, SZZ
@@ -425,12 +424,15 @@ JIT-SDP models under an evaluation that respects time order and verification
 latency, and, in the later part of the thesis, to understand how the noise
 affects an online learner and how its effect can be reduced.
 
-The thesis work has been planned in stages. This report presents the first
-stage, in which the quality of the labels produced by six SZZ variants is
-analysed and the effect of these labels on JIT-SDP models is measured. The
-questions of how the noise affects an online learner and how this effect can
-be reduced belong to the next stage. Only the plan for that stage is given, in
-Chapter~\ref{ch:conclusion}, and no results are reported for it here.
+The thesis work is divided into four stages. The first stage consisted of the
+literature survey, the formulation of the objectives and research questions,
+and the selection of the dataset. This report presents the second stage, in
+which the quality of the labels produced by six SZZ variants is analysed and
+the effect of these labels on JIT-SDP models is measured. The questions of
+how the noise affects an online learner and how this effect can be reduced
+belong to the third and fourth stages. Only the plan for these stages is
+given, in Chapter~\ref{ch:conclusion}, and no results are reported for them
+here.
 
 % ============================================================================
 \chapter{Literature Review}\label{ch:lit}
@@ -862,13 +864,14 @@ label noise & Batch setting; noise rates assumed to be known \\
 \end{table}
 
 % ============================================================================
-\chapter{Research Gaps, Research Questions and Objectives}\label{ch:gaps}
+\chapter{Research Gaps, Objectives and Research Questions}\label{ch:gaps}
 % ============================================================================
 
 This chapter states the research gaps that were identified from the
-literature reviewed in Chapter~\ref{ch:lit}. Based on these gaps, the research
-questions and the objectives of the thesis are formulated. The part of the
-objectives that is covered by the first stage of the work is indicated.
+literature reviewed in Chapter~\ref{ch:lit}. Based on these gaps, the
+objectives of the thesis are formulated, and the research questions that
+follow from them are stated. The part that is covered by the second stage of
+the work is indicated.
 
 \section{Research Gaps}
 
@@ -920,64 +923,58 @@ learning with noisy labels assume a batch setting and stable
 labels~\cite{natarajan2013noisy,northcutt2021confident} and cannot be applied
 directly to a stream with delayed labels.
 
+\section{Objectives}
+
+Based on these gaps, the main objectives of the thesis are as follows.
+
+\begin{enumerate}[leftmargin=*]
+\item To quantify the label noise introduced by SZZ and its variants, by
+comparing their labels with independently obtained reference labels over
+complete project histories.
+\item To measure the effect of this noise on JIT-SDP models under a realistic
+evaluation, in which the order of the commits and the delay of the labels are
+respected, and to separate it from the effect of the evaluation procedure.
+\item To identify how the noise affects an online learner, and to develop a
+noise-aware online learning approach that reduces its effect.
+\end{enumerate}
+
+Objectives 1 and 2 belong to the second stage of the thesis and have been
+completed. They are reported in the following chapters. Objective 3 belongs
+to the third and fourth stages, and the plan for it is given in
+Section~\ref{sec:future}.
+
 \section{Research Questions}
 
-Based on these gaps, the thesis addresses the following research questions.
+To meet these objectives, the thesis addresses the following research
+questions.
 
 \paragraph{RQ1: How much do the labels of different SZZ variants disagree with one
 another and with independently obtained reference labels, and what type of
 error does each variant make?}
-This question corresponds to Gap~1. To answer it, the labels of six SZZ
-variants are compared with reference labels on the same set of commits, and
-the false positive and false negative rates of each variant are estimated.
+This question belongs to Objective~1 and corresponds to Gap~1. To answer it,
+the labels of six SZZ variants are compared with reference labels on the same
+set of commits, and the false positive and false negative rates of each
+variant are estimated.
 
 \paragraph{RQ2: How does the choice of the label source affect the measured
 performance of JIT-SDP models under different evaluation settings?}
-This question corresponds to Gaps~2, 3 and~4. To answer it, models are
-trained on the reference labels and on the labels of each SZZ variant, and
-are evaluated with random cross-validation, with a chronological split and
-with prequential evaluation under verification latency. The predictions are
-scored against the reference labels and, for comparison, against the training
-labels.
+This question belongs to Objective~2 and corresponds to Gaps~2, 3 and~4. To
+answer it, models are trained on the reference labels and on the labels of
+each SZZ variant, and are evaluated with random cross-validation, with a
+chronological split and with prequential evaluation under verification
+latency. The predictions are scored against the reference labels and, for
+comparison, against the training labels.
 
 \paragraph{RQ3: Through which mechanism does label noise reduce the performance of
 an online learner, and which of the two types of error is responsible?}
-This question corresponds to the first part of Gap~5. It will be addressed in
-the next stage of the thesis.
+This question belongs to Objective~3 and corresponds to the first part of
+Gap~5. It will be addressed in the third stage of the thesis.
 
 \paragraph{RQ4: Can an online learner be modified so that it loses less
 performance when it is trained on SZZ labels, without access to clean labels
 and without losing performance when the labels are clean?}
-This question corresponds to the second part of Gap~5. It will also be
-addressed in the next stage of the thesis.
-
-\section{Objectives}
-
-The objectives of the thesis are as follows.
-
-\begin{enumerate}[leftmargin=*]
-\item To generate the labels of six SZZ variants for all projects of a
-dataset that provides independent reference labels, and to characterise the
-labelling errors of each variant in terms of false positive and false
-negative rates.
-\item To examine the agreement between the SZZ variants and to identify the
-sources of the errors that the variants make.
-\item To measure how much the evaluation procedure, namely the validation
-scheme and the labels used for scoring, changes the measured performance of
-JIT-SDP models.
-\item To measure the loss in performance caused by training on SZZ labels
-when an online learner is evaluated on a commit stream with verification
-latency.
-\item To identify the type of labelling error that is responsible for this
-loss and the mechanism through which it acts.
-\item To design and evaluate a modification of the online learner that
-reduces this loss.
-\end{enumerate}
-
-Objectives 1 to 4 belong to the first stage of the thesis and have been
-completed. They are reported in the following chapters. Objectives 5 and 6
-belong to the next stage, and the plan for them is given in
-Section~\ref{sec:future}.
+This question also belongs to Objective~3 and corresponds to the second part
+of Gap~5. It will be addressed in the fourth stage of the thesis.
 
 % ============================================================================
 \chapter{Dataset}\label{ch:data}
@@ -1338,7 +1335,7 @@ than the usual waiting period of 90 days.
 \chapter{Methodology}\label{ch:method}
 % ============================================================================
 
-This chapter describes the methodology of the first stage of the thesis. It
+This chapter describes the methodology of the second stage of the thesis. It
 begins with an overview of the approach. It then explains how the SZZ labels
 were generated and how their quality is analysed, describes the prediction
 models, the evaluation settings and the simulation of verification latency,
@@ -1348,7 +1345,7 @@ experimental setup.
 \section{Overview of the Approach}
 
 Figure~\ref{fig:approach} shows the overall plan of the thesis and the part
-that is covered by the first stage. The first stage consists of two studies
+that is covered by the second stage. The second stage consists of two studies
 that build on each other.
 
 In the first study, the \emph{label quality analysis}, six SZZ variants are
@@ -1395,8 +1392,8 @@ baseline for the SZZ-trained models.
       {reference labels for scoring} (s2.north);
 \end{tikzpicture}
 \caption{Overview of the thesis work. The boxes with solid borders belong to
-the first stage, which is reported here. The boxes with dashed borders are
-planned for the next stage.}
+the second stage, which is reported here. The boxes with dashed borders are
+planned for the third and fourth stages.}
 \label{fig:approach}
 \end{figure}
 
@@ -2098,7 +2095,7 @@ $p$-values are corrected for multiple comparisons.
 \chapter{Results and Discussion}\label{ch:results}
 % ============================================================================
 
-This chapter presents the results of the first stage of the thesis.
+This chapter presents the results of the second stage of the thesis.
 Section~\ref{sec:res-quality} gives the results of the label quality analysis
 and answers RQ1. Section~\ref{sec:res-impact} gives the results of the impact
 analysis and answers RQ2. Section~\ref{sec:res-summary} summarises the
@@ -2400,7 +2397,7 @@ Two conclusions are important for the rest of the thesis. First, the label
 noise that a JIT-SDP model is exposed to is class-conditional and depends on
 the variant, so experiments with artificial symmetric noise would not
 represent it. Second, the measured pairs $(\rhoz,\rhoo)$ provide a realistic
-range of noise levels, which will be used in the next stage to design noise
+range of noise levels, which will be used in the third stage to design noise
 experiments.
 
 \section{Impact on the Prediction Models}\label{sec:res-impact}
@@ -2804,7 +2801,7 @@ values in between, show larger losses. The correlation between the mean loss
 and the recall over the six variants is $-0.18$. Which property of the labels
 determines the loss cannot be decided from this comparison, because the
 variants differ from each other in several respects at the same time. This
-question is taken up in the next stage of the thesis.
+question is taken up in the third stage of the thesis.
 
 \paragraph{Results with the terminal MCC.} With the terminal MCC the
 reference-trained model is also better than all variants on average, and
@@ -2947,7 +2944,7 @@ verification latency has no effect. It shows that the effect, if it exists,
 is too small to be detected with this design. The experiment also shows that
 a design in which several things change at the same time, as in the
 comparison of two label sources or two settings, is not suitable for
-isolating the effect of latency. In the next stage, experiments are planned
+isolating the effect of latency. In the third stage, experiments are planned
 in which the learner and the stream are kept fixed and only the labels are
 changed in a controlled way.
 
@@ -3106,11 +3103,11 @@ of all models is low, so the results say little about how useful JIT-SDP
 would be with better labels. The results do not show which property of the
 SZZ labels causes the loss in the online setting. And the experiment on label
 delay and model adaptation remained inconclusive. These points define the
-work of the next stage.
+work of the next stages.
 
 \section{Summary of Findings}\label{sec:res-summary}
 
-Table~\ref{tab:findings} summarises the main findings of the first stage
+Table~\ref{tab:findings} summarises the main findings of the second stage
 together with the evidence for each.
 
 \begin{table}[htbp]
@@ -3150,14 +3147,14 @@ projects. & All comparisons of the four-cell experiment not significant \\
 \chapter{Conclusion and Future Work}\label{ch:conclusion}
 % ============================================================================
 
-This chapter concludes the report. It summarises the work of the first stage
+This chapter concludes the report. It summarises the work of the second stage
 and its conclusions, discusses the threats to the validity of the results and
-describes the work planned for the next stage of the thesis.
+describes the work planned for the remaining stages of the thesis.
 
 \section{Conclusions}
 
 The thesis deals with the effect of the label noise introduced by the SZZ
-algorithm on just-in-time software defect prediction. In the first stage,
+algorithm on just-in-time software defect prediction. In the second stage,
 two studies were carried out on the JIT-Defects4J dataset, which contains
 27,319 commits from 21 Apache Java projects and provides reference labels
 derived from manually validated bug-fixing lines.
@@ -3201,7 +3198,7 @@ causes a loss that is large in relation to the performance that an online
 learner can actually achieve.
 
 The research questions RQ1 and RQ2 have thus been answered, and objectives 1
-to 4 of Chapter~\ref{ch:gaps} have been achieved.
+and 2 of Chapter~\ref{ch:gaps} have been achieved.
 
 \section{Threats to Validity}\label{sec:threats}
 
@@ -3278,9 +3275,9 @@ not depend on them.
 
 \section{Future Work}\label{sec:future}
 
-The first stage has shown that SZZ labels reduce the performance of an online
-learner, but it has not shown why. The next stage of the thesis addresses
-RQ3 and RQ4.
+The second stage has shown that SZZ labels reduce the performance of an online
+learner, but it has not shown why. The third and fourth stages of the thesis
+address RQ3 and RQ4, which belong to the third objective.
 
 \subsection{Mechanism of the noise effect}
 
@@ -3300,7 +3297,7 @@ labels, once by removing only the false positives and once by restoring only
 the false negatives. The change in performance will show which type of error
 is responsible for the loss.
 
-The results of the first stage indicate three precautions for these
+The results of the second stage indicate three precautions for these
 experiments. Since B-SZZ produces about eight false positives for every false
 negative, a comparison in which the same number of labels of each type is
 corrected should be included, so that the effect of the type of error is not
